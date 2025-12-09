@@ -41,6 +41,7 @@ export default function SetupPage() {
           personName: person.name,
           photoId: location.photoId,
           useAsProfilePhoto: person.preferredPhotoId === location.photoId,
+          rotation: location.rotation || 0,
         });
       });
     });
@@ -90,6 +91,7 @@ export default function SetupPage() {
         y: parseFloat(rect.y.toFixed(2)),
         width: parseFloat(rect.width.toFixed(2)),
         height: parseFloat(rect.height.toFixed(2)),
+        ...(rect.rotation && rect.rotation !== 0 ? { rotation: rect.rotation } : {}),
       }));
 
       // Find which photo (if any) is marked as profile photo

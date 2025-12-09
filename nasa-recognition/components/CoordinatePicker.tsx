@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Person, PhotoLocation, Category } from '@/types';
+import { Person, PhotoLocation, Category, GroupPhoto } from '@/types';
+import PersonPreview from './PersonPreview';
 
 interface CoordinatePickerProps {
   imagePath: string;
   photoId: string;
   allPeople: Person[];
-  groupPhotos: Array<{ id: string; name: string; imagePath: string; category: string }>;
+  groupPhotos: GroupPhoto[];
   rectangles: Rectangle[];
   initialRectangleIds: Set<string>;
   hideInitialRectangles: boolean;
@@ -27,6 +28,7 @@ interface Rectangle {
   useAsProfilePhoto?: boolean;
   category?: Category;
   description?: string;
+  rotation?: number;
 }
 
 export default function CoordinatePicker({ imagePath, photoId, allPeople, groupPhotos, rectangles, initialRectangleIds, hideInitialRectangles, onRectanglesChange, onToggleProfilePhoto }: CoordinatePickerProps) {
@@ -57,6 +59,8 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [selectedRectIndex, setSelectedRectIndex] = useState<number | null>(null);
+  const [editingRotation, setEditingRotation] = useState<number | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // Track shift key for square drawing
@@ -293,6 +297,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
         personName: person.name,
         photoId: photoId,
         useAsProfilePhoto: true,
+        rotation: 0,
       }]);
     }
 
@@ -326,6 +331,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       useAsProfilePhoto: true,
       category: newPersonCategory,
       description: newPersonDescription.trim(),
+      rotation: 0,
     }]);
 
     setShowPersonPicker(false);
@@ -371,10 +377,38 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
 
   const removeRectangle = (index: number) => {
     onRectanglesChange(rectangles.filter((_, i) => i !== index));
+    if (selectedRectIndex === index) {
+      setSelectedRectIndex(null);
+    }
+  };
+
+  // Create a mock person object for the preview
+  const getPreviewPerson = (rect: Rectangle): Person | null => {
+    if (selectedRectIndex === null) return null;
+    
+    return {
+      id: rect.personId,
+      name: rect.personName,
+      description: rect.description || '',
+      category: rect.category || 'staff',
+      individualPhoto: null,
+      photoLocations: [{
+        photoId: photoId,
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        rotation: rect.rotation || 0,
+      }],
+      preferredPhotoId: photoId,
+    };
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div className="max-w-7xl mx-auto p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main editing area */}
+        <div className="lg:col-span-2">
       <div className="bg-slate-800 rounded-lg p-6 mb-6">
         <h2 className="text-2xl font-bold text-white mb-4">Photo Coordinate Picker</h2>
         <p className="text-slate-300 mb-4">
@@ -637,26 +671,206 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
             {rectangles.map((rect, idx) => (
               <div
                 key={idx}
-                className="bg-slate-700 px-4 py-2 rounded-lg text-sm text-white flex items-center justify-between gap-4"
+                className={`bg-slate-700 px-4 py-2 rounded-lg text-sm text-white transition-colors ${
+                  selectedRectIndex === idx ? 'ring-2 ring-blue-500' : ''
+                }`}
               >
-                <span className="font-medium">{rect.personName}</span>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rect.useAsProfilePhoto || false}
-                      onChange={() => onToggleProfilePhoto(rect.personId, photoId)}
-                      className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-300">Use as profile photo</span>
-                  </label>
-                  <button
-                    onClick={() => removeRectangle(idx)}
-                    className="text-red-400 hover:text-red-300 ml-2"
-                  >
-                    ✕
-                  </button>
+                <div className="flex items-center justify-between gap-4 mb-2">
+                  <span className="font-medium">{rect.personName}</span>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={rect.useAsProfilePhoto || false}
+                        onChange={() => onToggleProfilePhoto(rect.personId, photoId)}
+                        className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <span className="text-xs text-slate-300">Use as profile photo</span>
+                    </label>
+                    <button
+                      onClick={() => setSelectedRectIndex(selectedRectIndex === idx ? null : idx)}
+                      className="text-blue-400 hover:text-blue-300 text-xs px-2 py-1 bg-slate-600 rounded"
+                    >
+                      {selectedRectIndex === idx ? 'Hide' : 'Edit'}
+                    </button>
+                    <button
+                      onClick={() => removeRectangle(idx)}
+                      className="text-red-400 hover:text-red-300 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
+                
+                {/* Rotation control - show when this rect is selected */}
+                {selectedRectIndex === idx && (
+                  <div className="mt-2 pt-2 border-t border-slate-600 space-y-3">
+                    {/* Rotation */}
+                    <div>
+                      <label className="block text-slate-300 text-xs mb-1">
+                        Rotation: {rect.rotation || 0}°
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min="0"
+                          max="360"
+                          value={editingRotation ?? rect.rotation ?? 0}
+                          onChange={(e) => {
+                            const newRotation = parseInt(e.target.value);
+                            setEditingRotation(newRotation);
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], rotation: newRotation };
+                            onRectanglesChange(updated);
+                          }}
+                          className="flex-1 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer"
+                          style={{
+                            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((editingRotation ?? rect.rotation ?? 0) / 360) * 100}%, #475569 ${((editingRotation ?? rect.rotation ?? 0) / 360) * 100}%, #475569 100%)`
+                          }}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="360"
+                          value={editingRotation ?? rect.rotation ?? 0}
+                          onChange={(e) => {
+                            const newRotation = Math.max(0, Math.min(360, parseInt(e.target.value) || 0));
+                            setEditingRotation(newRotation);
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], rotation: newRotation };
+                            onRectanglesChange(updated);
+                          }}
+                          onBlur={() => setEditingRotation(null)}
+                          className="w-16 px-2 py-1 bg-slate-600 text-white rounded text-xs text-center"
+                        />
+                        <button
+                          onClick={() => {
+                            setEditingRotation(0);
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], rotation: 0 };
+                            onRectanglesChange(updated);
+                          }}
+                          className="text-xs px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Position Controls */}
+                    <div>
+                      <label className="block text-slate-300 text-xs mb-1">Position</label>
+                      <div className="grid grid-cols-3 gap-1">
+                        <div></div>
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], y: Math.max(0, rect.y - 0.5) };
+                            onRectanglesChange(updated);
+                          }}
+                          className="px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Move Up"
+                        >
+                          ▲
+                        </button>
+                        <div></div>
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], x: Math.max(0, rect.x - 0.5) };
+                            onRectanglesChange(updated);
+                          }}
+                          className="px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Move Left"
+                        >
+                          ◄
+                        </button>
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], x: rect.x, y: rect.y };
+                            onRectanglesChange(updated);
+                          }}
+                          className="px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Center"
+                        >
+                          ●
+                        </button>
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], x: Math.min(100 - rect.width, rect.x + 0.5) };
+                            onRectanglesChange(updated);
+                          }}
+                          className="px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Move Right"
+                        >
+                          ►
+                        </button>
+                        <div></div>
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            updated[idx] = { ...updated[idx], y: Math.min(100 - rect.height, rect.y + 0.5) };
+                            onRectanglesChange(updated);
+                          }}
+                          className="px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Move Down"
+                        >
+                          ▼
+                        </button>
+                        <div></div>
+                      </div>
+                    </div>
+
+                    {/* Size Controls */}
+                    <div>
+                      <label className="block text-slate-300 text-xs mb-1">Size</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            const newWidth = Math.max(1, rect.width - 0.5);
+                            const newHeight = Math.max(1, rect.height - 0.5);
+                            updated[idx] = { 
+                              ...updated[idx], 
+                              width: newWidth,
+                              height: newHeight,
+                              x: rect.x + (rect.width - newWidth) / 2,
+                              y: rect.y + (rect.height - newHeight) / 2,
+                            };
+                            onRectanglesChange(updated);
+                          }}
+                          className="flex-1 px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Zoom Out"
+                        >
+                          🔍−
+                        </button>
+                        <button
+                          onClick={() => {
+                            const updated = [...rectangles];
+                            const newWidth = Math.min(100, rect.width + 0.5);
+                            const newHeight = Math.min(100, rect.height + 0.5);
+                            const newX = Math.max(0, rect.x - (newWidth - rect.width) / 2);
+                            const newY = Math.max(0, rect.y - (newHeight - rect.height) / 2);
+                            updated[idx] = { 
+                              ...updated[idx], 
+                              width: newWidth,
+                              height: newHeight,
+                              x: newX,
+                              y: newY,
+                            };
+                            onRectanglesChange(updated);
+                          }}
+                          className="flex-1 px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-xs"
+                          title="Zoom In"
+                        >
+                          🔍+
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -830,10 +1044,32 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
           <li>Press Enter or click to confirm</li>
           <li>Click the X button on any rectangle to delete it</li>
           <li>Check &quot;Use as profile photo&quot; to set this as the person&apos;s display image (only one per person)</li>
+          <li>Click &quot;Edit&quot; on any mapped person to adjust rotation</li>
           <li>Repeat for all people in all photos</li>
           <li>Click the green &quot;Copy Complete JSON&quot; button at the bottom when done</li>
           <li>Paste the complete JSON directly into your people.json file (replaces entire file)</li>
         </ol>
+      </div>
+        </div>
+        
+        {/* Preview Panel */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-8">
+            {selectedRectIndex !== null && rectangles[selectedRectIndex] && (
+              <PersonPreview
+                person={getPreviewPerson(rectangles[selectedRectIndex])!}
+                groupPhotos={groupPhotos}
+                title="Person Preview"
+              />
+            )}
+            {selectedRectIndex === null && (
+              <div className="bg-slate-800 rounded-lg p-6 text-center text-slate-400">
+                <p className="mb-2">No person selected</p>
+                <p className="text-sm">Click "Edit" on a mapped person to see a preview with rotation applied</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

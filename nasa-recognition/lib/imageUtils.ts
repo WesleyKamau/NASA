@@ -5,7 +5,14 @@ export interface PersonImageInfo {
   src?: string;
   backgroundSize?: string;
   backgroundPosition?: string;
+  rotation?: number;
   placeholder?: string;
+  crop?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 
 /**
@@ -78,5 +85,7 @@ export function getPersonImage(person: Person, groupPhotos: GroupPhoto[]): Perso
     src: groupPhoto.imagePath,
     backgroundSize,
     backgroundPosition,
+    rotation: photoLocation.rotation || 0,
+    crop: { x, y, width, height },
   };
 }

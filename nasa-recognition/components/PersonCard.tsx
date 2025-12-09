@@ -53,9 +53,11 @@ export default function PersonCard({ person, groupPhotos, onClick }: PersonCardP
               ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
               : person.category === 'family'
                 ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                : person.category === 'sil-lab'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
         }`}>
-          {person.category}
+          {person.category === 'sil-lab' ? 'SIL Lab' : person.category}
         </span>
       </div>
     </div>

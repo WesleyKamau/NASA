@@ -28,16 +28,33 @@ export default function PersonImage({ person, groupPhotos, className = '' }: Per
   }
 
   if (imageInfo.type === 'cropped-group' && imageInfo.src && !imageError) {
+    const { x, y, width, height } = imageInfo.crop || { x: 0, y: 0, width: 100, height: 100 };
+    const rotation = imageInfo.rotation || 0;
+    
+    // Calculate center of crop relative to the image
+    // x, y, width, height are percentages of the image
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+
     return (
-      <div 
-        className="relative w-full h-full"
-        style={{
-          backgroundImage: `url(${imageInfo.src})`,
-          backgroundSize: `${imageInfo.backgroundSize}`,
-          backgroundPosition: `${imageInfo.backgroundPosition}`,
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
+      <div className="relative w-full h-full overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img 
+          src={imageInfo.src}
+          alt={person.name}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: `${10000 / width}%`,
+            height: `${10000 / height}%`,
+            transformOrigin: `${cx}% ${cy}%`,
+            transform: `translate(-${cx}%, -${cy}%) rotate(${rotation}deg)`,
+            maxWidth: 'none',
+            maxHeight: 'none',
+          }}
+        />
+      </div>
     );
   }
 

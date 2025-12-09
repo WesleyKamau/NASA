@@ -1,4 +1,4 @@
-export type Category = 'staff' | 'interns' | 'girlfriend' | 'family';
+export type Category = 'staff' | 'interns' | 'girlfriend' | 'family' | 'sil-lab';
 
 export interface PhotoLocation {
   photoId: string;
@@ -6,6 +6,7 @@ export interface PhotoLocation {
   y: number; // percentage from top
   width: number; // percentage width
   height: number; // percentage height
+  rotation?: number; // rotation in degrees (0-360)
 }
 
 export interface Person {
@@ -17,6 +18,7 @@ export interface Person {
   photoLocations: PhotoLocation[];
   preferredPhotoId?: string; // Which group photo to use as their display image
   hidden?: boolean; // Hide from front-end grid display
+  linkedIn?: string; // LinkedIn profile URL
 }
 
 export interface GroupPhoto {
