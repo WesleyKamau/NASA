@@ -1,0 +1,248 @@
+{
+  "people": [
+    {
+      "id": "wesley-kamau",
+      "name": "Wesley Kamau",
+      "description": "Me!",
+      "category": "interns",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "gloria-caldwell",
+      "name": "Gloria Caldwell",
+      "description": "Best Dressed",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "vicky",
+      "name": "Vicky",
+      "description": "Best sarcasm",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "leigh-martin",
+      "name": "Leigh Martin",
+      "description": "Best sense of humor",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "mardi-wilkerson",
+      "name": "Mardi Wilkerson",
+      "description": "Best mentor",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "jonathan-mickelson",
+      "name": "Jonathan Mickelson",
+      "description": "Best mentor",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "pam-honeycutt",
+      "name": "Pam Honeycutt",
+      "description": "Tea",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "allison-gregg",
+      "name": "Allison Gregg",
+      "description": "Best Baker",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "jeramie-broadway",
+      "name": "Jeramie Broadway",
+      "description": "Best Suits",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "april-troutt",
+      "name": "April Troutt",
+      "description": "One of the nicest people I've ever met",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "renee",
+      "name": "Renee",
+      "description": "My favorite southern accent",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "quincy-bean",
+      "name": "Quincy Bean",
+      "description": "Coolest Hobby",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "mandy-pinyan",
+      "name": "Mandy Pinyan",
+      "description": "Green Thumb",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "janet-anderson",
+      "name": "Janet Anderson",
+      "description": "Very Thoughtful (thank you note!)",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "beverly-johnson",
+      "name": "Beverly Johnson",
+      "description": "Best Energy",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "michael-pierce",
+      "name": "Michael Pierce",
+      "description": "Best Shirts",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "lee-judge",
+      "name": "Lee Judge",
+      "description": "Inspired me to get a 3D Printer",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "kirk-pierce",
+      "name": "Kirk Pierce",
+      "description": "Most Honest",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "jena-strawn",
+      "name": "Jena Strawn",
+      "description": "Most patient",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "akia-austin",
+      "name": "Akia Austin",
+      "description": "Most Helpful",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "shawn-mceniry",
+      "name": "Shawn McEniry",
+      "description": "Most down-to-earth",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "julie-bilbrey",
+      "name": "Julie Bilbrey",
+      "description": "Most Inspiring Leader",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "cassandra-gideon",
+      "name": "Cassandra Gideon",
+      "description": "Most relatable",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "kimberly-newton",
+      "name": "Kimberly Newton",
+      "description": "Easiest to strike up a conversation with",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "allison-smith",
+      "name": "Allison Smith",
+      "description": "Always had headphones on, very pleasant to be around",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "mary-hovater",
+      "name": "Mary Hovater",
+      "description": "Coolest office, best boss",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "melanie-manson",
+      "name": "Melanie Manson",
+      "description": "Very sweet",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "jenna-hassell",
+      "name": "Jenna Hassell",
+      "description": "Most Creative",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    }
+  ],
+  "groupPhotos": [
+    {
+      "id": "staff-photo",
+      "name": "Staff Photo",
+      "imagePath": "/photos/staff-group.jpg",
+      "category": "staff"
+    },
+    {
+      "id": "interns-photo",
+      "name": "Interns Photo",
+      "imagePath": "/photos/interns-group.jpg",
+      "category": "interns"
+    },
+    {
+      "id": "family-photo",
+      "name": "Family Photo",
+      "imagePath": "/photos/family-group.jpg",
+      "category": "staff"
+    }
+  ]
+}
