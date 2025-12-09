@@ -31,6 +31,7 @@ export default function ZoomablePhotoSection({ people, groupPhotos, title }: Zoo
               key={photo.id}
               groupPhoto={photo}
               people={people}
+              groupPhotos={groupPhotos}
               zoomToPerson={zoomToPersonId}
               onZoomChange={setZoomToPersonId}
             />
@@ -40,15 +41,8 @@ export default function ZoomablePhotoSection({ people, groupPhotos, title }: Zoo
 
       {/* Person Grid */}
       <PersonGrid 
-        people={people} 
-        onPhotoClick={(personId) => {
-          setZoomToPersonId(personId);
-          // Scroll to group photos
-          const photoSection = document.querySelector(`[data-photo-section="${title}"]`);
-          if (photoSection) {
-            photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }}
+        people={people}
+        groupPhotos={groupPhotos}
       />
     </section>
   );

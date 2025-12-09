@@ -82,6 +82,37 @@ body {
   }
 }
 
+@keyframes rainbow {
+  0% {
+    border-color: #ff0000;
+    box-shadow: 0 0 20px #ff0000;
+  }
+  16% {
+    border-color: #ff8800;
+    box-shadow: 0 0 20px #ff8800;
+  }
+  33% {
+    border-color: #ffff00;
+    box-shadow: 0 0 20px #ffff00;
+  }
+  50% {
+    border-color: #00ff00;
+    box-shadow: 0 0 20px #00ff00;
+  }
+  66% {
+    border-color: #0088ff;
+    box-shadow: 0 0 20px #0088ff;
+  }
+  83% {
+    border-color: #8800ff;
+    box-shadow: 0 0 20px #8800ff;
+  }
+  100% {
+    border-color: #ff0000;
+    box-shadow: 0 0 20px #ff0000;
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
@@ -92,4 +123,12 @@ body {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-rainbow-border {
+  animation: rainbow 3s linear infinite;
+}
+
+.hover\:shadow-rainbow-glow:hover {
+  animation: rainbow 3s linear infinite;
 }

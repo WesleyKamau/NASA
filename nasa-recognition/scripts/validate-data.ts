@@ -24,7 +24,7 @@ interface Person {
   id: string;
   name: string;
   description: string;
-  category: 'staff' | 'interns';
+  category: 'staff' | 'interns' | 'girlfriend' | 'family';
   individualPhoto: string | null;
   photoLocations: PhotoLocation[];
 }
@@ -33,7 +33,7 @@ interface GroupPhoto {
   id: string;
   name: string;
   imagePath: string;
-  category: 'staff' | 'interns';
+  category: 'staff' | 'interns' | 'girlfriend' | 'family';
 }
 
 interface PeopleData {
@@ -71,7 +71,7 @@ function validateData() {
       ids.add(person.id);
 
       // Validate category
-      if (person.category && !['staff', 'interns'].includes(person.category)) {
+      if (person.category && !['staff', 'interns', 'girlfriend', 'family'].includes(person.category)) {
         errors.push(`Invalid category: ${person.category}`);
       }
 
@@ -114,7 +114,7 @@ function validateData() {
       if (!photo.imagePath) errors.push('Missing imagePath');
       if (!photo.category) errors.push('Missing category');
 
-      if (photo.category && !['staff', 'interns'].includes(photo.category)) {
+      if (photo.category && !['staff', 'interns', 'girlfriend', 'family'].includes(photo.category)) {
         errors.push(`Invalid category: ${photo.category}`);
       }
 
@@ -129,6 +129,8 @@ function validateData() {
     console.log('\n📊 Statistics:');
     console.log(`   - Staff members: ${data.people.filter(p => p.category === 'staff').length}`);
     console.log(`   - Interns: ${data.people.filter(p => p.category === 'interns').length}`);
+    console.log(`   - Girlfriend: ${data.people.filter(p => p.category === 'girlfriend').length}`);
+    console.log(`   - Family: ${data.people.filter(p => p.category === 'family').length}`);
     console.log(`   - With individual photos: ${data.people.filter(p => p.individualPhoto).length}`);
     console.log(`   - In group photos: ${data.people.filter(p => p.photoLocations.length > 0).length}`);
     console.log(`   - Not in any photo: ${data.people.filter(p => !p.individualPhoto && p.photoLocations.length === 0).length}`);

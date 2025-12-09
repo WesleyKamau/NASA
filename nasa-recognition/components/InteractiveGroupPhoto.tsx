@@ -8,11 +8,12 @@ import PersonModal from './PersonModal';
 interface InteractiveGroupPhotoProps {
   groupPhoto: GroupPhoto;
   people: Person[];
+  groupPhotos: GroupPhoto[]; // All group photos for image utility
   zoomToPerson?: string | null; // Person ID to zoom to
   onZoomChange?: (personId: string | null) => void;
 }
 
-export default function InteractiveGroupPhoto({ groupPhoto, people, zoomToPerson, onZoomChange }: InteractiveGroupPhotoProps) {
+export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos, zoomToPerson, onZoomChange }: InteractiveGroupPhotoProps) {
   const [hoveredPerson, setHoveredPerson] = useState<Person | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [zoomedPerson, setZoomedPerson] = useState<Person | null>(null);
@@ -82,7 +83,7 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, zoomToPerson
               />
 
               {/* Clickable regions overlay */}
-              <div className="absolute inset-0">
+              <div className="absolute inset-0 z-10">
               {peopleInPhoto.map((person) => {
                 const location = person.photoLocations.find(
                   loc => loc.photoId === groupPhoto.id
@@ -110,7 +111,11 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, zoomToPerson
                     <div
                       className={`absolute inset-0 border-4 rounded-lg transition-all duration-200 ${
                         isHovered
-                          ? 'border-blue-400 bg-blue-400/20 shadow-lg shadow-blue-500/50'
+                          ? 
+                        //   person.id === 'wesley-kamau'
+                        //     ? 'animate-rainbow-border bg-blue-400/20'
+                        //     : 
+                            'border-blue-400 bg-blue-400/20 shadow-lg shadow-blue-500/50'
                           : 'border-transparent bg-transparent'
                       }`}
                     />
@@ -175,6 +180,7 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, zoomToPerson
       {selectedPerson && (
         <PersonModal
           person={selectedPerson}
+          groupPhotos={groupPhotos}
           onClose={() => setSelectedPerson(null)}
         />
       )}

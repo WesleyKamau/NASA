@@ -5,9 +5,7 @@ import SLSRocket from '@/components/SLSRocket';
 
 export default function Home() {
   const data = getPeopleData();
-  const staffPeople = data.people.filter(p => p.category === 'staff');
-  const internPeople = data.people.filter(p => p.category === 'interns');
-  const staffPhotos = data.groupPhotos.filter(p => p.category === 'staff');
+  const staffPhotos = data.groupPhotos.filter(p => p.category === 'staff' || p.category === 'girlfriend' || p.category === 'family');
   const internPhotos = data.groupPhotos.filter(p => p.category === 'interns');
 
   return (
@@ -35,15 +33,15 @@ export default function Home() {
 
         {/* Staff Section */}
         <ZoomablePhotoSection
-          people={staffPeople}
+          people={data.people}
           groupPhotos={staffPhotos}
           title="Staff & Mentors"
         />
 
         {/* Interns Section */}
-        {internPeople.length > 0 && (
+        {internPhotos.length > 0 && (
           <ZoomablePhotoSection
-            people={internPeople}
+            people={data.people}
             groupPhotos={internPhotos}
             title="Fellow Interns"
           />

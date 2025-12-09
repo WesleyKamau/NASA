@@ -1,17 +1,16 @@
 'use client';
 
-import { Person } from '@/types';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { Person, GroupPhoto } from '@/types';
+import { useEffect } from 'react';
+import PersonImage from './PersonImage';
 
 interface PersonModalProps {
   person: Person;
+  groupPhotos: GroupPhoto[];
   onClose: () => void;
 }
 
-export default function PersonModal({ person, onClose }: PersonModalProps) {
-  const [imageError, setImageError] = useState(false);
-
+export default function PersonModal({ person, groupPhotos, onClose }: PersonModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -41,19 +40,7 @@ export default function PersonModal({ person, onClose }: PersonModalProps) {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Photo */}
           <div className="w-full md:w-1/3 aspect-square rounded-lg overflow-hidden bg-slate-800/50 relative flex-shrink-0">
-            {person.individualPhoto && !imageError ? (
-              <Image
-                src={person.individualPhoto}
-                alt={person.name}
-                fill
-                className="object-cover"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-blue-400/30">
-                {person.name.charAt(0)}
-              </div>
-            )}
+            <PersonImage person={person} groupPhotos={groupPhotos} className="text-6xl" />
           </div>
 
           {/* Info */}
@@ -62,7 +49,11 @@ export default function PersonModal({ person, onClose }: PersonModalProps) {
               <span className={`text-xs px-3 py-1 rounded-full ${
                 person.category === 'staff' 
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
-                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  : person.category === 'girlfriend'
+                    ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
+                    : person.category === 'family'
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                      : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
               }`}>
                 {person.category}
               </span>
@@ -77,12 +68,6 @@ export default function PersonModal({ person, onClose }: PersonModalProps) {
                 {person.description}
               </p>
             </div>
-
-            {person.photoLocations.length > 0 && (
-              <p className="text-slate-400 text-sm mt-auto">
-                Featured in {person.photoLocations.length} group photo{person.photoLocations.length !== 1 ? 's' : ''}
-              </p>
-            )}
           </div>
         </div>
       </div>

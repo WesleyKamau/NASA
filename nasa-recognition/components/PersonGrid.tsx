@@ -1,17 +1,17 @@
 'use client';
 
-import { Person } from '@/types';
+import { Person, GroupPhoto } from '@/types';
 import PersonCard from './PersonCard';
 import { useState } from 'react';
 import PersonModal from './PersonModal';
 
 interface PersonGridProps {
   people: Person[];
+  groupPhotos: GroupPhoto[];
   title?: string;
-  onPhotoClick?: (personId: string) => void;
 }
 
-export default function PersonGrid({ people, title, onPhotoClick }: PersonGridProps) {
+export default function PersonGrid({ people, groupPhotos, title }: PersonGridProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   return (
@@ -28,8 +28,8 @@ export default function PersonGrid({ people, title, onPhotoClick }: PersonGridPr
             <PersonCard
               key={person.id}
               person={person}
+              groupPhotos={groupPhotos}
               onClick={() => setSelectedPerson(person)}
-              onPhotoClick={onPhotoClick ? () => onPhotoClick(person.id) : undefined}
             />
           ))}
         </div>
@@ -38,6 +38,7 @@ export default function PersonGrid({ people, title, onPhotoClick }: PersonGridPr
       {selectedPerson && (
         <PersonModal
           person={selectedPerson}
+          groupPhotos={groupPhotos}
           onClose={() => setSelectedPerson(null)}
         />
       )}

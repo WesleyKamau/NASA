@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Person, PhotoLocation } from '@/types';
+import { Person, PhotoLocation, Category } from '@/types';
 
 interface CoordinatePickerProps {
   imagePath: string;
   photoId: string;
   allPeople: Person[];
   groupPhotos: Array<{ id: string; name: string; imagePath: string; category: string }>;
+  rectangles: Rectangle[];
+  onRectanglesChange: (rectangles: Rectangle[]) => void;
+  onToggleProfilePhoto: (personId: string, photoId: string) => void;
 }
 
 interface Rectangle {
@@ -18,9 +21,13 @@ interface Rectangle {
   height: number;
   personId: string;
   personName: string;
+  photoId: string;
+  useAsProfilePhoto?: boolean;
+  category?: Category;
+  description?: string;
 }
 
-export default function CoordinatePicker({ imagePath, photoId, allPeople, groupPhotos }: CoordinatePickerProps) {
+export default function CoordinatePicker({ imagePath, photoId, allPeople, groupPhotos, rectangles, onRectanglesChange, onToggleProfilePhoto }: CoordinatePickerProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [currentRect, setCurrentRect] = useState<{
@@ -29,12 +36,13 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
     width: number;
     height: number;
   } | null>(null);
-  const [rectangles, setRectangles] = useState<Rectangle[]>([]);
   const [showPersonPicker, setShowPersonPicker] = useState(false);
   const [pendingRect, setPendingRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [newPersonName, setNewPersonName] = useState('');
+  const [newPersonCategory, setNewPersonCategory] = useState<Category>('staff');
+  const [newPersonDescription, setNewPersonDescription] = useState('');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeIndex, setResizeIndex] = useState<number | null>(null);
@@ -47,25 +55,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-
-  // Load existing coordinates on mount
-  useEffect(() => {
-    const existingRects: Rectangle[] = [];
-    allPeople.forEach(person => {
-      const location = person.photoLocations.find(loc => loc.photoId === photoId);
-      if (location) {
-        existingRects.push({
-          x: location.x,
-          y: location.y,
-          width: location.width,
-          height: location.height,
-          personId: person.id,
-          personName: person.name,
-        });
-      }
-    });
-    setRectangles(existingRects);
-  }, [allPeople, photoId]);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // Track shift key for square drawing
   useEffect(() => {
@@ -82,6 +72,51 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  // Prevent page scroll when zooming with mouse wheel
+  useEffect(() => {
+    const container = imageContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const delta = e.deltaY > 0 ? -0.2 : 0.2;
+      const newZoom = Math.max(1, Math.min(5, zoom + delta));
+      
+      if (newZoom !== zoom) {
+        if (newZoom === 1) {
+          // Reset to center when zooming back to 1
+          setZoom(1);
+          setPan({ x: 0, y: 0 });
+        } else {
+          // Get the position of the mouse relative to the center of the container
+          const offsetX = mouseX - rect.width / 2;
+          const offsetY = mouseY - rect.height / 2;
+          
+          // Calculate the point in the original image that's under the mouse
+          const pointX = (offsetX - pan.x) / zoom;
+          const pointY = (offsetY - pan.y) / zoom;
+          
+          // Calculate new pan so that same point stays under mouse
+          const newPanX = offsetX - pointX * newZoom;
+          const newPanY = offsetY - pointY * newZoom;
+          
+          setZoom(newZoom);
+          setPan({ x: newPanX, y: newPanY });
+        }
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [zoom, pan]);
 
   const filteredPeople = allPeople.filter(person =>
     person.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -141,7 +176,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       
       const updated = [...rectangles];
       updated[dragIndex] = newRect;
-      setRectangles(updated);
+      onRectanglesChange(updated);
       setDragStart({ x, y });
     } else if (isResizing && resizeIndex !== null) {
       const oldRect = rectangles[resizeIndex];
@@ -202,7 +237,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
 
       const updated = [...rectangles];
       updated[resizeIndex] = newRect;
-      setRectangles(updated);
+      onRectanglesChange(updated);
     }
   };
 
@@ -245,19 +280,25 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
         ...pendingRect,
         personId: person.id,
         personName: person.name,
+        photoId: photoId,
       };
-      setRectangles(updated);
+      onRectanglesChange(updated);
     } else {
-      setRectangles([...rectangles, {
+      // This is the first time mapping this person, set as profile photo
+      onRectanglesChange([...rectangles, {
         ...pendingRect,
         personId: person.id,
         personName: person.name,
+        photoId: photoId,
+        useAsProfilePhoto: true,
       }]);
     }
 
     setShowPersonPicker(false);
     setPendingRect(null);
     setNewPersonName('');
+    setNewPersonCategory('staff');
+    setNewPersonDescription('');
     setIsCreatingNew(false);
   };
 
@@ -274,15 +315,22 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       return;
     }
 
-    setRectangles([...rectangles, {
+    // For a brand new person, this is their first photo so mark it as profile photo
+    onRectanglesChange([...rectangles, {
       ...pendingRect,
       personId: newPersonId,
       personName: newPersonName.trim(),
+      photoId: photoId,
+      useAsProfilePhoto: true,
+      category: newPersonCategory,
+      description: newPersonDescription.trim(),
     }]);
 
     setShowPersonPicker(false);
     setPendingRect(null);
     setNewPersonName('');
+    setNewPersonCategory('staff');
+    setNewPersonDescription('');
     setIsCreatingNew(false);
   };
 
@@ -294,6 +342,8 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       } else if (e.key === 'Escape') {
         setIsCreatingNew(false);
         setNewPersonName('');
+        setNewPersonCategory('staff');
+        setNewPersonDescription('');
       }
       return;
     }
@@ -311,51 +361,14 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       setShowPersonPicker(false);
       setPendingRect(null);
       setNewPersonName('');
+      setNewPersonCategory('staff');
+      setNewPersonDescription('');
       setIsCreatingNew(false);
     }
   };
 
   const removeRectangle = (index: number) => {
-    setRectangles(rectangles.filter((_, i) => i !== index));
-  };
-
-  const generateFullJSON = () => {
-    // Create a copy of all people data
-    const updatedPeople = allPeople.map(person => {
-      const rect = rectangles.find(r => r.personId === person.id);
-      
-      // Filter out existing location for this photo and add new one if exists
-      const otherLocations = person.photoLocations.filter(loc => loc.photoId !== photoId);
-      
-      const photoLocations: PhotoLocation[] = rect 
-        ? [
-            ...otherLocations,
-            {
-              photoId: photoId,
-              x: parseFloat(rect.x.toFixed(2)),
-              y: parseFloat(rect.y.toFixed(2)),
-              width: parseFloat(rect.width.toFixed(2)),
-              height: parseFloat(rect.height.toFixed(2)),
-            }
-          ]
-        : otherLocations;
-
-      return {
-        ...person,
-        photoLocations,
-      };
-    });
-
-    return { 
-      people: updatedPeople,
-      groupPhotos: groupPhotos
-    };
-  };
-
-  const copyToClipboard = () => {
-    const json = JSON.stringify(generateFullJSON(), null, 2);
-    navigator.clipboard.writeText(json);
-    alert('Complete JSON copied to clipboard! You can paste this directly into people.json to replace the entire file.');
+    onRectanglesChange(rectangles.filter((_, i) => i !== index));
   };
 
   return (
@@ -397,13 +410,9 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
           <span className="text-slate-400 text-sm">Use mouse wheel to zoom, {zoom > 1 ? 'right-click + drag to pan' : ''}</span>
         </div>
         
-        <div 
+        <div
+          ref={imageContainerRef}
           className="relative w-full bg-slate-900 rounded-lg overflow-hidden cursor-crosshair"
-          onWheel={(e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            setZoom(Math.max(1, Math.min(5, zoom + delta)));
-          }}
         >
           <div
             style={{
@@ -608,53 +617,41 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
             )}
           </div>
         </div>
-      </div>
-
-      <div className="mt-6 space-y-4">
-          <div className="flex gap-4">
-            <button
-              onClick={copyToClipboard}
-              disabled={rectangles.length === 0}
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Copy Complete JSON ({rectangles.length} people mapped)
-            </button>
-            <button
-              onClick={() => {
-                if (confirm('Clear all rectangles for this photo?')) {
-                  setRectangles([]);
-                }
-              }}
-              disabled={rectangles.length === 0}
-              className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Clear All
-            </button>
-          </div>
-
-          {rectangles.length > 0 && (
-            <div className="bg-slate-900 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-2">Mapped People:</h3>
-              <div className="flex flex-wrap gap-2">
-                {rectangles.map((rect, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-700 px-3 py-1 rounded-full text-sm text-white flex items-center gap-2"
-                  >
-                    {rect.personName}
-                    <button
-                      onClick={() => removeRectangle(idx)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {rectangles.length > 0 && (
+        <div className="mt-6 bg-slate-900 rounded-lg p-4">
+          <h3 className="text-white font-semibold mb-2">Mapped People:</h3>
+          <div className="space-y-2">
+            {rectangles.map((rect, idx) => (
+              <div
+                key={idx}
+                className="bg-slate-700 px-4 py-2 rounded-lg text-sm text-white flex items-center justify-between gap-4"
+              >
+                <span className="font-medium">{rect.personName}</span>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rect.useAsProfilePhoto || false}
+                      onChange={() => onToggleProfilePhoto(rect.personId, photoId)}
+                      className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="text-xs text-slate-300">Use as profile photo</span>
+                  </label>
+                  <button
+                    onClick={() => removeRectangle(idx)}
+                    className="text-red-400 hover:text-red-300 ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Person Picker Modal */}
       {showPersonPicker && (
@@ -728,6 +725,31 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                     className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     autoFocus
                   />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-white font-semibold mb-2">Category</label>
+                  <select
+                    value={newPersonCategory}
+                    onChange={(e) => setNewPersonCategory(e.target.value as Category)}
+                    className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="staff">Staff</option>
+                    <option value="interns">Interns</option>
+                    <option value="girlfriend">Girlfriend</option>
+                    <option value="family">Family</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-white font-semibold mb-2">Description</label>
+                  <input
+                    type="text"
+                    value={newPersonDescription}
+                    onChange={(e) => setNewPersonDescription(e.target.value)}
+                    placeholder="Enter description..."
+                    className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
                   <p className="text-slate-400 text-xs mt-1">
                     Press Enter to create, Esc to go back
                   </p>
@@ -745,6 +767,8 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                     onClick={() => {
                       setIsCreatingNew(false);
                       setNewPersonName('');
+                      setNewPersonCategory('staff');
+                      setNewPersonDescription('');
                     }}
                     className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
                   >
@@ -760,6 +784,8 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                   setShowPersonPicker(false);
                   setPendingRect(null);
                   setNewPersonName('');
+                  setNewPersonCategory('staff');
+                  setNewPersonDescription('');
                   setIsCreatingNew(false);
                 }}
                 className="mt-4 w-full px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
@@ -782,8 +808,9 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
           <li>Type to search for an existing person or click &quot;Create New Person&quot;</li>
           <li>Press Enter or click to confirm</li>
           <li>Click the X button on any rectangle to delete it</li>
-          <li>Repeat for all people in the photo</li>
-          <li>Click &quot;Copy Complete JSON&quot; when done</li>
+          <li>Check &quot;Use as profile photo&quot; to set this as the person&apos;s display image (only one per person)</li>
+          <li>Repeat for all people in all photos</li>
+          <li>Click the green &quot;Copy Complete JSON&quot; button at the bottom when done</li>
           <li>Paste the complete JSON directly into your people.json file (replaces entire file)</li>
         </ol>
       </div>
