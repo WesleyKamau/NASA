@@ -7,10 +7,12 @@ import { useState } from 'react';
 interface PersonCardProps {
   person: Person;
   onClick?: () => void;
+  onPhotoClick?: () => void;
 }
 
-export default function PersonCard({ person, onClick }: PersonCardProps) {
+export default function PersonCard({ person, onClick, onPhotoClick }: PersonCardProps) {
   const [imageError, setImageError] = useState(false);
+  const hasGroupPhoto = person.photoLocations && person.photoLocations.length > 0;
 
   return (
     <div
@@ -33,9 +35,27 @@ export default function PersonCard({ person, onClick }: PersonCardProps) {
           </div>
         )}
         
+        {/* Zoom to group photo button */}
+        {hasGroupPhoto && onPhotoClick && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPhotoClick();
+            }}
+            className="absolute top-2 right-2 p-2 bg-blue-500/90 hover:bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            title="Zoom to face in group photo"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+            </svg>
+          </button>
+        )}
+        
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-          <p className="text-white text-sm font-medium">Click to view</p>
+          <p className="text-white text-sm font-medium">
+            {hasGroupPhoto && onPhotoClick ? 'Click card for details • 🔍 for photo' : 'Click to view'}
+          </p>
         </div>
       </div>
 

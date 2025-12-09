@@ -8,9 +8,10 @@ import PersonModal from './PersonModal';
 interface PersonGridProps {
   people: Person[];
   title?: string;
+  onPhotoClick?: (personId: string) => void;
 }
 
-export default function PersonGrid({ people, title }: PersonGridProps) {
+export default function PersonGrid({ people, title, onPhotoClick }: PersonGridProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   return (
@@ -28,6 +29,7 @@ export default function PersonGrid({ people, title }: PersonGridProps) {
               key={person.id}
               person={person}
               onClick={() => setSelectedPerson(person)}
+              onPhotoClick={onPhotoClick ? () => onPhotoClick(person.id) : undefined}
             />
           ))}
         </div>

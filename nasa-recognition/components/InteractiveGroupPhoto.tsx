@@ -2,17 +2,37 @@
 
 import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PersonModal from './PersonModal';
 
 interface InteractiveGroupPhotoProps {
   groupPhoto: GroupPhoto;
   people: Person[];
+  zoomToPerson?: string | null; // Person ID to zoom to
+  onZoomChange?: (personId: string | null) => void;
 }
 
-export default function InteractiveGroupPhoto({ groupPhoto, people }: InteractiveGroupPhotoProps) {
+export default function InteractiveGroupPhoto({ groupPhoto, people, zoomToPerson, onZoomChange }: InteractiveGroupPhotoProps) {
   const [hoveredPerson, setHoveredPerson] = useState<Person | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [zoomedPerson, setZoomedPerson] = useState<Person | null>(null);
+
+  // Handle external zoom requests
+  useEffect(() => {
+    if (zoomToPerson) {
+      const person = people.find(p => p.id === zoomToPerson);
+      if (person) {
+        setZoomedPerson(person);
+      }
+    } else {
+      setZoomedPerson(null);
+    }
+  }, [zoomToPerson, people]);
+
+  const handleZoomReset = () => {
+    setZoomedPerson(null);
+    onZoomChange?.(null);
+  };
 
   // Get people who are in this photo
   const peopleInPhoto = people.filter(person =>
@@ -29,17 +49,40 @@ export default function InteractiveGroupPhoto({ groupPhoto, people }: Interactiv
         <div className="relative w-full rounded-xl overflow-hidden shadow-2xl shadow-blue-500/20 border border-slate-700/50">
           {/* The group photo */}
           <div className="relative w-full bg-slate-800/50">
-            <Image
-              src={groupPhoto.imagePath}
-              alt={groupPhoto.name}
-              width={1600}
-              height={1000}
-              className="w-full h-auto object-contain"
-              priority
-            />
+            <div
+              style={{
+                transform: zoomedPerson ? (() => {
+                  const location = zoomedPerson.photoLocations.find(loc => loc.photoId === groupPhoto.id);
+                  if (!location) return 'scale(1)';
+                  
+                  // Calculate zoom to fit face with padding
+                  const zoomX = 100 / location.width;
+                  const zoomY = 100 / location.height;
+                  const zoom = Math.min(zoomX, zoomY, 3) * 0.8; // Cap at 3x, add padding
+                  
+                  // Calculate translation to center the face
+                  const centerX = location.x + location.width / 2;
+                  const centerY = location.y + location.height / 2;
+                  const translateX = (50 - centerX) * zoom;
+                  const translateY = (50 - centerY) * zoom;
+                  
+                  return `scale(${zoom}) translate(${translateX}%, ${translateY}%)`;
+                })() : 'scale(1)',
+                transformOrigin: 'center center',
+                transition: 'transform 0.5s ease-in-out',
+              }}
+            >
+              <Image
+                src={groupPhoto.imagePath}
+                alt={groupPhoto.name}
+                width={1600}
+                height={1000}
+                className="w-full h-auto object-contain"
+                priority
+              />
 
-            {/* Clickable regions overlay */}
-            <div className="absolute inset-0">
+              {/* Clickable regions overlay */}
+              <div className="absolute inset-0">
               {peopleInPhoto.map((person) => {
                 const location = person.photoLocations.find(
                   loc => loc.photoId === groupPhoto.id
@@ -93,6 +136,7 @@ export default function InteractiveGroupPhoto({ groupPhoto, people }: Interactiv
                 );
               })}
             </div>
+            </div>
           </div>
 
           {/* Info banner */}
@@ -112,10 +156,18 @@ export default function InteractiveGroupPhoto({ groupPhoto, people }: Interactiv
 
         {/* Legend */}
         {peopleInPhoto.length > 0 && (
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center flex items-center justify-center gap-4">
             <p className="text-slate-400 text-sm">
               Hover over faces to see names • {peopleInPhoto.length} people tagged
             </p>
+            {zoomedPerson && (
+              <button
+                onClick={handleZoomReset}
+                className="px-4 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+              >
+                Reset Zoom
+              </button>
+            )}
           </div>
         )}
       </div>

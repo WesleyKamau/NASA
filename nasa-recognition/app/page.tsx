@@ -1,6 +1,5 @@
 import { getPeopleData } from '@/lib/data';
-import PersonGrid from '@/components/PersonGrid';
-import InteractiveGroupPhoto from '@/components/InteractiveGroupPhoto';
+import ZoomablePhotoSection from '@/components/ZoomablePhotoSection';
 import StarfieldBackground from '@/components/StarfieldBackground';
 import SLSRocket from '@/components/SLSRocket';
 
@@ -35,57 +34,19 @@ export default function Home() {
         </header>
 
         {/* Staff Section */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-2">
-              Staff & Mentors
-            </h2>
-            <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full" />
-          </div>
-
-          {/* Staff Group Photos */}
-          {staffPhotos.length > 0 && (
-            <div className="mb-12 space-y-12">
-              {staffPhotos.map((photo) => (
-                <InteractiveGroupPhoto
-                  key={photo.id}
-                  groupPhoto={photo}
-                  people={staffPeople}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Staff Grid */}
-          <PersonGrid people={staffPeople} />
-        </section>
+        <ZoomablePhotoSection
+          people={staffPeople}
+          groupPhotos={staffPhotos}
+          title="Staff & Mentors"
+        />
 
         {/* Interns Section */}
         {internPeople.length > 0 && (
-          <section className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-white mb-2">
-                Fellow Interns
-              </h2>
-              <div className="h-1 w-24 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full" />
-            </div>
-
-            {/* Intern Group Photos */}
-            {internPhotos.length > 0 && (
-              <div className="mb-12 space-y-12">
-                {internPhotos.map((photo) => (
-                  <InteractiveGroupPhoto
-                    key={photo.id}
-                    groupPhoto={photo}
-                    people={internPeople}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Interns Grid */}
-            <PersonGrid people={internPeople} />
-          </section>
+          <ZoomablePhotoSection
+            people={internPeople}
+            groupPhotos={internPhotos}
+            title="Fellow Interns"
+          />
         )}
 
         {/* Footer */}

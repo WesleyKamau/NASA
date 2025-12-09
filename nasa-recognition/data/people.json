@@ -78,7 +78,15 @@
       "description": "One of the nicest people I've ever met",
       "category": "staff",
       "individualPhoto": null,
-      "photoLocations": []
+      "photoLocations": [
+        {
+          "photoId": "staff-photo",
+          "x": 44.98,
+          "y": 33.8,
+          "width": 8.32,
+          "height": 6.13
+        }
+      ]
     },
     {
       "id": "renee",

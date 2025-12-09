@@ -20,7 +20,7 @@ interface Rectangle {
   personName: string;
 }
 
-export default function CoordinatePicker({ imagePath, photoId, allPeople }: CoordinatePickerProps) {
+export default function CoordinatePicker({ imagePath, photoId, allPeople, groupPhotos }: CoordinatePickerProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [currentRect, setCurrentRect] = useState<{
@@ -43,6 +43,10 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople }: Coor
   const [isDragging, setIsDragging] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   // Load existing coordinates on mount
   useEffect(() => {
@@ -364,23 +368,97 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople }: Coor
           Select their name from the dropdown. Existing coordinates are already loaded.
         </p>
         
-        <div className="relative w-full bg-slate-900 rounded-lg overflow-hidden cursor-crosshair">
-          <Image
-            src={imagePath}
-            alt="Group photo"
-            width={1600}
-            height={1000}
-            className="w-full h-auto object-contain"
-            draggable={false}
-          />
-          
+        {/* Zoom Controls */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setZoom(Math.max(1, zoom - 0.25))}
+              className="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600"
+              disabled={zoom <= 1}
+            >
+              -
+            </button>
+            <span className="text-white font-semibold min-w-[60px] text-center">{(zoom * 100).toFixed(0)}%</span>
+            <button
+              onClick={() => setZoom(Math.min(5, zoom + 0.25))}
+              className="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600"
+              disabled={zoom >= 5}
+            >
+              +
+            </button>
+            <button
+              onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+              className="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600"
+              disabled={zoom === 1 && pan.x === 0 && pan.y === 0}
+            >
+              Reset
+            </button>
+          </div>
+          <span className="text-slate-400 text-sm">Use mouse wheel to zoom, {zoom > 1 ? 'right-click + drag to pan' : ''}</span>
+        </div>
+        
+        <div 
+          className="relative w-full bg-slate-900 rounded-lg overflow-hidden cursor-crosshair"
+          onWheel={(e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            setZoom(Math.max(1, Math.min(5, zoom + delta)));
+          }}
+        >
           <div
-            className="absolute inset-0"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            style={{
+              transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
+              transformOrigin: 'center center',
+              transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+            }}
           >
+            <Image
+              src={imagePath}
+              alt="Group photo"
+              width={1600}
+              height={1000}
+              className="w-full h-auto object-contain"
+              draggable={false}
+            />
+          
+            <div
+              className="absolute inset-0"
+              onMouseDown={(e) => {
+                if (e.button === 2 && zoom > 1) {
+                  // Right click for panning when zoomed
+                  e.preventDefault();
+                  setIsPanning(true);
+                  setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+                } else if (e.button === 0) {
+                  handleMouseDown(e);
+                }
+              }}
+              onMouseMove={(e) => {
+                if (isPanning) {
+                  setPan({
+                    x: e.clientX - panStart.x,
+                    y: e.clientY - panStart.y,
+                  });
+                } else {
+                  handleMouseMove(e);
+                }
+              }}
+              onMouseUp={(e) => {
+                if (isPanning) {
+                  setIsPanning(false);
+                } else {
+                  handleMouseUp();
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (isPanning) {
+                  setIsPanning(false);
+                } else {
+                  handleMouseUp();
+                }
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
             {/* Saved rectangles */}
             {rectangles.map((rect, idx) => (
               <div
@@ -530,8 +608,9 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople }: Coor
             )}
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4">
           <div className="flex gap-4">
             <button
               onClick={copyToClipboard}
