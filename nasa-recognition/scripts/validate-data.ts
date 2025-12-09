@@ -27,6 +27,7 @@ interface Person {
   category: 'staff' | 'interns' | 'girlfriend' | 'family';
   individualPhoto: string | null;
   photoLocations: PhotoLocation[];
+  hidden?: boolean;
 }
 
 interface GroupPhoto {
@@ -131,6 +132,7 @@ function validateData() {
     console.log(`   - Interns: ${data.people.filter(p => p.category === 'interns').length}`);
     console.log(`   - Girlfriend: ${data.people.filter(p => p.category === 'girlfriend').length}`);
     console.log(`   - Family: ${data.people.filter(p => p.category === 'family').length}`);
+    console.log(`   - Hidden from display: ${data.people.filter(p => p.hidden).length}`);
     console.log(`   - With individual photos: ${data.people.filter(p => p.individualPhoto).length}`);
     console.log(`   - In group photos: ${data.people.filter(p => p.photoLocations.length > 0).length}`);
     console.log(`   - Not in any photo: ${data.people.filter(p => !p.individualPhoto && p.photoLocations.length === 0).length}`);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ROCKET_CONFIG } from '@/lib/rocketConfig';
 
 /**
  * Calculate rocket rotation angle based on trajectory.
@@ -27,12 +28,12 @@ function calculateRocketRotation(
 }
 
 export default function RocketConfigPage() {
-  const [rocketSize, setRocketSize] = useState(120);
-  const [rocketSpeed, setRocketSpeed] = useState(8);
-  const [launchInterval, setLaunchInterval] = useState(60);
-  const [vibrationIntensity, setVibrationIntensity] = useState(1);
-  const [engineGlowOffsetX, setEngineGlowOffsetX] = useState(-80);
-  const [engineGlowOffsetY, setEngineGlowOffsetY] = useState(10);
+  const [rocketSize, setRocketSize] = useState<number>(ROCKET_CONFIG.ROCKET_SIZE);
+  const [rocketSpeed, setRocketSpeed] = useState<number>(ROCKET_CONFIG.ROCKET_SPEED);
+  const [launchInterval, setLaunchInterval] = useState<number>(ROCKET_CONFIG.LAUNCH_INTERVAL / 1000); // Convert to seconds
+  const [vibrationIntensity, setVibrationIntensity] = useState<number>(ROCKET_CONFIG.VIBRATION_INTENSITY);
+  const [engineGlowOffsetX, setEngineGlowOffsetX] = useState<number>(ROCKET_CONFIG.ENGINE_GLOW_OFFSET_X);
+  const [engineGlowOffsetY, setEngineGlowOffsetY] = useState<number>(ROCKET_CONFIG.ENGINE_GLOW_OFFSET_Y);
   const [isLaunching, setIsLaunching] = useState(false);
   const [position, setPosition] = useState<{
     startSide: 'left' | 'right';
@@ -57,16 +58,19 @@ export default function RocketConfigPage() {
   };
 
   const copyConfig = () => {
-    const config = `// Configuration constants
-const ROCKET_SIZE = ${rocketSize}; // Adjust this to change rocket size
-const ROCKET_SPEED = ${rocketSpeed}; // Seconds to cross screen (lower = faster)
-const LAUNCH_INTERVAL = ${launchInterval * 1000}; // ${launchInterval} seconds between launches
-const VIBRATION_INTENSITY = ${vibrationIntensity}; // Vibration/shake intensity in pixels (0 to disable)
-const ENGINE_GLOW_OFFSET_X = ${engineGlowOffsetX}; // Horizontal offset of engine glow in percentage (-200 to 200)
-const ENGINE_GLOW_OFFSET_Y = ${engineGlowOffsetY}; // Vertical offset of engine glow in percentage (-200 to 200)`;
+    const config = `// Shared rocket configuration constants
+export const ROCKET_CONFIG = {
+  ENABLE_ROCKET: true, // Set to false to disable the rocket animation
+  ROCKET_SIZE: ${rocketSize},
+  ROCKET_SPEED: ${rocketSpeed},
+  LAUNCH_INTERVAL: ${launchInterval * 1000}, // milliseconds
+  VIBRATION_INTENSITY: ${vibrationIntensity},
+  ENGINE_GLOW_OFFSET_X: ${engineGlowOffsetX},
+  ENGINE_GLOW_OFFSET_Y: ${engineGlowOffsetY},
+} as const;`;
     
     navigator.clipboard.writeText(config);
-    alert('Configuration copied to clipboard! Paste into components/SLSRocket.tsx');
+    alert('Configuration copied to clipboard! Paste into lib/rocketConfig.ts');
   };
 
   useEffect(() => {
@@ -242,16 +246,19 @@ const ENGINE_GLOW_OFFSET_Y = ${engineGlowOffsetY}; // Vertical offset of engine 
             {/* Current Values */}
             <div className="bg-slate-800 rounded-lg p-6">
               <h3 className="text-xl font-bold text-white mb-4">Current Configuration</h3>
-              <div className="bg-slate-900 rounded-lg p-4 font-mono text-sm text-slate-300">
-                <pre>{`const ROCKET_SIZE = ${rocketSize};
-const ROCKET_SPEED = ${rocketSpeed};
-const LAUNCH_INTERVAL = ${launchInterval * 1000};
-const VIBRATION_INTENSITY = ${vibrationIntensity};
-const ENGINE_GLOW_OFFSET_X = ${engineGlowOffsetX};
-const ENGINE_GLOW_OFFSET_Y = ${engineGlowOffsetY};`}</pre>
+              <div className="bg-slate-900 rounded p-4 overflow-x-auto">
+                <pre className="text-green-400 text-sm">{`export const ROCKET_CONFIG = {
+  ENABLE_ROCKET: true,
+  ROCKET_SIZE: ${rocketSize},
+  ROCKET_SPEED: ${rocketSpeed},
+  LAUNCH_INTERVAL: ${launchInterval * 1000},
+  VIBRATION_INTENSITY: ${vibrationIntensity},
+  ENGINE_GLOW_OFFSET_X: ${engineGlowOffsetX},
+  ENGINE_GLOW_OFFSET_Y: ${engineGlowOffsetY},
+} as const;`}</pre>
               </div>
               <p className="text-slate-400 text-sm mt-4">
-                Click "Copy Config" and paste these values into <code className="bg-slate-700 px-2 py-1 rounded">components/SLSRocket.tsx</code>
+                Click "Copy Config" and paste these values into <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code>
               </p>
             </div>
 
@@ -402,8 +409,8 @@ const ENGINE_GLOW_OFFSET_Y = ${engineGlowOffsetY};`}</pre>
             <li>Adjust the sliders above until you&apos;re happy with the animation</li>
             <li>Click "Launch Rocket" to test your settings in real-time</li>
             <li>Click "Copy Config" to copy the configuration code</li>
-            <li>Open <code className="bg-slate-700 px-2 py-1 rounded">components/SLSRocket.tsx</code></li>
-            <li>Replace the constants at the top of the file with your copied values</li>
+            <li>Open <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code></li>
+            <li>Replace the entire ROCKET_CONFIG object with your copied values</li>
             <li>Save the file and the changes will apply to the main page</li>
           </ol>
         </div>

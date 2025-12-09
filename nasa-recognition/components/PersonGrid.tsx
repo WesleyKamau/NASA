@@ -14,6 +14,9 @@ interface PersonGridProps {
 export default function PersonGrid({ people, groupPhotos, title }: PersonGridProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
+  // Filter out hidden people
+  const visiblePeople = people.filter(person => !person.hidden);
+
   return (
     <>
       <div className="w-full">
@@ -24,7 +27,7 @@ export default function PersonGrid({ people, groupPhotos, title }: PersonGridPro
         )}
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {people.map((person) => (
+          {visiblePeople.map((person) => (
             <PersonCard
               key={person.id}
               person={person}

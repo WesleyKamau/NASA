@@ -48,12 +48,9 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <footer className="text-center py-12 border-t border-slate-800">
-          <p className="text-slate-400 text-sm">
-            Built with ❤️ to remember an amazing internship experience
-          </p>
-          <p className="text-slate-500 text-xs mt-2">
-            Spring {new Date().getFullYear()}
+        <footer className="text-center py-8 border-t border-slate-800/50">
+          <p className="text-slate-500 text-xs">
+            NASA Interns • Spring {new Date().getFullYear()}
           </p>
         </footer>
       </main>

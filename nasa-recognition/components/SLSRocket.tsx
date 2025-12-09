@@ -2,21 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { ROCKET_CONFIG } from '@/lib/rocketConfig';
 
-// Configuration constants
-// const ROCKET_SIZE = 120; // Adjust this to change rocket size
-// const ROCKET_SPEED = 8; // Seconds to cross screen (lower = faster)
-// const LAUNCH_INTERVAL = 60000; // 60 seconds between launches
-// const VIBRATION_INTENSITY = 1; // Vibration/shake intensity in pixels (0 to disable)
-// const ENGINE_GLOW_OFFSET_X = -80; // Horizontal offset of engine glow in percentage (-200 to 200)
-// const ENGINE_GLOW_OFFSET_Y = 10; // Vertical offset of engine glow in percentage (-200 to 200)
-
-const ROCKET_SIZE = 120;
-const ROCKET_SPEED = 8;
-const LAUNCH_INTERVAL = 60000;
-const VIBRATION_INTENSITY = 1;
-const ENGINE_GLOW_OFFSET_X = 0;
-const ENGINE_GLOW_OFFSET_Y = 200;
+// Destructure config for easier access
+const {
+  ENABLE_ROCKET,
+  ROCKET_SIZE,
+  ROCKET_SPEED,
+  LAUNCH_INTERVAL,
+  VIBRATION_INTENSITY,
+  ENGINE_GLOW_OFFSET_X,
+  ENGINE_GLOW_OFFSET_Y,
+} = ROCKET_CONFIG;
 
 interface RocketPosition {
   startSide: 'left' | 'right';
@@ -64,6 +61,8 @@ export default function SLSRocket() {
   const [position, setPosition] = useState<RocketPosition | null>(null);
 
   useEffect(() => {
+    if (!ENABLE_ROCKET) return;
+    
     const scheduleLaunch = () => {
       // Randomly choose which side to start from
       const startSide: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
@@ -102,7 +101,7 @@ export default function SLSRocket() {
     };
   }, []);
 
-  if (!isLaunching || !position) return null;
+  if (!ENABLE_ROCKET || !isLaunching || !position) return null;
 
   const { startSide, startY, endY, rotation } = position;
 

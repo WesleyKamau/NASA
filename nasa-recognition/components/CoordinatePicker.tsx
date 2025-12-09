@@ -10,6 +10,8 @@ interface CoordinatePickerProps {
   allPeople: Person[];
   groupPhotos: Array<{ id: string; name: string; imagePath: string; category: string }>;
   rectangles: Rectangle[];
+  initialRectangleIds: Set<string>;
+  hideInitialRectangles: boolean;
   onRectanglesChange: (rectangles: Rectangle[]) => void;
   onToggleProfilePhoto: (personId: string, photoId: string) => void;
 }
@@ -27,7 +29,7 @@ interface Rectangle {
   description?: string;
 }
 
-export default function CoordinatePicker({ imagePath, photoId, allPeople, groupPhotos, rectangles, onRectanglesChange, onToggleProfilePhoto }: CoordinatePickerProps) {
+export default function CoordinatePicker({ imagePath, photoId, allPeople, groupPhotos, rectangles, initialRectangleIds, hideInitialRectangles, onRectanglesChange, onToggleProfilePhoto }: CoordinatePickerProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [currentRect, setCurrentRect] = useState<{
@@ -469,7 +471,14 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
               onContextMenu={(e) => e.preventDefault()}
             >
             {/* Saved rectangles */}
-            {rectangles.map((rect, idx) => (
+            {rectangles.map((rect, idx) => {
+              const isInitialRect = initialRectangleIds.has(`${rect.personId}-${rect.photoId}`);
+              const isHidden = hideInitialRectangles && isInitialRect;
+              
+              // Don't render hidden rectangles at all
+              if (isHidden) return null;
+              
+              return (
               <div
                 key={idx}
                 className="absolute border-2 border-green-400 bg-green-400/20 group cursor-move"
@@ -601,7 +610,8 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                   }}
                 />
               </div>
-            ))}
+              );
+            })}
 
             {/* Current drawing rectangle */}
             {isDrawing && currentRect && (
@@ -684,7 +694,10 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
             {!isCreatingNew ? (
               <>
                 <div className="max-h-96 overflow-y-auto space-y-1 mb-4">
-                  {filteredPeople.map((person, idx) => (
+                  {filteredPeople.map((person, idx) => {
+                    const alreadyMapped = rectangles.some(r => r.personId === person.id);
+                    
+                    return (
                     <button
                       key={person.id}
                       onClick={() => handlePersonSelect(person)}
@@ -694,10 +707,18 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                           : 'bg-slate-700 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
-                      <div className="font-semibold">{person.name}</div>
-                      <div className="text-xs opacity-75">{person.category} • {person.description}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-semibold">{person.name}</div>
+                          <div className="text-xs opacity-75">{person.category} • {person.description}</div>
+                        </div>
+                        {alreadyMapped && (
+                          <div className="ml-2 text-green-400 text-sm font-semibold">✓ Mapped</div>
+                        )}
+                      </div>
                     </button>
-                  ))}
+                    );
+                  })}
                   {filteredPeople.length === 0 && (
                     <div className="text-center text-slate-400 py-4">
                       No matching people found

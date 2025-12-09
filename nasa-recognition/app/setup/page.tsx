@@ -21,12 +21,17 @@ interface Rectangle {
 export default function SetupPage() {
   const data = getPeopleData();
   const [allRectangles, setAllRectangles] = useState<Rectangle[]>([]);
+  const [initialRectangleIds, setInitialRectangleIds] = useState<Set<string>>(new Set());
+  const [showExistingRectangles, setShowExistingRectangles] = useState(true);
 
   // Load all existing coordinates on mount
   useEffect(() => {
     const existingRects: Rectangle[] = [];
+    const initialIds = new Set<string>();
     data.people.forEach(person => {
       person.photoLocations.forEach(location => {
+        const rectId = `${person.id}-${location.photoId}`;
+        initialIds.add(rectId);
         existingRects.push({
           x: location.x,
           y: location.y,
@@ -40,6 +45,7 @@ export default function SetupPage() {
       });
     });
     setAllRectangles(existingRects);
+    setInitialRectangleIds(initialIds);
   }, []);
 
   const handleRectanglesChange = (photoId: string, rectangles: Rectangle[]) => {
@@ -139,9 +145,22 @@ export default function SetupPage() {
           <h1 className="text-4xl font-bold text-white mb-4">
             Photo Coordinate Setup
           </h1>
-          <p className="text-slate-400">
+          <p className="text-slate-400 mb-6">
             Use this tool to map face locations in your group photos. Existing coordinates are loaded automatically.
           </p>
+          
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowExistingRectangles(!showExistingRectangles)}
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                showExistingRectangles
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {showExistingRectangles ? '👁️ Existing Rectangles Visible' : '👁️‍🗨️ Existing Rectangles Hidden'}
+            </button>
+          </div>
         </header>
 
         <div className="space-y-12">
@@ -156,6 +175,8 @@ export default function SetupPage() {
                 allPeople={data.people}
                 groupPhotos={data.groupPhotos}
                 rectangles={allRectangles.filter(r => r.photoId === photo.id)}
+                initialRectangleIds={initialRectangleIds}
+                hideInitialRectangles={!showExistingRectangles}
                 onRectanglesChange={(rects) => handleRectanglesChange(photo.id, rects)}
                 onToggleProfilePhoto={toggleProfilePhoto}
               />

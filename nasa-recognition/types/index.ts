@@ -16,6 +16,7 @@ export interface Person {
   individualPhoto: string | null;
   photoLocations: PhotoLocation[];
   preferredPhotoId?: string; // Which group photo to use as their display image
+  hidden?: boolean; // Hide from front-end grid display
 }
 
 export interface GroupPhoto {
