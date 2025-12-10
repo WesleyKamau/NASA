@@ -156,177 +156,26 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
   }, [isAutoHighlighting]);
 
-  // Dynamic label positioning with collision avoidance
+  // Dynamic label positioning - simple stable placement above faces
   useEffect(() => {
     if (!containerRef.current || containerDimensions.width === 0) return;
-
-    // Helper to check if viewport center is inside expanded face hitbox
-    const isInsideExpandedHitbox = (person: Person) => {
-      const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
-      if (!location) return false;
-
-      const rect = containerRef.current!.getBoundingClientRect();
-      const imageCenterOffsetX = -position.x / (rect.width * scale) * 100;
-      const imageCenterOffsetY = -position.y / (rect.height * scale) * 100;
-      
-      const visibleCenterX = 50 + imageCenterOffsetX;
-      const visibleCenterY = 50 + imageCenterOffsetY;
-      
-      // Calculate expanded hitbox
-      const expandedX = location.x - FACE_HITBOX_PADDING / 2;
-      const expandedY = location.y - FACE_HITBOX_PADDING / 2;
-      const expandedWidth = location.width + FACE_HITBOX_PADDING;
-      const expandedHeight = location.height + FACE_HITBOX_PADDING;
-      
-      // Check if center point is inside the expanded box
-      return visibleCenterX >= expandedX && 
-             visibleCenterX <= expandedX + expandedWidth &&
-             visibleCenterY >= expandedY && 
-             visibleCenterY <= expandedY + expandedHeight;
-    };
-    
-    // Helper to calculate distance from viewport center (for sorting when multiple overlap)
-    const getDistanceFromCenter = (person: Person) => {
-      const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
-      if (!location) return Infinity;
-
-      const personCenterX = location.x + location.width / 2;
-      const personCenterY = location.y + location.height / 2;
-      
-      const rect = containerRef.current!.getBoundingClientRect();
-      const imageCenterOffsetX = -position.x / (rect.width * scale) * 100;
-      const imageCenterOffsetY = -position.y / (rect.height * scale) * 100;
-      
-      const visibleCenterX = 50 + imageCenterOffsetX;
-      const visibleCenterY = 50 + imageCenterOffsetY;
-      
-      const dx = personCenterX - visibleCenterX;
-      const dy = personCenterY - visibleCenterY;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-
-    let visiblePeople: Person[] = [];
-
-    if (isAutoHighlighting) {
-      // In auto mode, just show the highlighted person
-      const current = shuffledPeople[highlightedPersonIndex];
-      if (current) visiblePeople = [current];
-    } else {
-      // In manual/zoom mode, show people whose expanded hitbox contains the viewport center
-      visiblePeople = shuffledPeople
-        .filter(person => isInsideExpandedHitbox(person))
-        .map(person => ({ person, distance: getDistanceFromCenter(person) }))
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, MAX_VISIBLE_LABELS)
-        .map(item => item.person);
-    }
-
-    if (visiblePeople.length === 0) {
-      setLabelOffsets({});
-      return;
-    }
-
-    // Skip label calculation while dragging to improve performance and prevent update loops
     if (isDragging) return;
 
-    // Calculate stable positions immediately without physics simulation
-    setLabelOffsets(prev => {
-      const newOffsets: Record<string, { x: number; y: number }> = {};
-      
-      visiblePeople.forEach(person => {
+    // Place labels in a consistent position above each face; keep simple to avoid jitter
+    setLabelOffsets(() => {
+      const offsets: Record<string, { x: number; y: number }> = {};
+      shuffledPeople.forEach(person => {
         const loc = person.photoLocations.find(l => l.photoId === currentPhoto.id);
         if (!loc) return;
-        
-        const imgW = containerDimensions.width;
+
         const imgH = containerDimensions.height;
-        const faceX = (loc.x + loc.width / 2) / 100 * imgW;
-        const faceY = (loc.y + loc.height / 2) / 100 * imgH;
-        const faceW = loc.width / 100 * imgW;
-        const faceH = loc.height / 100 * imgH;
-        
-        // Estimate label dimensions
-        const estimatedFontSize = 14;
-        const charWidth = estimatedFontSize * 0.75;
-        const paddingX = estimatedFontSize * 0.9 * 2;
-        const labelWidth = person.name.length * charWidth + paddingX;
-        const labelHeight = estimatedFontSize + (estimatedFontSize * 0.4 * 2);
-        const halfLabelW = labelWidth / 2;
-        const halfLabelH = labelHeight / 2;
-        
-        // Check each direction for obstacles
-        const checkDirection = (dx: number, dy: number, distance: number) => {
-          const testX = faceX + dx * distance;
-          const testY = faceY + dy * distance;
-          
-          // Check if position is in bounds
-          const edgePadding = 15;
-          if (testX - halfLabelW < edgePadding || testX + halfLabelW > imgW - edgePadding ||
-              testY - halfLabelH < edgePadding || testY + halfLabelH > imgH - edgePadding) {
-            return false;
-          }
-          
-          // Check for face collisions
-          for (const p of shuffledPeople) {
-            const pLoc = p.photoLocations.find(l => l.photoId === currentPhoto.id);
-            if (!pLoc) continue;
-            
-            const pX = pLoc.x / 100 * imgW;
-            const pY = pLoc.y / 100 * imgH;
-            const pW = pLoc.width / 100 * imgW;
-            const pH = pLoc.height / 100 * imgH;
-            
-            // Box collision check with padding
-            const padding = 15;
-            const labelLeft = testX - halfLabelW;
-            const labelRight = testX + halfLabelW;
-            const labelTop = testY - halfLabelH;
-            const labelBottom = testY + halfLabelH;
-            
-            if (labelRight + padding > pX && labelLeft - padding < pX + pW &&
-                labelBottom + padding > pY && labelTop - padding < pY + pH) {
-              return false;
-            }
-          }
-          
-          return true;
-        };
-        
-        // Try different directions with preference order
-        const directions = [
-          { dx: 0, dy: 1, dist: faceH / 2 + 40 },   // Below
-          { dx: 0, dy: -1, dist: faceH / 2 + 40 },  // Above
-          { dx: 1, dy: 0, dist: faceW / 2 + 45 },   // Right
-          { dx: -1, dy: 0, dist: faceW / 2 + 45 },  // Left
-          { dx: 1, dy: 1, dist: 55 },               // Bottom-right
-          { dx: -1, dy: 1, dist: 55 },              // Bottom-left
-          { dx: 1, dy: -1, dist: 55 },              // Top-right
-          { dx: -1, dy: -1, dist: 55 },             // Top-left
-        ];
-        
-        let foundClear = false;
-        for (const dir of directions) {
-          if (checkDirection(dir.dx, dir.dy, dir.dist)) {
-            newOffsets[person.id] = { 
-              x: dir.dx * dir.dist, 
-              y: dir.dy * dir.dist 
-            };
-            foundClear = true;
-            break;
-          }
-        }
-        
-        if (!foundClear) {
-          // Fallback: position below
-          newOffsets[person.id] = { x: 0, y: 50 };
-        }
+        const faceH = (loc.height / 100) * imgH;
+        const verticalOffset = Math.max(36, faceH * 0.9); // px above face center
+        offsets[person.id] = { x: 0, y: -verticalOffset };
       });
-      
-      return newOffsets;
+      return offsets;
     });
-
-  }, [shuffledPeople, currentPhoto, highlightedPersonIndex, isAutoHighlighting, scale, position, containerDimensions]);
-
-  const pauseAutoScroll = useCallback(() => {
+  }, [shuffledPeople, currentPhoto, containerDimensions, isDragging]);  const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);
     
     if (cooldownTimer.current) {
@@ -746,8 +595,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   return sortedByDistance.some(item => item.id === person.id);
                 })();
 
-                // Get dynamic label offset
-                const offset = labelOffsets[person.id] || { x: 0, y: 0 };
+                // Get stable label offset (positioned above face)
+                const offset = labelOffsets[person.id] || { x: 0, y: -48 };
                 
                 // Calculate expanded hitbox for debugging
                 const expandedLocation = {
@@ -853,88 +702,30 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                           className="absolute pointer-events-none overflow-visible"
                           style={{
                             left: '50%',
-                            top: '50%',
-                            width: `${Math.abs(offset.x) + 100}px`,
-                            height: `${Math.abs(offset.y) + 100}px`,
-                            transform: 'translate(-50%, -50%)',
+                            top: '0%',
+                            width: '1px',
+                            height: `${Math.abs(offset.y)}px`,
+                            transform: 'translate(-50%, 0)'
                           }}
                         >
-                          {/* Calculate where line should start from rectangle edge */}
-                          {(() => {
-                            const centerX = (Math.abs(offset.x) + 100) / 2;
-                            const centerY = (Math.abs(offset.y) + 100) / 2;
-                            
-                            // Calculate rectangle dimensions in pixels
-                            const imgW = containerDimensions.width;
-                            const imgH = containerDimensions.height;
-                            
-                            // If dimensions aren't ready, fallback to percentage-ish logic or hide
-                            if (imgW === 0 || imgH === 0) return null;
-                            
-                            const rectPixelW = location.width / 100 * imgW;
-                            const rectPixelH = location.height / 100 * imgH;
-                            
-                            const rectHalfW = rectPixelW / 2;
-                            const rectHalfH = rectPixelH / 2;
-                            
-                            // Find intersection point on rectangle edge
-                            let startX = centerX;
-                            let startY = centerY;
-                            
-                            // Check slope to determine which edge is intersected
-                            // Slope of diagonal: rectHalfH / rectHalfW
-                            // Slope of offset: Math.abs(offset.y) / Math.abs(offset.x)
-                            
-                            // Avoid division by zero
-                            const offsetX = offset.x === 0 ? 0.001 : offset.x;
-                            const offsetY = offset.y === 0 ? 0.001 : offset.y;
-                            
-                            if (Math.abs(offsetY / offsetX) < (rectHalfH / rectHalfW)) {
-                              // Intersects left or right edge
-                              // x = +/- rectHalfW
-                              // y = x * (offsetY / offsetX)
-                              const xSign = offsetX > 0 ? 1 : -1;
-                              const dx = rectHalfW * xSign;
-                              const dy = dx * (offsetY / offsetX);
-                              
-                              startX = centerX + dx;
-                              startY = centerY + dy;
-                            } else {
-                              // Intersects top or bottom edge
-                              // y = +/- rectHalfH
-                              // x = y * (offsetX / offsetY)
-                              const ySign = offsetY > 0 ? 1 : -1;
-                              const dy = rectHalfH * ySign;
-                              const dx = dy * (offsetX / offsetY);
-                              
-                              startX = centerX + dx;
-                              startY = centerY + dy;
-                            }
-                            
-                            const endX = centerX + offset.x;
-                            const endY = centerY + offset.y;
-                            
-                            return (
-                              <path
-                                d={`M ${startX} ${startY} L ${endX} ${endY}`}
-                                stroke={isHighlighted ? '#FBBF24' : '#FFFFFF'}
-                                strokeWidth="2"
-                                fill="none"
-                                opacity="0.7"
-                              />
-                            );
-                          })()}
+                          <path
+                            d={`M 0 0 L 0 ${Math.abs(offset.y)}`}
+                            stroke={isHighlighted ? '#FBBF24' : '#FFFFFF'}
+                            strokeWidth="2"
+                            fill="none"
+                            opacity="0.7"
+                          />
                         </svg>
                         
                         {/* Name tag - positioned outside rectangle */}
                         <div 
                           className="absolute whitespace-nowrap"
                           style={{ 
-                            top: '50%',
+                            top: '0%',
                             left: '50%',
-                            transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${1 / scale})`,
+                            transform: `translate(-50%, ${offset.y}px) scale(${1 / scale})`,
                             transformOrigin: 'center',
-                            transition: 'transform 0.1s ease-out',
+                            transition: 'transform 0.12s ease-out',
                           }}
                         >
                           <div 
