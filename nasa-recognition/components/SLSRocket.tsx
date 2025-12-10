@@ -15,20 +15,21 @@ const {
   ENGINE_GLOW_OFFSET_Y,
 } = ROCKET_CONFIG;
 
+// Calculate glow size based on rocket size (approx 50% of rocket width)
+const GLOW_SIZE = ROCKET_SIZE * 0.53;
+
 interface RocketPosition {
   startSide: 'left' | 'right';
-  startY: number;
-  endY: number;
+  startY: number; // pixels
+  endY: number; // pixels
   rotation: number;
 }
 
 /**
  * Calculate rocket rotation angle based on trajectory.
- * The rocket image points upward (north = 0°), so we calculate the angle
- * to point the rocket in the direction of travel.
  * @param startSide - Which side the rocket starts from
- * @param startY - Starting Y position (percentage)
- * @param endY - Ending Y position (percentage)
+ * @param startY - Starting Y position (pixels)
+ * @param endY - Ending Y position (pixels)
  * @returns Rotation angle in degrees (0° = north/up)
  */
 function calculateRocketRotation(
@@ -37,20 +38,13 @@ function calculateRocketRotation(
   endY: number
 ): number {
   // Calculate the trajectory vector
-  // X: positive if going right, negative if going left
-  // Y: positive if going down (CSS coordinates), negative if going up
-  const deltaX = startSide === 'left' ? 100 : -100;
-  const deltaY = -(endY - startY); // Negate to reflect across x-axis
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+  // The rocket travels from -150px to 100vw + 150px, so total X distance is viewportWidth + 300
+  const totalDistanceX = viewportWidth + 300;
+  const deltaX = startSide === 'left' ? totalDistanceX : -totalDistanceX;
+  const deltaY = endY - startY; // Positive when going down, negative when going up
   
-  // atan2(y, x) gives angle from positive X-axis (east)
-  // We need to convert this to rotation from north (up)
-  // atan2 returns [-π, π], with 0 = east, π/2 = south, -π/2 = north, ±π = west
   const angleFromEast = Math.atan2(deltaY, deltaX);
-  
-  // Convert to degrees and adjust:
-  // - atan2 measures from east (0°)
-  // - We need rotation from north (0°)
-  // - North is -90° from east, so we add 90° to convert
   const rotation = (angleFromEast * 180 / Math.PI) + 90;
   
   return rotation;
@@ -59,20 +53,65 @@ function calculateRocketRotation(
 export default function SLSRocket() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [position, setPosition] = useState<RocketPosition | null>(null);
+  const [pageHeight, setPageHeight] = useState(0);
+
+  // Get total page height on mount and window resize
+  useEffect(() => {
+    const updatePageHeight = () => {
+      setPageHeight(document.documentElement.scrollHeight);
+    };
+    
+    updatePageHeight();
+    window.addEventListener('resize', updatePageHeight);
+    
+    // Also update when content loads
+    const interval = setInterval(updatePageHeight, 1000);
+    const timeoutId = setTimeout(() => clearInterval(interval), 5000);
+    
+    return () => {
+      window.removeEventListener('resize', updatePageHeight);
+      clearInterval(interval);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   useEffect(() => {
-    if (!ENABLE_ROCKET) return;
+    if (!ENABLE_ROCKET || pageHeight === 0) return;
     
     const scheduleLaunch = () => {
+      console.log('🚀 SLS Rocket Launch Initiated');
+      
+      // Get current scroll position
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const viewportHeight = window.innerHeight;
+      
+      console.log('📊 Scroll Info:', {
+        scrollY,
+        viewportHeight,
+        pageHeight,
+        visibleStart: scrollY,
+        visibleEnd: scrollY + viewportHeight
+      });
+      
       // Randomly choose which side to start from
       const startSide: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
       
-      // Random Y positions (0-100% of screen height)
-      const startY = Math.random() * 100;
-      const endY = Math.random() * 100;
+      // Random Y positions in pixels (within current viewport)
+      const startY = scrollY + (Math.random() * viewportHeight);
+      const endY = scrollY + (Math.random() * viewportHeight);
+      
+      console.log('📍 Rocket Positions:', {
+        startSide,
+        startY: `${startY.toFixed(2)}px`,
+        endY: `${endY.toFixed(2)}px`,
+        startYRelativeToViewport: `${(startY - scrollY).toFixed(2)}px`,
+        endYRelativeToViewport: `${(endY - scrollY).toFixed(2)}px`
+      });
       
       // Calculate rotation to match trajectory
       const rotation = calculateRocketRotation(startSide, startY, endY);
+      
+      console.log('🔄 Rocket Rotation:', `${rotation.toFixed(2)}°`);
 
       setPosition({
         startSide,
@@ -82,11 +121,13 @@ export default function SLSRocket() {
       });
       
       setIsLaunching(true);
+      console.log('✅ Rocket Launch Scheduled');
 
       // Reset after animation completes
       setTimeout(() => {
         setIsLaunching(false);
-      }, ROCKET_SPEED * 1000);
+        console.log('🏁 Rocket Animation Complete');
+      }, (ROCKET_SPEED * 1000) + 500); // Add 500ms buffer to ensure it's off screen
     };
 
     // Initial launch after 5 seconds
@@ -99,7 +140,7 @@ export default function SLSRocket() {
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, []);
+  }, [pageHeight]);
 
   if (!ENABLE_ROCKET || !isLaunching || !position) return null;
 
@@ -107,44 +148,50 @@ export default function SLSRocket() {
 
   return (
     <div
-      className="fixed pointer-events-none z-10"
+      className="absolute pointer-events-none z-0"
       style={{
         width: `${ROCKET_SIZE}px`,
         height: `${ROCKET_SIZE * 2}px`,
-        bottom: `${startY}vh`,
+        top: `${startY}px`,
+        willChange: 'transform',
         left: startSide === 'left' ? '-150px' : 'auto',
         right: startSide === 'right' ? '-150px' : 'auto',
+        transform: `rotate(${rotation}deg)`,
         animation: `
-          ${startSide === 'left' ? `flyRight-${startY}-${endY}` : `flyLeft-${startY}-${endY}`} ${ROCKET_SPEED}s linear forwards,
+          ${startSide === 'left' ? 'flyRightPixels' : 'flyLeftPixels'} ${ROCKET_SPEED}s linear forwards,
           rocketVibrate 0.1s infinite
         `,
-        '--start-y': `${startY}vh`,
-        '--end-y': `${endY}vh`,
-        '--rotation': `${rotation}deg`,
-        '--vibration': `${VIBRATION_INTENSITY}px`,
-      } as React.CSSProperties & { '--start-y': string; '--end-y': string; '--rotation': string; '--vibration': string }}
+      }}
     >
       <style jsx>{`
-        @keyframes flyRight-${startY}-${endY} {
+        @keyframes flyRightPixels {
           from {
             left: -150px;
-            bottom: ${startY}vh;
+            top: ${startY}px;
           }
           to {
-            left: calc(100vw + 150px);
-            bottom: ${endY}vh;
+            left: calc(100vw + 300px);
+            top: ${endY}px;
           }
         }
 
-        @keyframes flyLeft-${startY}-${endY} {
+        @keyframes flyLeftPixels {
           from {
             right: -150px;
-            bottom: ${startY}vh;
+            top: ${startY}px;
           }
           to {
-            right: calc(100vw + 150px);
-            bottom: ${endY}vh;
+            right: calc(100vw + 300px);
+            top: ${endY}px;
           }
+        }
+
+        @keyframes rocketVibrate {
+          0% { transform: rotate(${rotation}deg) translate(0, 0); }
+          25% { transform: rotate(${rotation}deg) translate(${VIBRATION_INTENSITY}px, -${VIBRATION_INTENSITY}px); }
+          50% { transform: rotate(${rotation}deg) translate(-${VIBRATION_INTENSITY}px, ${VIBRATION_INTENSITY}px); }
+          75% { transform: rotate(${rotation}deg) translate(${VIBRATION_INTENSITY}px, ${VIBRATION_INTENSITY}px); }
+          100% { transform: rotate(${rotation}deg) translate(0, 0); }
         }
       `}</style>
       
@@ -154,13 +201,18 @@ export default function SLSRocket() {
         width={ROCKET_SIZE}
         height={ROCKET_SIZE * 2}
         className="drop-shadow-2xl"
+        style={{ height: 'auto' }}
         priority={false}
       />
       
       {/* Engine glow effect */}
       <div 
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-16 bg-orange-500/60 blur-xl animate-pulse"
-        style={{ transform: `translateX(${ENGINE_GLOW_OFFSET_X}%) translateY(${ENGINE_GLOW_OFFSET_Y}%)` }}
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-orange-500/60 blur-xl animate-pulse"
+        style={{ 
+          width: `${GLOW_SIZE}px`,
+          height: `${GLOW_SIZE}px`,
+          transform: `translateX(${ENGINE_GLOW_OFFSET_X}%) translateY(${ENGINE_GLOW_OFFSET_Y}%)` 
+        }}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Star {
   x: number;
@@ -12,6 +12,7 @@ interface Star {
 
 export default function StarfieldBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -70,6 +71,9 @@ export default function StarfieldBackground() {
     };
 
     animate();
+    
+    // Fade in after initialization
+    setIsLoaded(true);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
@@ -80,7 +84,7 @@ export default function StarfieldBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
+      className={`fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       style={{ background: 'linear-gradient(to bottom, #030712, #0f172a)' }}
     />
   );

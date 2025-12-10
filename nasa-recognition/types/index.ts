@@ -28,6 +28,8 @@ export interface GroupPhoto {
   category: Category;
   width: number;
   height: number;
+  defaultZoom?: number; // Default zoom level when zoom button is pressed (default: 2.0)
+  zoomTranslation?: { x: number; y: number }; // Translation offset when zooming (in pixels)
 }
 
 export interface PeopleData {

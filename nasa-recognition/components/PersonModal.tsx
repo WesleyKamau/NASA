@@ -15,77 +15,102 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleEscape);
+    };
   }, [onClose]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6 max-w-2xl w-full shadow-2xl shadow-blue-500/20 animate-scaleIn"
+        className="relative bg-gradient-to-br from-slate-800 to-slate-900 border-t sm:border border-slate-700 rounded-t-2xl sm:rounded-xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl shadow-blue-500/20 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600/50 text-white transition-colors"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600/50 active:bg-slate-600/70 text-white transition-colors touch-manipulation z-10"
           aria-label="Close"
         >
-          ✕
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Photo */}
-          <div className="w-full md:w-1/3 aspect-square rounded-lg overflow-hidden bg-slate-800/50 relative flex-shrink-0">
-            <PersonImage person={person} groupPhotos={groupPhotos} className="text-6xl" />
-          </div>
+        {/* Swipe indicator for mobile */}
+        <div className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-600 rounded-full" />
 
-          {/* Info */}
-          <div className="flex-1 flex flex-col">
-            <div className="mb-2">
-              <span className={`text-xs px-3 py-1 rounded-full ${
-                person.category === 'staff' 
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
-                  : person.category === 'girlfriend'
-                    ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
-                    : person.category === 'family'
-                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                      : person.category === 'sil-lab'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-              }`}>
-                {person.category === 'sil-lab' ? 'SIL Lab' : person.category}
-              </span>
+        <div className="flex flex-col gap-6 pt-4 sm:pt-0">
+          {/* Photo and basic info */}
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Photo */}
+            <div className="w-full sm:w-48 aspect-square rounded-xl overflow-hidden bg-slate-800/50 relative flex-shrink-0 mx-auto sm:mx-0 max-w-xs">
+              <PersonImage person={person} groupPhotos={groupPhotos} className="text-5xl sm:text-6xl" />
             </div>
 
-            <h2 className="text-3xl font-bold text-white mb-4">
-              {person.name}
-            </h2>
+            {/* Info */}
+            <div className="flex-1 flex flex-col">
+              <div className="mb-3">
+                <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-full inline-block ${
+                  person.category === 'staff' 
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                    : person.category === 'girlfriend'
+                      ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
+                      : person.category === 'family'
+                        ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                        : person.category === 'sil-lab'
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                          : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                }`}>
+                  {person.category === 'sil-lab' ? 'SIL Lab' : person.category}
+                </span>
+              </div>
 
-            <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
-              <p className="text-slate-300 text-lg leading-relaxed">
-                {person.description}
-              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+                {person.name}
+              </h2>
+
+              {person.description && (
+                <div className="bg-slate-800/50 rounded-lg p-4 mb-4 flex-grow">
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
+                    {person.description}
+                  </p>
+                </div>
+              )}
             </div>
-
-            {/* LinkedIn */}
-            {person.linkedIn && (
-              <a
-                href={person.linkedIn}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                </svg>
-                View LinkedIn Profile
-              </a>
-            )}
           </div>
+
+          {/* LinkedIn - full width on mobile */}
+          {person.linkedIn && (
+            <a
+              href={person.linkedIn}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium touch-manipulation"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              View LinkedIn Profile
+            </a>
+          )}
+
+          {/* Close button at bottom for mobile */}
+          <button
+            onClick={onClose}
+            className="sm:hidden w-full py-3 bg-slate-700/50 hover:bg-slate-600/50 active:bg-slate-600/70 text-white rounded-lg transition-colors font-medium touch-manipulation"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

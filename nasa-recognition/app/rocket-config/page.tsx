@@ -61,7 +61,7 @@ export default function RocketConfigPage() {
     const config = `// Shared rocket configuration constants
 export const ROCKET_CONFIG = {
   ENABLE_ROCKET: true, // Set to false to disable the rocket animation
-  ROCKET_SIZE: ${rocketSize},
+  ROCKET_SIZE: ${rocketSize}, // Controls the entire size of the rocket and glow
   ROCKET_SPEED: ${rocketSpeed},
   LAUNCH_INTERVAL: ${launchInterval * 1000}, // milliseconds
   VIBRATION_INTENSITY: ${vibrationIntensity},
@@ -106,7 +106,7 @@ export const ROCKET_CONFIG = {
               {/* Rocket Size */}
               <div className="mb-6">
                 <label className="block text-white font-semibold mb-2">
-                  Rocket Size: {rocketSize}px
+                  Rocket Size: {rocketSize}px (controls glow)
                 </label>
                 <input
                   type="range"
@@ -249,7 +249,7 @@ export const ROCKET_CONFIG = {
               <div className="bg-slate-900 rounded p-4 overflow-x-auto">
                 <pre className="text-green-400 text-sm">{`export const ROCKET_CONFIG = {
   ENABLE_ROCKET: true,
-  ROCKET_SIZE: ${rocketSize},
+  ROCKET_SIZE: ${rocketSize}, // Controls the entire size of the rocket and glow
   ROCKET_SPEED: ${rocketSpeed},
   LAUNCH_INTERVAL: ${launchInterval * 1000},
   VIBRATION_INTENSITY: ${vibrationIntensity},
@@ -379,12 +379,17 @@ export const ROCKET_CONFIG = {
                     width={rocketSize}
                     height={rocketSize * 2}
                     className="drop-shadow-2xl"
+                    style={{ height: 'auto' }}
                   />
                   
                   {/* Engine glow */}
                   <div 
-                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-16 bg-orange-500/60 blur-xl animate-pulse"
-                    style={{ transform: `translateX(${engineGlowOffsetX}%) translateY(${engineGlowOffsetY}%)` }}
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-orange-500/60 blur-xl animate-pulse"
+                    style={{ 
+                      width: `${rocketSize * 0.53}px`,
+                      height: `${rocketSize * 0.53}px`,
+                      transform: `translateX(${engineGlowOffsetX}%) translateY(${engineGlowOffsetY}%)` 
+                    }}
                   />
                 </div>
               )}

@@ -16,6 +16,7 @@ interface Rectangle {
   useAsProfilePhoto?: boolean;
   category?: Category;
   description?: string;
+  rotation?: number;
 }
 
 export default function SetupPage() {

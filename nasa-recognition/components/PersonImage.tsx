@@ -21,6 +21,7 @@ export default function PersonImage({ person, groupPhotos, className = '' }: Per
         src={imageInfo.src}
         alt={person.name}
         fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         className={`object-cover ${className}`}
         onError={() => setImageError(true)}
       />

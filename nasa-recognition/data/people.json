@@ -1562,25 +1562,30 @@
       "id": "staff-photo",
       "name": "Staff Photo",
       "imagePath": "/photos/staff-group.jpg",
-      "category": "staff"
+      "category": "staff",
+      "defaultZoom": 1.5
     },
     {
       "id": "interns-photo",
       "name": "Interns Photo",
       "imagePath": "/photos/interns-group.jpg",
-      "category": "interns"
+      "category": "interns",
+      "defaultZoom": 2.0,
+      "zoomTranslation": { "x": 0, "y": -100 }
     },
     {
       "id": "family-photo",
       "name": "Family Photo",
       "imagePath": "/photos/family-group.jpg",
-      "category": "staff"
+      "category": "staff",
+      "defaultZoom": 1.5
     },
     {
       "id": "pathways-photo",
       "name": "Pathways Photo",
       "imagePath": "/photos/pathways-group.jpg",
-      "category": "interns"
+      "category": "interns",
+      "defaultZoom": 1.5
     }
   ]
 }
