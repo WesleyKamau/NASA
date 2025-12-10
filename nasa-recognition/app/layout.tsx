@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nasa-internship-recognition.vercel.app'),
   title: "NASA Internship Recognition",
   description: "Recognizing the amazing people from my NASA internship experience",
   icons: {

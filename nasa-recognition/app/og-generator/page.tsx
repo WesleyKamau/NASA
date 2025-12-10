@@ -57,12 +57,12 @@ function GeneratorContent() {
     };
   }, []);
 
-  const [position, setPosition] = useState({ x: OG_IMAGE_CONFIG.rocketPosition.x, y: OG_IMAGE_CONFIG.rocketPosition.y });
-  const [rotation, setRotation] = useState(OG_IMAGE_CONFIG.rocketRotation);
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: OG_IMAGE_CONFIG.rocketPosition.x, y: OG_IMAGE_CONFIG.rocketPosition.y });
+  const [rotation, setRotation] = useState<number>(OG_IMAGE_CONFIG.rocketRotation);
   const [rocketSize, setRocketSize] = useState<number>(OG_IMAGE_CONFIG.rocketSize);
-  const [fontFamily, setFontFamily] = useState(OG_IMAGE_CONFIG.fontFamily);
-  const [fontSize, setFontSize] = useState(OG_IMAGE_CONFIG.fontSize);
-  const [isBold, setIsBold] = useState(OG_IMAGE_CONFIG.isBold);
+  const [fontFamily, setFontFamily] = useState<string>(OG_IMAGE_CONFIG.fontFamily);
+  const [fontSize, setFontSize] = useState<{ line1: number; line2: number }>(OG_IMAGE_CONFIG.fontSize);
+  const [isBold, setIsBold] = useState<boolean>(OG_IMAGE_CONFIG.isBold);
   const [availableFonts, setAvailableFonts] = useState(FONTS);
   const [isDragging, setIsDragging] = useState(false);
   
