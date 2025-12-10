@@ -12,8 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nasa-internship-recognition.vercel.app'),
+  metadataBase: new URL(getBaseUrl()),
   title: "MSFC Book of Faces",
   description: "Recognizing the amazing people from my NASA internship experience",
   icons: {
@@ -27,28 +33,35 @@ export const metadata: Metadata = {
     ],
     shortcut: '/favicon.png',
   },
-  openGraph: {
-    title: "NASA Internship Recognition",
-    description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
-    url: "https://yourwebsite.com",
-    siteName: "NASA Internship Recognition",
-    images: [
-      {
-        url: '/og-preview.png',
-        width: 1200,
-        height: 630,
-        alt: 'NASA Internship Recognition Preview',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: "NASA Internship Recognition",
-    description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
-    images: ['/og-preview.png'],
-  },
+  openGraph: ((): Metadata['openGraph'] => {
+    const base = getBaseUrl();
+    const img = `${base}/og-preview.png`;
+    return {
+      title: "MSFC Book of Faces",
+      description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
+      url: base,
+      siteName: "MSFC Book of Faces",
+      images: [
+        {
+          url: img,
+          width: 1200,
+          height: 630,
+          alt: 'MSFC Book of Faces Preview',
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    };
+  })(),
+  twitter: ((): Metadata['twitter'] => {
+    const base = getBaseUrl();
+    return {
+      card: 'summary_large_image',
+      title: "MSFC Book of Faces",
+      description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
+      images: [`${base}/og-preview.png`],
+    };
+  })(),
 };
 
 export default function RootLayout({
@@ -56,8 +69,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const base = getBaseUrl();
   return (
     <html lang="en">
+      <head>
+        <meta property="og:image" content={`${base}/og-preview.png`} />
+        <meta property="og:image:secure_url" content={`${base}/og-preview.png`} />
+        <meta name="twitter:image" content={`${base}/og-preview.png`} />
+        <link rel="image_src" href={`${base}/og-preview.png`} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
