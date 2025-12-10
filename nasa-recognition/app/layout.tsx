@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nasa-internship-recognition.vercel.app'),
-  title: "NASA Internship Recognition",
+  title: "MSFC Book of Faces",
   description: "Recognizing the amazing people from my NASA internship experience",
   icons: {
     icon: [
@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     apple: [
       { url: '/favicon.png', sizes: '180x180', type: 'image/png' },
     ],
+    shortcut: '/favicon.png',
   },
   openGraph: {
     title: "NASA Internship Recognition",

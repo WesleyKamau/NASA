@@ -5,6 +5,7 @@ import { GroupPhoto, Person } from '@/types';
 import PhotoCarousel from '@/components/PhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
+import BackToTop from '@/components/BackToTop';
 
 interface DesktopSplitViewProps {
   groupPhotos: GroupPhoto[];
@@ -43,16 +44,6 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
       <div className="flex h-screen overflow-hidden">
         {/* Left side - Photo Carousel (fixed) */}
         <div className="w-1/2 flex-shrink-0 p-8 flex flex-col">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-white mb-3">
-              Group Photos
-            </h2>
-            <div className="h-1 w-20 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mx-auto rounded-full" />
-            <p className="text-slate-400 mt-4 text-sm">
-              Hover over faces to pause • Click to view profiles
-            </p>
-          </div>
-          
           <div className="flex-1 flex items-center justify-center overflow-hidden">
             <PhotoCarousel
               groupPhotos={groupPhotos}
@@ -60,6 +51,9 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
               onPersonClick={handlePersonClick}
             />
           </div>
+          <p className="text-center text-slate-500 text-sm mt-4">
+            Hover over faces to pause • Click to view profiles
+          </p>
         </div>
 
         {/* Right side - Scrollable content */}
@@ -71,7 +65,7 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
             {/* Header */}
             <header className="text-center mb-12 pt-8">
               <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                My NASA Internship Book of Faces
+                MSFC Book of Faces
               </h1>
               <p className="text-lg text-slate-300 max-w-xl mx-auto">
                 One of the most impactful parts of my NASA internship was all of the people I got to meet. This lets you learn more about the people who made it special! :)
@@ -81,7 +75,7 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
             {/* Decorative divider */}
             <div className="flex items-center gap-4 my-12">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-slate-600" />
-              <div className="text-slate-500 text-2xl">✦</div>
+              <div className="text-slate-500 text-2xl animate-spin-slow">✦</div>
               <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-600 to-slate-600" />
             </div>
 
@@ -106,12 +100,10 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
             </section>
 
             {/* Footer */}
-            <footer className="text-center py-8 border-t border-slate-800/50 mt-16">
+            <BackToTop containerId="desktop-right-panel" />
+            <footer className="text-center py-8 border-t border-slate-800/50 mt-4">
               <p className="text-slate-500 text-sm">
-                NASA Interns • Spring {new Date().getFullYear()}
-              </p>
-              <p className="text-slate-600 text-xs mt-2">
-                Made with ❤️ and gratitude
+                Made by Wesley Kamau
               </p>
             </footer>
           </div>

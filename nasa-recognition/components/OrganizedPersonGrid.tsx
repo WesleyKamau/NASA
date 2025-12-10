@@ -48,6 +48,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
       categoryPeople = [...categoryPeople, ...girlfriend];
     }
 
+    // Sort alphabetically by name
+    categoryPeople.sort((a, b) => a.name.localeCompare(b.name));
+
     if (categoryPeople.length > 0) {
       acc[category] = categoryPeople;
     }
@@ -73,6 +76,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                   groupPhotos={groupPhotos}
                   onClick={() => handlePersonClick(wesley)}
                   idPrefix={idPrefix}
+                  priority={true}
                 />
               </div>
             </div>
@@ -97,18 +101,20 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                 </div>
               )}
 
-              <h3 className="text-2xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-4">
+              <h3 className="text-2xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-4 text-center">
                 {categoryLabels[category]}
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+              <div className="flex flex-wrap justify-center gap-4">
                 {categoryPeople.map((person) => (
-                  <PersonCard
-                    key={person.id}
-                    person={person}
-                    groupPhotos={groupPhotos}
-                    onClick={() => handlePersonClick(person)}
-                    idPrefix={idPrefix}
-                  />
+                  <div key={person.id} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.75rem)] md:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(25%-0.75rem)]">
+                    <PersonCard
+                      person={person}
+                      groupPhotos={groupPhotos}
+                      onClick={() => handlePersonClick(person)}
+                      idPrefix={idPrefix}
+                      priority={true}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

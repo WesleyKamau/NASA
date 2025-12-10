@@ -1,4 +1,4 @@
-# NASA Internship Recognition
+# MSFC Book of Faces
 
 A beautiful, interactive single-page application to recognize and honor the amazing people from my NASA internship experience. Features NASA-inspired space theming with subtle animations and interactive group photos.
 

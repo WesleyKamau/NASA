@@ -8,9 +8,10 @@ interface PersonCardProps {
   groupPhotos: GroupPhoto[];
   onClick?: () => void;
   idPrefix?: string;
+  priority?: boolean;
 }
 
-export default function PersonCard({ person, groupPhotos, onClick, idPrefix = '' }: PersonCardProps) {
+export default function PersonCard({ person, groupPhotos, onClick, idPrefix = '', priority = false }: PersonCardProps) {
   const isWesley = person.id === 'wesley-kamau';
   
   return (
@@ -24,7 +25,12 @@ export default function PersonCard({ person, groupPhotos, onClick, idPrefix = ''
     >
       {/* Photo */}
       <div className="w-full aspect-square mb-2 sm:mb-3 rounded-lg overflow-hidden bg-slate-800/50 relative">
-        <PersonImage person={person} groupPhotos={groupPhotos} className="text-3xl sm:text-4xl" />
+        <PersonImage 
+          person={person} 
+          groupPhotos={groupPhotos} 
+          className="text-3xl sm:text-4xl" 
+          priority={priority}
+        />
         
         {/* Overlay for desktop hover - hidden on touch devices */}
         <div className="hidden sm:flex absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-end p-3">

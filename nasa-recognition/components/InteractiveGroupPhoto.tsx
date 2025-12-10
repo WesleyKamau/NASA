@@ -2,7 +2,7 @@
 
 import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PersonModal from './PersonModal';
 
 interface InteractiveGroupPhotoProps {
@@ -17,6 +17,13 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
   const [hoveredPerson, setHoveredPerson] = useState<Person | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [zoomedPerson, setZoomedPerson] = useState<Person | null>(null);
+  const [manualZoom, setManualZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startPanRef = useRef({ x: 0, y: 0 });
+  const startOffsetRef = useRef({ x: 0, y: 0 });
 
   // Handle external zoom requests
   useEffect(() => {
@@ -24,6 +31,8 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
       const person = people.find(p => p.id === zoomToPerson);
       if (person) {
         setZoomedPerson(person);
+        setManualZoom(1);
+        setPanOffset({ x: 0, y: 0 });
       }
     } else {
       setZoomedPerson(null);
@@ -32,7 +41,70 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
 
   const handleZoomReset = () => {
     setZoomedPerson(null);
+    setManualZoom(1);
+    setPanOffset({ x: 0, y: 0 });
     onZoomChange?.(null);
+  };
+
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return null;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    if (e.touches.length === 2) {
+      // Prevent page scroll during pinch
+      e.preventDefault();
+      const distance = getTouchDistance(e.touches);
+      setLastTouchDistance(distance);
+    } else if (e.touches.length === 1 && manualZoom > 1) {
+      // Start panning
+      setIsPanning(true);
+      startPanRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      startOffsetRef.current = { ...panOffset };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Always prevent default to stop scrolling while interacting with the photo
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.touches.length === 2 && lastTouchDistance !== null) {
+      const distance = getTouchDistance(e.touches);
+      if (distance) {
+        const scale = distance / lastTouchDistance;
+        setManualZoom(prev => Math.max(1, Math.min(4, prev * scale)));
+        setLastTouchDistance(distance);
+      }
+    } else if (e.touches.length === 1 && isPanning && manualZoom > 1) {
+      const deltaX = e.touches[0].clientX - startPanRef.current.x;
+      const deltaY = e.touches[0].clientY - startPanRef.current.y;
+      setPanOffset({
+        x: startOffsetRef.current.x + deltaX,
+        y: startOffsetRef.current.y + deltaY
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    // Re-enable body scroll
+    document.body.style.overflow = '';
+    setLastTouchDistance(null);
+    setIsPanning(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = -e.deltaY * 0.01;
+      setManualZoom(prev => Math.max(1, Math.min(4, prev + delta)));
+    }
   };
 
   // Get people who are in this photo
@@ -47,7 +119,15 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
           {groupPhoto.name}
         </h2>
 
-        <div className="relative w-full rounded-xl overflow-hidden shadow-2xl shadow-blue-500/20 border border-slate-700/50">
+        <div 
+          ref={containerRef}
+          className="relative w-full rounded-xl overflow-hidden shadow-2xl shadow-blue-500/20 border border-slate-700/50 touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onWheel={handleWheel}
+        >
           {/* The group photo */}
           <div className="relative w-full bg-slate-800/50">
             <div
@@ -68,9 +148,10 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
                   const translateY = (50 - centerY) * zoom;
                   
                   return `scale(${zoom}) translate(${translateX}%, ${translateY}%)`;
-                })() : 'scale(1)',
+                })() : `scale(${manualZoom}) translate(${panOffset.x / manualZoom}px, ${panOffset.y / manualZoom}px)`,
                 transformOrigin: 'center center',
-                transition: 'transform 0.5s ease-in-out',
+                transition: zoomedPerson ? 'transform 0.5s ease-in-out' : 'none',
+                cursor: manualZoom > 1 ? 'grab' : 'default',
               }}
             >
               <Image
@@ -78,69 +159,78 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
                 alt={groupPhoto.name}
                 width={1600}
                 height={1000}
-                className="w-full h-auto object-contain"
+                className="w-full h-auto"
                 priority
               />
-
+              
               {/* Clickable regions overlay */}
-              <div className="absolute inset-0 z-10">
-              {peopleInPhoto.map((person) => {
-                const location = person.photoLocations.find(
-                  loc => loc.photoId === groupPhoto.id
-                );
-                
-                if (!location) return null;
+              <div 
+                className="absolute inset-0 z-10"
+                onClick={() => setHoveredPerson(null)}
+              >
+                {peopleInPhoto.map((person) => {
+                  const location = person.photoLocations.find(
+                    loc => loc.photoId === groupPhoto.id
+                  );
+                  
+                  if (!location) return null;
 
-                const isHovered = hoveredPerson?.id === person.id;
+                  const isHovered = hoveredPerson?.id === person.id;
 
-                return (
-                  <div
-                    key={person.id}
-                    className="absolute cursor-pointer group"
-                    style={{
-                      left: `${location.x}%`,
-                      top: `${location.y}%`,
-                      width: `${location.width}%`,
-                      height: `${location.height}%`,
-                    }}
-                    onMouseEnter={() => setHoveredPerson(person)}
-                    onMouseLeave={() => setHoveredPerson(null)}
-                    onClick={() => setSelectedPerson(person)}
-                  >
-                    {/* Hover highlight overlay */}
+                  return (
                     <div
-                      className={`absolute inset-0 border-4 rounded-lg transition-all duration-200 ${
-                        isHovered
-                          ? 
-                        //   person.id === 'wesley-kamau'
-                        //     ? 'animate-rainbow-border bg-blue-400/20'
-                        //     : 
-                            'border-blue-400 bg-blue-400/20 shadow-lg shadow-blue-500/50'
-                          : 'border-transparent bg-transparent'
-                      }`}
-                    />
+                      key={person.id}
+                      className="absolute cursor-pointer group"
+                      style={{
+                        left: `${location.x}%`,
+                        top: `${location.y}%`,
+                        width: `${location.width}%`,
+                        height: `${location.height}%`,
+                      }}
+                      onMouseEnter={() => setHoveredPerson(person)}
+                      onMouseLeave={() => setHoveredPerson(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // On mobile/touch, first tap shows name (hover), second tap opens modal
+                        // On desktop, hover shows name, click opens modal
+                        // We can detect if it's a touch interaction or check if already hovered
+                        if (hoveredPerson?.id === person.id) {
+                          setSelectedPerson(person);
+                        } else {
+                          setHoveredPerson(person);
+                        }
+                      }}
+                    >
+                      {/* Hover highlight overlay */}
+                      <div
+                        className={`absolute inset-0 border-4 rounded-lg transition-all duration-200 ${
+                          isHovered
+                            ? 'border-blue-400 bg-blue-400/20 shadow-lg shadow-blue-500/50'
+                            : 'border-transparent bg-transparent'
+                        }`}
+                      />
 
-                    {/* Name tooltip on hover */}
-                    {isHovered && (
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-10 animate-fadeIn">
-                        <div className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-4 py-2 shadow-xl shadow-blue-500/30 whitespace-nowrap">
-                          <p className="text-white font-semibold text-sm">
-                            {person.name}
-                          </p>
-                          <p className="text-slate-300 text-xs">
-                            {person.description}
-                          </p>
+                      {/* Name tooltip on hover */}
+                      {isHovered && (
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-10 animate-fadeIn">
+                          <div className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-4 py-2 shadow-xl shadow-blue-500/30 whitespace-nowrap">
+                            <p className="text-white font-semibold text-sm">
+                              {person.name}
+                            </p>
+                            <p className="text-slate-300 text-xs">
+                              {person.description}
+                            </p>
+                          </div>
+                          {/* Arrow */}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                            <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-blue-500/50" />
+                          </div>
                         </div>
-                        {/* Arrow */}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-                          <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-blue-500/50" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -150,9 +240,6 @@ export default function InteractiveGroupPhoto({ groupPhoto, people, groupPhotos,
               <div className="text-center p-6">
                 <p className="text-white text-lg mb-2">
                   📸 Photo locations not yet configured
-                </p>
-                <p className="text-slate-300 text-sm">
-                  Add face coordinates to people.json to make this photo interactive
                 </p>
               </div>
             </div>

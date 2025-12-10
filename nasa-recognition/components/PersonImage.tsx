@@ -9,9 +9,10 @@ interface PersonImageProps {
   person: Person;
   groupPhotos: GroupPhoto[];
   className?: string;
+  priority?: boolean;
 }
 
-export default function PersonImage({ person, groupPhotos, className = '' }: PersonImageProps) {
+export default function PersonImage({ person, groupPhotos, className = '', priority = false }: PersonImageProps) {
   const [imageError, setImageError] = useState(false);
   const imageInfo = getPersonImage(person, groupPhotos);
 
@@ -24,6 +25,7 @@ export default function PersonImage({ person, groupPhotos, className = '' }: Per
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         className={`object-cover ${className}`}
         onError={() => setImageError(true)}
+        priority={priority}
       />
     );
   }
@@ -43,6 +45,7 @@ export default function PersonImage({ person, groupPhotos, className = '' }: Per
         <img 
           src={imageInfo.src}
           alt={person.name}
+          loading={priority ? "eager" : "lazy"}
           style={{
             position: 'absolute',
             left: '50%',

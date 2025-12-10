@@ -23,6 +23,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [shuffledPeople, setShuffledPeople] = useState<Person[]>([]);
   const [labelOffsets, setLabelOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
+  const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -195,6 +196,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       return;
     }
 
+    // Skip label calculation while dragging to improve performance and prevent update loops
+    if (isDragging) return;
+
     // Calculate stable positions immediately without physics simulation
     setLabelOffsets(prev => {
       const newOffsets: Record<string, { x: number; y: number }> = {};
@@ -326,6 +330,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Mobile touch handlers
   const handleTouchStart = (e: TouchEvent) => {
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+
     if (e.touches.length === 1) {
       setIsDragging(true);
       setDragStart({
@@ -340,8 +347,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   };
 
   const handleTouchMove = (e: TouchEvent) => {
+    // Always prevent default and propagation to stop scrolling
+    e.preventDefault();
+    e.stopPropagation();
+
     if (isDragging && e.touches.length === 1) {
-      e.preventDefault();
       setPosition({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
@@ -350,6 +360,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   };
 
   const handleTouchEnd = () => {
+    // Re-enable body scroll
+    document.body.style.overflow = '';
     setIsDragging(false);
   };
 
@@ -378,10 +390,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
         <div 
           ref={containerRef}
-          className="relative w-full bg-slate-800/50 overflow-hidden touch-pan-x touch-pan-y"
+          className="relative w-full bg-slate-800/50 overflow-hidden touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           onClick={(e) => {
             if (isMobile) {
               handleDoubleTap(e as any);
@@ -551,6 +564,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8)));
                 const lineLength = Math.max(20, Math.min(40, 30 / scale));
                 const showWhenZoomed = (() => {
+                  if (person.id === hoveredPersonId) return true;
                   if (isAutoHighlighting) return false;
                   
                   // Check if viewport center is inside this person's expanded hitbox
@@ -639,6 +653,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       width: `${location.width}%`,
                       height: `${location.height}%`,
                     }}
+                    onMouseEnter={() => {
+                      setHoveredPersonId(person.id);
+                      pauseAllAuto();
+                    }}
+                    onMouseLeave={() => setHoveredPersonId(null)}
                     onClick={(e) => {
                       e.stopPropagation();
                       console.log('Face clicked:', person.name, person.id);
