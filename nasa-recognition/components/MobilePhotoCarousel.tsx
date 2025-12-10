@@ -34,6 +34,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isTouchMode, setIsTouchMode] = useState(false);
   const [autoZoomedOnPan, setAutoZoomedOnPan] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
+  const [interactionLocked, setInteractionLocked] = useState(false);
+  const pinchStartDistance = useRef(0);
+  const pinchStartScale = useRef(1);
+  const pinchStartCenter = useRef({ x: 0, y: 0 });
+  const interactionLockTimer = useRef<NodeJS.Timeout | null>(null);
   
   const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -55,6 +60,14 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     detectTouchMode();
     window.addEventListener('resize', detectTouchMode);
     return () => window.removeEventListener('resize', detectTouchMode);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (interactionLockTimer.current) {
+        clearTimeout(interactionLockTimer.current);
+      }
+    };
   }, []);
 
   // Update container dimensions
@@ -340,6 +353,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     pauseAutoHighlight();
   }, [pauseAutoScroll, pauseAutoHighlight]);
 
+  const lockInteraction = useCallback((duration = 280) => {
+    if (interactionLockTimer.current) {
+      clearTimeout(interactionLockTimer.current);
+    }
+    setInteractionLocked(true);
+    interactionLockTimer.current = setTimeout(() => {
+      setInteractionLocked(false);
+    }, duration);
+  }, []);
+
   const handlePhotoNavigation = (index: number) => {
     setCurrentPhotoIndex(index);
     pauseAllAuto();
@@ -347,6 +370,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Mobile touch handlers
   const handleTouchStart = (e: TouchEvent) => {
+    if (interactionLocked) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
 
@@ -363,6 +391,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     } else if (e.touches.length === 2) {
       // Pinch zoom preparation
       setIsDragging(false);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDistance.current = Math.hypot(dx, dy);
+      pinchStartScale.current = scale;
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - (rect.left + rect.width / 2);
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - (rect.top + rect.height / 2);
+        pinchStartCenter.current = { x: cx, y: cy };
+      }
+      pauseAllAuto();
     }
   };
 
@@ -371,12 +410,44 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     e.preventDefault();
     e.stopPropagation();
 
-    if (isDragging && e.touches.length === 1) {
+    if (interactionLocked) return;
+
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      if (pinchStartDistance.current > 0) {
+        const scaleFactor = dist / pinchStartDistance.current;
+        const targetScale = Math.min(4, Math.max(1, pinchStartScale.current * scaleFactor));
+        const { x: cx, y: cy } = pinchStartCenter.current;
+        setIsZooming(true);
+        setScale(prevScale => {
+          const newScale = targetScale;
+          const factor = newScale / prevScale;
+          setPosition(prev => ({
+            x: prev.x + cx * (factor - 1),
+            y: prev.y + cy * (factor - 1),
+          }));
+          return newScale;
+        });
+        setTimeout(() => setIsZooming(false), 120);
+      }
+    } else if (isDragging && e.touches.length === 1) {
       // If starting a pan at zero zoom, auto-jump to default zoom once
       if (scale === 1 && !autoZoomedOnPan) {
+        const defaultZoom = currentPhoto.defaultZoom || 2;
+        lockInteraction(320);
         setIsZooming(true);
-        setScale(2);
+        setScale(defaultZoom);
         setAutoZoomedOnPan(true);
+        if (currentPhoto.zoomTranslation) {
+          setPosition({
+            x: currentPhoto.zoomTranslation.x,
+            y: currentPhoto.zoomTranslation.y,
+          });
+        } else {
+          setPosition({ x: 0, y: 0 });
+        }
         // Reset drag origin to avoid jump after zoom change
         setDragStart({
           x: e.touches[0].clientX - position.x,
@@ -396,20 +467,24 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     // Re-enable body scroll
     document.body.style.overflow = '';
     setIsDragging(false);
+    pinchStartDistance.current = 0;
   };
 
   const handleDoubleTap = (e: TouchEvent | React.MouseEvent) => {
+    if (interactionLocked) return;
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
 
     if (now - lastTap < DOUBLE_TAP_DELAY) {
       // Double tap detected - toggle zoom
       if (scale === 1) {
+        lockInteraction(300);
         setIsZooming(true);
         setScale(2);
         setAutoZoomedOnPan(true);
         setTimeout(() => setIsZooming(false), 250);
       } else {
+        lockInteraction(300);
         setIsZooming(true);
         setScale(1);
         setPosition({ x: 0, y: 0 });
