@@ -31,6 +31,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTap, setLastTap] = useState(0);
+  const [isTouchMode, setIsTouchMode] = useState(false);
   
   const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -40,7 +41,19 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const animationFrameRef = useRef<number>(0);
 
   const currentPhoto = groupPhotos[currentPhotoIndex];
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  useEffect(() => {
+    const detectTouchMode = () => {
+      const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+      const touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      const portraitTablet = typeof window !== 'undefined' && window.innerWidth < 1200;
+      setIsTouchMode(coarse || (touchCapable && portraitTablet));
+    };
+
+    detectTouchMode();
+    window.addEventListener('resize', detectTouchMode);
+    return () => window.removeEventListener('resize', detectTouchMode);
+  }, []);
 
   // Update container dimensions
   useEffect(() => {
@@ -396,7 +409,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
           onClick={(e) => {
-            if (isMobile) {
+            if (isTouchMode) {
               handleDoubleTap(e as any);
             }
           }}
@@ -850,7 +863,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         </div>
 
         {/* Zoom controls - compact in top right */}
-        {isMobile && (
+        {isTouchMode && (
           <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg p-1">
             {scale > 1 && (
               <>
@@ -972,7 +985,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       </div>
 
       {/* Mobile instructions */}
-      {isMobile && (
+      {isTouchMode && (
         <div className="mt-3 text-center">
           <p className="text-slate-400 text-sm">
             Pinch or use +/− to zoom • Drag to pan

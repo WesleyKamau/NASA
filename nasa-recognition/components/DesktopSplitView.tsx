@@ -62,11 +62,8 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
           className="w-1/2 flex-shrink-0 overflow-y-auto bg-slate-900/30 border-l border-slate-700/50"
         >
           <div className="p-8">
-            {/* Header */}
+            {/* Header removed per request */}
             <header className="text-center mb-12 pt-8">
-              <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                MSFC Book of Faces
-              </h1>
               <p className="text-lg text-slate-300 max-w-xl mx-auto">
                 One of the most impactful parts of my NASA internship was all of the people I got to meet. This lets you learn more about the people who made it special! :)
               </p>
@@ -103,7 +100,7 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
             <BackToTop containerId="desktop-right-panel" />
             <footer className="text-center py-8 border-t border-slate-800/50 mt-4">
               <p className="text-slate-500 text-sm">
-                Made by Wesley Kamau
+                Made by <a className="underline hover:text-slate-300 transition" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
               </p>
             </footer>
           </div>

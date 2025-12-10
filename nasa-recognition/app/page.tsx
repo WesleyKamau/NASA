@@ -3,6 +3,7 @@ import DesktopSplitView from '@/components/DesktopSplitView';
 import SingleColumnView from '@/components/SingleColumnView';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import StarfieldBackground from '@/components/StarfieldBackground';
+import GalaxyBackground from '@/components/GalaxyBackground';
 import SLSRocket from '@/components/SLSRocket';
 import BackToTop from '@/components/BackToTop';
 
@@ -27,8 +28,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
-      {/* Animated background */}
-      <StarfieldBackground />
+      {/* Animated backgrounds: legacy starfield on mobile/tablet, galaxy on desktop */}
+      <div className="xl:hidden">
+        <StarfieldBackground />
+      </div>
+      <div className="hidden xl:block">
+        <GalaxyBackground />
+      </div>
       
       {/* Flying SLS rocket decoration - positioned absolutely within page */}
       <div className="absolute inset-0 pointer-events-none overflow-x-hidden">
@@ -45,12 +51,7 @@ export default function Home() {
 
       {/* Tablet/Mobile View (below xl) */}
       <main className="xl:hidden relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Header */}
-        <header className="text-center mb-8 pt-4 sm:pt-8">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent px-4">
-            MSFC Book of Faces
-          </h1>
-        </header>
+        {/* Header removed per request */}
 
         {/* Photo Carousel Section */}
         <section className="mb-12">
@@ -94,7 +95,7 @@ export default function Home() {
         <BackToTop />
         <footer className="text-center py-6 sm:py-8 border-t border-slate-800/50 mt-4">
           <p className="text-slate-500 text-sm">
-            Made by Wesley Kamau
+            Made by <a className="underline hover:text-slate-300 transition" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
           </p>
         </footer>
       </main>

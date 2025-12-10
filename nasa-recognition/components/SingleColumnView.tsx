@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from './MobilePhotoCarousel';
 import PhotoCarousel from './PhotoCarousel';
@@ -10,6 +11,21 @@ interface SingleColumnViewProps {
 }
 
 export default function SingleColumnView({ groupPhotos, people }: SingleColumnViewProps) {
+  const [useTouchLayout, setUseTouchLayout] = useState(false);
+
+  useEffect(() => {
+    const detect = () => {
+      const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+      const touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      const portraitTablet = typeof window !== 'undefined' && window.innerWidth < 1200; // catch iPad portrait
+      setUseTouchLayout(coarse || (touchCapable && portraitTablet));
+    };
+
+    detect();
+    window.addEventListener('resize', detect);
+    return () => window.removeEventListener('resize', detect);
+  }, []);
+
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card
     const personCardId = `person-card-mobile-${person.id}`;
@@ -47,22 +63,20 @@ export default function SingleColumnView({ groupPhotos, people }: SingleColumnVi
 
   return (
     <>
-      {/* Mobile View (< 768px) */}
-      <div className="md:hidden">
+      {/* Touch-first layout (phones, tablets, coarse/pen pointers) */}
+      {useTouchLayout ? (
         <MobilePhotoCarousel 
           groupPhotos={groupPhotos} 
           people={people} 
+          onPersonClick={handlePersonClick}
         />
-      </div>
-
-      {/* Desktop/Tablet View (>= 768px) */}
-      <div className="hidden md:block">
+      ) : (
         <PhotoCarousel 
           groupPhotos={groupPhotos} 
           people={people} 
           onPersonClick={handlePersonClick}
         />
-      </div>
+      )}
     </>
   );
 }
