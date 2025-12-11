@@ -50,9 +50,41 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const currentPhoto = groupPhotos[currentPhotoIndex];
 
   // Helper function to convert photo coordinates to container coordinates
-  // With a matching aspect ratio this is effectively a pass-through, but we keep
-  // the helper for future adjustments and clarity.
-  const convertPhotoToContainerCoords = (location: any) => location;
+  // Account for letterboxing when photo aspect ratio differs from container (3:4)
+  const convertPhotoToContainerCoords = (location: any) => {
+    if (!currentPhoto) return location;
+    
+    const CONTAINER_ASPECT = 3 / 4; // width / height
+    
+    // Get photo dimensions (either from loaded state or from data)
+    const photoDims = photoDimensions[currentPhoto.id];
+    const photoWidth = photoDims?.width || currentPhoto.width || 1600;
+    const photoHeight = photoDims?.height || currentPhoto.height || 1000;
+    const PHOTO_ASPECT = photoWidth / photoHeight;
+    
+    // Determine how the image fits in the container
+    if (PHOTO_ASPECT > CONTAINER_ASPECT) {
+      // Photo is wider than container - image fills width, letterboxed top/bottom
+      const imageHeightInContainer = CONTAINER_ASPECT / PHOTO_ASPECT; // as fraction of container
+      const verticalOffsetPct = (1 - imageHeightInContainer) / 2 * 100; // top padding as %
+      
+      return {
+        ...location,
+        y: location.y * imageHeightInContainer + verticalOffsetPct,
+        height: location.height * imageHeightInContainer,
+      };
+    } else {
+      // Photo is taller than container - image fills height, letterboxed left/right
+      const imageWidthInContainer = PHOTO_ASPECT / CONTAINER_ASPECT; // as fraction of container
+      const horizontalOffsetPct = (1 - imageWidthInContainer) / 2 * 100; // left padding as %
+      
+      return {
+        ...location,
+        x: location.x * imageWidthInContainer + horizontalOffsetPct,
+        width: location.width * imageWidthInContainer,
+      };
+    }
+  };
 
   useEffect(() => {
     const detectTouchMode = () => {
@@ -337,59 +369,49 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   return (
     <div className="w-full">
-      {/* Photo viewer - dynamic aspect ratio container */}
-      {(() => {
-        const intrinsic = photoDimensions[currentPhoto.id];
-        const aspectRatio = intrinsic ? `${intrinsic.width} / ${intrinsic.height}` : '3 / 4';
-        const intrinsicWidth = intrinsic?.width ?? 1600;
-        const intrinsicHeight = intrinsic?.height ?? 1000;
-
-        return (
+      {/* Photo viewer - fixed vertical rectangle container */}
+      <div className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm" style={{ width: '100%', maxWidth: '500px', aspectRatio: '3 / 4' }}>
+        <div
+          ref={containerRef}
+          className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onClick={(e) => {
+            if (isTouchMode) {
+              handleDoubleTap(e as any);
+            }
+          }}
+        >
           <div
-            className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm"
-            style={{ width: '100%', maxWidth: '500px', aspectRatio }}
+            style={{
+              transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+              transition: isDragging && !isZooming ? 'none' : 'transform 0.25s ease-out',
+              transformOrigin: 'center center',
+            }}
+            className="relative w-full h-full"
           >
-            <div
-              ref={containerRef}
-              className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onTouchCancel={handleTouchEnd}
-              onClick={(e) => {
-                if (isTouchMode) {
-                  handleDoubleTap(e as any);
-                }
+            <Image
+              src={currentPhoto.imagePath}
+              alt={currentPhoto.name}
+              width={1600}
+              height={1000}
+              className="w-full h-full object-contain pointer-events-none"
+              priority
+              sizes="100vw"
+              draggable={false}
+              onLoadingComplete={(img) => {
+                setPhotoDimensions((prev) => (
+                  prev[currentPhoto.id]
+                    ? prev
+                    : { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } }
+                ));
               }}
-            >
-              <div
-                style={{
-                  transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
-                  transition: isDragging && !isZooming ? 'none' : 'transform 0.25s ease-out',
-                  transformOrigin: 'center center',
-                }}
-                className="relative w-full h-full"
-              >
-                <Image
-                  src={currentPhoto.imagePath}
-                  alt={currentPhoto.name}
-                  width={intrinsicWidth}
-                  height={intrinsicHeight}
-                  className="w-full h-full object-contain pointer-events-none"
-                  priority
-                  sizes="100vw"
-                  draggable={false}
-                  onLoadingComplete={(img) => {
-                    setPhotoDimensions((prev) => (
-                      prev[currentPhoto.id]
-                        ? prev
-                        : { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } }
-                    ));
-                  }}
-                />
+            />
 
-                {/* Interactive regions overlay */}
-                <div className="absolute inset-0 z-10 w-full h-full">
+            {/* Interactive regions overlay */}
+            <div className="absolute inset-0 z-10 w-full h-full">
               {/* Debug: True center point dot */}
               {showDebugHitboxes && (() => {
                 if (!containerRef.current) return null;
@@ -601,6 +623,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 })();
 
                 // Calculate expanded hitbox for debugging
+                const adjustedLocation = convertPhotoToContainerCoords(location);
                 const expandedLocation = {
                   x: location.x - FACE_HITBOX_PADDING / 2,
                   y: location.y - FACE_HITBOX_PADDING / 2,
@@ -613,10 +636,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     key={person.id}
                     className="absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none"
                     style={{
-                      left: `${location.x}%`,
-                      top: `${convertPhotoToContainerCoords(location).y}%`,
-                      width: `${location.width}%`,
-                      height: `${convertPhotoToContainerCoords(location).height}%`,
+                      left: `${adjustedLocation.x}%`,
+                      top: `${adjustedLocation.y}%`,
+                      width: `${adjustedLocation.width}%`,
+                      height: `${adjustedLocation.height}%`,
                     }}
                     onMouseEnter={() => {
                       setHoveredPersonId(person.id);
@@ -939,8 +962,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           </>
         )}
       </div>
-      );
-      })()}
 
       {/* Mobile instructions */}
       {isTouchMode && (
