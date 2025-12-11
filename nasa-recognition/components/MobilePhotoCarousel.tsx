@@ -21,7 +21,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isAutoHighlighting, setIsAutoHighlighting] = useState(true);
   const [shuffledPeople, setShuffledPeople] = useState<Person[]>([]);
-  const [labelOffsets, setLabelOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
   
@@ -156,26 +155,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
   }, [isAutoHighlighting]);
 
-  // Dynamic label positioning - simple stable placement above faces
-  useEffect(() => {
-    if (!containerRef.current || containerDimensions.width === 0) return;
-    if (isDragging) return;
-
-    // Place labels in a consistent position above each face; keep simple to avoid jitter
-    setLabelOffsets(() => {
-      const offsets: Record<string, { x: number; y: number }> = {};
-      shuffledPeople.forEach(person => {
-        const loc = person.photoLocations.find(l => l.photoId === currentPhoto.id);
-        if (!loc) return;
-
-        const imgH = containerDimensions.height;
-        const faceH = (loc.height / 100) * imgH;
-        const verticalOffset = Math.max(36, faceH * 0.9); // px above face center
-        offsets[person.id] = { x: 0, y: -verticalOffset };
-      });
-      return offsets;
-    });
-  }, [shuffledPeople, currentPhoto, containerDimensions, isDragging]);  const pauseAutoScroll = useCallback(() => {
+  const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);
     
     if (cooldownTimer.current) {
@@ -236,6 +216,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       if (scale === 1) {
         setAutoZoomedOnPan(false);
       }
+      // Clear any hovered state when starting to pan
+      setHoveredPersonId(null);
       pauseAllAuto();
     } else if (e.touches.length === 2) {
       // Pinch zoom preparation
@@ -525,7 +507,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
                 // Calculate responsive text size based on zoom (inverse scaling with more reduction)
                 const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8)));
-                const lineLength = Math.max(20, Math.min(40, 30 / scale));
                 const showWhenZoomed = (() => {
                   if (person.id === hoveredPersonId) return true;
                   if (isAutoHighlighting) return false;
@@ -589,15 +570,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       );
                       return { id: p.id, dist };
                     })
-                    .sort((a, b) => a.dist - b.dist)
-                    .slice(0, MAX_VISIBLE_LABELS);
+                    .sort((a, b) => a.dist - b.dist);
                   
-                  return sortedByDistance.some(item => item.id === person.id);
+                  // Only show the single closest person
+                  return sortedByDistance.length > 0 && sortedByDistance[0].id === person.id;
                 })();
 
-                // Get stable label offset (positioned above face)
-                const offset = labelOffsets[person.id] || { x: 0, y: -48 };
-                
                 // Calculate expanded hitbox for debugging
                 const expandedLocation = {
                   x: location.x - FACE_HITBOX_PADDING / 2,
@@ -694,52 +672,96 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       }}
                     />
                     
-                    {/* Name tag with connecting line */}
-                    {(isHighlighted || showWhenZoomed) && (
-                      <div className="z-20">
-                        {/* Connecting line - from edge of rectangle to label */}
-                        <svg
-                          className="absolute pointer-events-none overflow-visible"
-                          style={{
-                            left: '50%',
-                            top: '0%',
-                            width: '1px',
-                            height: `${Math.abs(offset.y)}px`,
-                            transform: 'translate(-50%, 0)'
-                          }}
-                        >
-                          <path
-                            d={`M 0 0 L 0 ${Math.abs(offset.y)}`}
-                            stroke={isHighlighted ? '#FBBF24' : '#FFFFFF'}
-                            strokeWidth="2"
-                            fill="none"
-                            opacity="0.7"
-                          />
-                        </svg>
-                        
-                        {/* Name tag - positioned outside rectangle */}
-                        <div 
-                          className="absolute whitespace-nowrap"
+                    {/* Name tag: fluid placement that follows the face, clamped within photo bounds */}
+                    {(isHighlighted || showWhenZoomed) && (() => {
+                      // Calculate face center in photo coordinates
+                      const faceCenterX = location.x + location.width / 2;
+                      
+                      // Get viewport width to adjust estimation for different screen sizes
+                      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
+                      
+                      // Scale estimation based on viewport width
+                      // On small phones (< 400px), use higher estimation
+                      // On tablets/larger (> 768px), use lower estimation
+                      const scaleFactor = viewportWidth < 400 ? 1.3 : 
+                                         viewportWidth < 768 ? 1.1 : 
+                                         0.7;
+                      const basePadding = viewportWidth < 400 ? 9 : 
+                                         viewportWidth < 768 ? 7 : 
+                                         5;
+                      
+                      // Estimate label width as percentage of photo width
+                      const estimatedLabelWidthPct = person.name.length * scaleFactor + basePadding;
+                      const halfLabelWidth = estimatedLabelWidthPct / 2;
+                      
+                      // Add buffer zone from edges
+                      const edgeBuffer = viewportWidth < 768 ? 4 : 2;
+                      
+                      // Calculate how much the label would overflow on each side (including buffer)
+                      const leftOverflow = Math.max(0, (halfLabelWidth + edgeBuffer) - faceCenterX);
+                      const rightOverflow = Math.max(0, (faceCenterX + halfLabelWidth + edgeBuffer) - 100);
+                      
+                      console.log(`${person.name}:`, {
+                        faceCenterX: faceCenterX.toFixed(2),
+                        labelWidth: estimatedLabelWidthPct.toFixed(2),
+                        leftOverflow: leftOverflow.toFixed(2),
+                        rightOverflow: rightOverflow.toFixed(2),
+                        viewportWidth,
+                        scaleFactor,
+                      });
+                      
+                      // Calculate shift: if near left edge, shift right; if near right edge, shift left
+                      let horizontalShift = 0;
+                      if (leftOverflow > 0) {
+                        // Shift right to prevent left cutoff
+                        horizontalShift = leftOverflow;
+                        console.log(`  → Shifting RIGHT by ${horizontalShift.toFixed(2)}%`);
+                      } else if (rightOverflow > 0) {
+                        // Shift left to prevent right cutoff
+                        horizontalShift = -rightOverflow;
+                        console.log(`  → Shifting LEFT by ${Math.abs(horizontalShift).toFixed(2)}%`);
+                      }
+                      
+                      // Convert shift from photo percentage to face rectangle percentage
+                      // horizontalShift is in photo %, we need it relative to face width
+                      const shiftInFacePercent = (horizontalShift / location.width) * 100;
+                      
+                      console.log(`  → Face width: ${location.width.toFixed(2)}%, shift in face coords: ${shiftInFacePercent.toFixed(2)}%`);
+                      
+                      return (
+                        <div
+                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95"
                           style={{ 
-                            top: '0%',
-                            left: '50%',
-                            transform: `translate(-50%, ${offset.y}px) scale(${1 / scale})`,
-                            transformOrigin: 'center',
-                            transition: 'transform 0.12s ease-out',
+                            top: '100%',
+                            left: `${50 + shiftInFacePercent}%`,
+                            marginTop: '8px',
+                            transform: 'translateX(-50%)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Scroll to the person's card
+                            const personCardId = `person-card-mobile-${person.id}`;
+                            const cardElement = document.getElementById(personCardId);
+                            if (cardElement) {
+                              setTimeout(() => {
+                                cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }, 50);
+                              // Add highlight effect
+                              cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              setTimeout(() => {
+                                cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              }, 2000);
+                            }
                           }}
                         >
-                          <div 
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold shadow-xl"
-                            style={{
-                              fontSize: `${fontSize}px`,
-                              padding: `${fontSize * 0.4}px ${fontSize * 0.9}px`,
-                            }}
-                          >
-                            {person.name}
+                          <div className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95">
+                            <p className="text-white font-semibold text-xs sm:text-sm md:text-lg">
+                              {person.name}
+                            </p>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 );
               })}
@@ -750,7 +772,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         {/* Photo name overlay */}
         <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20">
           <div className="bg-black/60 backdrop-blur-sm px-2 py-1 sm:px-4 sm:py-2 rounded-lg">
-            <h3 className="text-white font-semibold text-sm sm:text-lg">{currentPhoto.name}</h3>
+            <h3
+              className="text-white font-semibold text-sm sm:text-lg leading-snug"
+              style={{
+                maxWidth: '35vw',
+                wordBreak: 'break-word',
+                whiteSpace: 'normal',
+              }}
+            >
+              {currentPhoto.name}
+            </h3>
           </div>
         </div>
 
