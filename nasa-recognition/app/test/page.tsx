@@ -15,6 +15,7 @@ export default function TestPage() {
     accelZ: 0,
   });
   const [permissionStatus, setPermissionStatus] = useState('requesting...');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tiltRef = useRef({ x: 0, y: 0 });
 
@@ -77,23 +78,28 @@ export default function TestPage() {
             
             if (orientPerm === 'granted' && motionPerm === 'granted') {
               setPermissionStatus('granted');
+              setErrorMessage(null);
               window.addEventListener('deviceorientation', handleOrientation);
               window.addEventListener('devicemotion', handleMotion);
             } else {
               setPermissionStatus('denied');
+              setErrorMessage(`Orientation: ${orientPerm}, Motion: ${motionPerm}`);
             }
-          } catch (e) {
+          } catch (e: any) {
             setPermissionStatus('error');
+            setErrorMessage(`iOS permission error: ${e.message || e}`);
           }
         } else {
           // Android and other devices
           setPermissionStatus('granted');
+          setErrorMessage(null);
           window.addEventListener('deviceorientation', handleOrientation);
           window.addEventListener('devicemotion', handleMotion);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Permission error:', error);
         setPermissionStatus('error');
+        setErrorMessage(`Error: ${error.message || JSON.stringify(error)}`);
       }
     };
 
@@ -227,6 +233,13 @@ export default function TestPage() {
                   {permissionStatus}
                 </div>
               </div>
+
+              {errorMessage && (
+                <div className="bg-red-900/50 p-3 rounded border border-red-500/50">
+                  <div className="text-red-300 font-semibold mb-1">Error Details</div>
+                  <div className="text-red-200 text-xs break-words">{errorMessage}</div>
+                </div>
+              )}
 
               <div className="pt-2 text-xs text-slate-400">
                 Tilt your device to see values change
