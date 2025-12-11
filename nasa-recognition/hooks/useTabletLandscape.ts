@@ -11,8 +11,10 @@ export function useTabletLandscape() {
 
   useEffect(() => {
     const checkTabletLandscape = () => {
-      const isLandscape = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
-      const isTouchDevice = typeof navigator !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      if (typeof window === 'undefined') return;
+      
+      const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       setIsTabletLandscape(Boolean(isLandscape && isTouchDevice));
     };
 
