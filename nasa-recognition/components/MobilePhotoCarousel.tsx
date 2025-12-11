@@ -45,6 +45,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTap, setLastTap] = useState(0);
   const [isTouchMode, setIsTouchMode] = useState(false);
@@ -326,6 +327,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     } else if (e.touches.length === 2) {
       // Pinch zoom preparation
       setIsDragging(false);
+      setIsPinching(true);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       pinchStartDistance.current = Math.hypot(dx, dy);
@@ -345,7 +347,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     e.preventDefault();
     e.stopPropagation();
 
-    if (interactionLocked) return;
+    if (interactionLocked && !isZooming) return;
 
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -369,10 +371,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         setTimeout(() => setIsZooming(false), 120);
       }
     } else if (isDragging && e.touches.length === 1) {
-      // If starting a pan at zero zoom, auto-jump to default zoom once
-      if (scale === 1 && !autoZoomedOnPan) {
+      // If starting a pan at zero zoom and original position, auto-jump to default zoom once
+      const isAtOrigin = scale === 1 && position.x === 0 && position.y === 0;
+      if (isAtOrigin && !autoZoomedOnPan) {
         const defaultZoom = currentPhoto.defaultZoom || 2;
-        lockInteraction(320);
         setIsZooming(true);
         setScale(defaultZoom);
         setAutoZoomedOnPan(true);
@@ -384,14 +386,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         } else {
           setPosition({ x: 0, y: 0 });
         }
-        // Reset drag origin to avoid jump after zoom change
+        // Reset drag origin to allow panning during zoom animation
         setDragStart({
-          x: e.touches[0].clientX - position.x,
-          y: e.touches[0].clientY - position.y
+          x: e.touches[0].clientX - (currentPhoto.zoomTranslation?.x ?? 0),
+          y: e.touches[0].clientY - (currentPhoto.zoomTranslation?.y ?? 0)
         });
-        setTimeout(() => setIsZooming(false), 250);
+        setTimeout(() => setIsZooming(false), 300);
       }
 
+      // Always apply drag, even during zoom animation for smooth concurrent interaction
       setPosition({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
@@ -414,6 +417,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       (parentEl.style as any).overscrollBehavior = '';
     }
     setIsDragging(false);
+    setIsPinching(false);
     pinchStartDistance.current = 0;
     // Cancel RAF loop
     if (animationFrameRef.current) {
@@ -429,18 +433,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     if (now - lastTap < DOUBLE_TAP_DELAY) {
       // Double tap detected - toggle zoom
       if (scale === 1) {
-        lockInteraction(300);
+        lockInteraction(350);
         setIsZooming(true);
         setScale(2);
         setAutoZoomedOnPan(true);
-        setTimeout(() => setIsZooming(false), 250);
+        setTimeout(() => setIsZooming(false), 300);
       } else {
-        lockInteraction(300);
+        lockInteraction(350);
         setIsZooming(true);
         setScale(1);
         setPosition({ x: 0, y: 0 });
         setAutoZoomedOnPan(false);
-        setTimeout(() => setIsZooming(false), 250);
+        setTimeout(() => setIsZooming(false), 300);
       }
       pauseAllAuto();
     }
@@ -493,7 +497,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width: `${scale * 100}%`,
               height: `${scale * 100}%`,
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-              transition: (isDragging || isZooming) ? 'none' : 'width 0.25s ease-out, height 0.25s ease-out, transform 0.25s ease-out',
+              transition: isPinching 
+                ? 'none' 
+                : isDragging 
+                  ? 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
+                  : 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              willChange: 'width, height, transform',
               position: 'absolute',
               top: '50%',
               left: '50%',
@@ -868,16 +877,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         {/* Zoom controls - compact in top right */}
         {isTouchMode && (
           <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg p-1">
-            {scale > 1 && (
+            {(scale > 1 || position.x !== 0 || position.y !== 0) && (
               <>
                 <button
                   onClick={() => {
                     setScale(1);
                     setPosition({ x: 0, y: 0 });
+                    setAutoZoomedOnPan(false);
                     pauseAllAuto();
                   }}
                   className="p-2 text-white transition-all touch-manipulation"
-                  aria-label="Reset zoom"
+                  aria-label="Reset zoom and position"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
