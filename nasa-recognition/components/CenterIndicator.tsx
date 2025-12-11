@@ -103,8 +103,8 @@ export default function CenterIndicator({
           top: `${adjustedLocation.y}%`,
           width: `${adjustedLocation.width}%`,
           height: `${adjustedLocation.height}%`,
-          transition: 'all 0.3s ease-out',
-          filter: 'blur(0px)',
+          transition: 'all 0.05s linear',
+          filter: 'blur(0.3px)',
         }}
       >
         <div className="absolute inset-0 bg-white/20 border-2 border-white/60 rounded-lg shadow-lg" />
@@ -122,8 +122,8 @@ export default function CenterIndicator({
         left: `${visibleCenterX}%`,
         top: `${visibleCenterY}%`,
         transform: 'translate(-50%, -50%)',
-        transition: 'left 0.1s linear, top 0.1s linear',
-        filter: 'blur(0.5px)',
+        transition: 'none',
+        filter: 'blur(1px)',
       }}
     >
       <div
@@ -132,7 +132,7 @@ export default function CenterIndicator({
           width: `${circleSize}vw`,
           height: `${circleSize}vw`,
           aspectRatio: '1 / 1',
-          filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))',
+          filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.4))',
         }}
       />
     </div>
