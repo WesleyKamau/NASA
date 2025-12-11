@@ -743,7 +743,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     {/* Name tag: fluid placement that follows the face, clamped within photo bounds */}
                     {(() => {
                       const shouldRenderLabel = isHighlighted || showWhenZoomed;
-                      if (!shouldRenderLabel) return null;
                       
                       // Convert location to container coordinates to account for letterboxing
                       const containerLocation = convertPhotoToContainerCoords(location);
@@ -828,7 +827,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             }
                           }}
                         >
-                          <div className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95">
+                          {/* Element remains in DOM when hidden to support smooth fade-in/fade-out transitions */}
+                          <div
+                            className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95"
+                            style={{
+                              opacity: shouldRenderLabel ? 1 : 0,
+                              visibility: shouldRenderLabel ? 'visible' : 'hidden',
+                              pointerEvents: shouldRenderLabel ? 'auto' : 'none',
+                              transform: shouldRenderLabel ? 'scale(1)' : 'scale(0.95)',
+                            }}
+                          >
                             <p className="text-white font-semibold text-xs sm:text-sm md:text-lg">
                               {person.name}
                             </p>
