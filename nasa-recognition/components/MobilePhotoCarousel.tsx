@@ -48,6 +48,29 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   const currentPhoto = groupPhotos[currentPhotoIndex];
 
+  // Helper function to convert photo coordinates to container coordinates
+  // Account for the fixed 3:4 container and centered image positioning
+  const convertPhotoToContainerCoords = (location: any) => {
+    if (!currentPhoto) return location;
+    
+    const CONTAINER_ASPECT = 3 / 4; // width / height
+    const PHOTO_ASPECT = currentPhoto.width / currentPhoto.height;
+    
+    // Image fits in container with height = 100%, width scaled proportionally
+    // Vertical centering: (container height - image height) / 2 / container height = vertical offset
+    const imageHeightInContainer = 1; // 100%
+    const imageWidthInContainer = PHOTO_ASPECT / (1 / CONTAINER_ASPECT); // scaled to maintain aspect
+    
+    // Vertical offset as percentage of container height
+    const verticalOffsetPct = (1 - imageHeightInContainer) / 2 * 100;
+    
+    return {
+      ...location,
+      y: location.y * imageHeightInContainer + verticalOffsetPct,
+      height: location.height * imageHeightInContainer,
+    };
+  };
+
   useEffect(() => {
     const detectTouchMode = () => {
       const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
@@ -329,55 +352,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
 
-  // Calculate the scaled image bounds within the fixed container
-  // This accounts for the image being centered in the 3:4 container
-  const getImageBounds = () => {
-    if (!containerRef.current) return { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 };
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const containerWidth = rect.width;
-    const containerHeight = rect.height;
-    const containerAspect = containerWidth / containerHeight; // ~0.75 (3:4)
-    
-    // Photo aspect ratio (original image dimensions)
-    // Most photos are landscape, but we need to handle both
-    const photoAspect = 1600 / 1000; // 1.6 (landscape)
-    
-    let displayWidth = containerWidth;
-    let displayHeight = containerHeight;
-    let offsetXPx = 0;
-    let offsetYPx = 0;
-    
-    if (photoAspect > containerAspect) {
-      // Photo is wider than container - height fills container, width has padding
-      displayHeight = containerHeight;
-      displayWidth = containerHeight * photoAspect;
-      offsetXPx = (containerWidth - displayWidth) / 2;
-    } else {
-      // Photo is narrower than container - width fills container, height has padding
-      displayWidth = containerWidth;
-      displayHeight = containerWidth / photoAspect;
-      offsetYPx = (containerHeight - displayHeight) / 2;
-    }
-    
-    // Scale factors: how much the display is scaled relative to original photo percentages
-    // Since photo percentages are 0-100%, and display dimensions can vary, we need to adjust
-    const scaleX = displayWidth / containerWidth;
-    const scaleY = displayHeight / containerHeight;
-    
-    // Offset as percentage of container (where the image starts)
-    const offsetX = (offsetXPx / containerWidth) * 100;
-    const offsetY = (offsetYPx / containerHeight) * 100;
-    
-    return {
-      offsetX,
-      offsetY,
-      scaleX,
-      scaleY,
-    };
-  };
-
-
   return (
     <div className="w-full">
       {/* Photo viewer - fixed vertical rectangle container */}
@@ -506,14 +480,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 
                 // If a person is selected, morph to their rectangle
                 if (closestLocation) {
+                  const adjustedLocation = convertPhotoToContainerCoords(closestLocation);
                   return (
                     <div 
                       className="absolute z-50 transition-all duration-300 ease-out pointer-events-none"
                       style={{
-                        left: `${closestLocation.x}%`,
-                        top: `${closestLocation.y}%`,
-                        width: `${closestLocation.width}%`,
-                        height: `${closestLocation.height}%`,
+                        left: `${adjustedLocation.x}%`,
+                        top: `${adjustedLocation.y}%`,
+                        width: `${adjustedLocation.width}%`,
+                        height: `${adjustedLocation.height}%`,
                       }}
                     >
                       <div className="absolute inset-0 bg-white/20 border-2 border-white/60 rounded-lg shadow-lg" />
@@ -633,24 +608,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   height: location.height + FACE_HITBOX_PADDING,
                 };
 
-                // Get image bounds to adjust coordinates for centered image
-                const imageBounds = getImageBounds();
-                
-                // Adjust location coordinates for the centered image
-                const adjustedLeft = location.x * imageBounds.scaleX + imageBounds.offsetX;
-                const adjustedTop = location.y * imageBounds.scaleY + imageBounds.offsetY;
-                const adjustedWidth = location.width * imageBounds.scaleX;
-                const adjustedHeight = location.height * imageBounds.scaleY;
-
                 return (
                   <div
                     key={person.id}
                     className="absolute transition-all duration-300 cursor-pointer pointer-events-auto"
                     style={{
-                      left: `${adjustedLeft}%`,
-                      top: `${adjustedTop}%`,
-                      width: `${adjustedWidth}%`,
-                      height: `${adjustedHeight}%`,
+                      left: `${location.x}%`,
+                      top: `${convertPhotoToContainerCoords(location).y}%`,
+                      width: `${location.width}%`,
+                      height: `${convertPhotoToContainerCoords(location).height}%`,
                     }}
                     onMouseEnter={() => {
                       setHoveredPersonId(person.id);
