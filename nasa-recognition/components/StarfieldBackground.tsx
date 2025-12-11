@@ -32,20 +32,21 @@ export default function StarfieldBackground() {
 
     // Device orientation handler
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      // beta: front-to-back tilt (-180 to 180), use for horizontal movement
-      // gamma: left-to-right tilt (-90 to 90), use for horizontal movement
-      const beta = event.beta || 0; // Front-back tilt
-      const gamma = event.gamma || 0; // Left-right tilt
+      // alpha: rotation around z-axis (0 to 360)
+      // beta: front-to-back tilt (-180 to 180)
+      // gamma: left-to-right tilt (-90 to 90)
+      const alpha = (event.alpha || 0) % 360; // Rotation
+      const beta = event.beta || 0; // Front-back
+      const gamma = event.gamma || 0; // Left-right
       
-      // Normalize and scale down for subtle effect
-      // Clamp gamma to ±30 degrees for reasonable range
-      const normalizedGamma = Math.max(-30, Math.min(30, gamma)) / 30; // -1 to 1
-      const normalizedBeta = Math.max(-30, Math.min(30, beta - 90)) / 30; // -1 to 1, offset by 90 for portrait
+      // Use alpha (rotation) for the primary tilt effect
+      // Normalize to -1 to 1 range
+      const normalizedAlpha = Math.sin((alpha * Math.PI) / 180) * 0.3; // -0.3 to 0.3
+      const normalizedGamma = Math.max(-45, Math.min(45, gamma)) / 45 * 0.3; // -0.3 to 0.3
       
-      // Apply subtle multiplier (0.3 = max 30% speed in that direction)
       tiltRef.current = {
-        x: normalizedGamma * 0.3,
-        y: normalizedBeta * 0.3,
+        x: normalizedGamma,
+        y: normalizedAlpha,
       };
     };
 
@@ -58,7 +59,7 @@ export default function StarfieldBackground() {
             window.addEventListener('deviceorientation', handleOrientation);
           }
         } catch (error) {
-          console.log('Device orientation not supported or permission denied');
+          console.log('Device orientation permission denied');
         }
       } else {
         // Non-iOS devices
@@ -66,8 +67,43 @@ export default function StarfieldBackground() {
       }
     };
 
-    // Try to add orientation listener (will work automatically on Android, needs permission on iOS)
+    // Fallback: use accelerometer via DeviceMotionEvent for better compatibility
+    const handleMotion = (event: DeviceMotionEvent) => {
+      if (!event.accelerationIncludingGravity) return;
+      
+      const acc = event.accelerationIncludingGravity;
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      
+      // Normalize acceleration to tilt (clamped to ±9.8 m/s²)
+      const tiltX = Math.max(-1, Math.min(1, x / 9.8)) * 0.3;
+      const tiltY = Math.max(-1, Math.min(1, y / 9.8)) * 0.3;
+      
+      tiltRef.current = {
+        x: tiltX,
+        y: tiltY,
+      };
+    };
+
+    const requestMotionPermission = async () => {
+      if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+        try {
+          const permission = await (DeviceMotionEvent as any).requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('devicemotion', handleMotion);
+          }
+        } catch (error) {
+          console.log('Device motion permission denied');
+        }
+      } else {
+        // Non-iOS devices
+        window.addEventListener('devicemotion', handleMotion);
+      }
+    };
+
+    // Try orientation first, then fallback to motion
     requestOrientationPermission();
+    requestMotionPermission();
 
     // Create stars
     const stars: Star[] = [];
@@ -133,6 +169,7 @@ export default function StarfieldBackground() {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener('devicemotion', handleMotion);
       cancelAnimationFrame(animationId);
     };
   }, []);
