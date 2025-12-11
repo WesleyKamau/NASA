@@ -18,7 +18,7 @@ export default function GalaxyBackground() {
         mouseRepulsion={false}
         twinkleIntensity={0.4}
         rotationSpeed={0.05}
-        repulsionStrength={1}
+        repulsionStrength={0}
         autoCenterRepulsion={0}
         transparent={true}
       />
