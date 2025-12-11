@@ -20,14 +20,19 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
   // Detect if this is a touch device (like iPad)
   useEffect(() => {
     const detectTouch = () => {
-      const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-      const touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      const coarse = window.matchMedia('(pointer: coarse)').matches;
+      const touchCapable = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       setIsTouchDevice(coarse || touchCapable);
     };
 
     detectTouch();
-    window.addEventListener('resize', detectTouch);
-    return () => window.removeEventListener('resize', detectTouch);
+    
+    // Only listen to pointer media query changes (touch props don't change)
+    const mediaQuery = window.matchMedia('(pointer: coarse)');
+    const handleChange = () => detectTouch();
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const handlePersonClick = (person: Person) => {
