@@ -4,7 +4,7 @@ export const ROCKET_CONFIG = {
   ROCKET_SIZE: 58, // Controls the entire size of the rocket and glow
   ROCKET_SPEED: 4,
   LAUNCH_INTERVAL: 60000, // milliseconds
-  VIBRATION_INTENSITY: 1,
+  VIBRATION_INTENSITY: 0.5,
   ENGINE_GLOW_OFFSET_X: 0,
   ENGINE_GLOW_OFFSET_Y: 200,
 } as const;
