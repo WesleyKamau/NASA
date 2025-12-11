@@ -122,8 +122,9 @@ export default function CenterIndicator({
         left: `${visibleCenterX}%`,
         top: `${visibleCenterY}%`,
         transform: 'translate(-50%, -50%)',
-        transition: 'left 0.05s linear, top 0.05s linear',
-        filter: 'blur(1px)',
+        transition: 'left 0.1s ease-out, top 0.1s ease-out',
+        filter: 'blur(1.5px)',
+        willChange: 'left, top',
       }}
     >
       <div
