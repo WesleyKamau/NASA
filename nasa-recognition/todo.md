@@ -1,7 +1,7 @@
 # TODO
 
 - [x] Wrap mobile labels into two lines
-- [ ] Center or remove "Me" section text
+- [x] Center or remove "Me" section text
 - [ ] Add more LinkedIns
 - [ ] Add intern fun photos and feature flow
 - [x] Fix mobile name labels again

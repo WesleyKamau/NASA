@@ -140,7 +140,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
         {/* Me first */}
         {wesley && (
           <div>
-            <h3 className="text-2xl font-bold mb-4 gradient-text">
+            <h3 className="text-2xl font-bold mb-4 text-center gradient-text">
               Me
             </h3>
             <div className="flex justify-center">
