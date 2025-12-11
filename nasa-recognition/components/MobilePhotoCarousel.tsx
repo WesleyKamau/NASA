@@ -45,6 +45,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastTap, setLastTap] = useState(0);
   const [isTouchMode, setIsTouchMode] = useState(false);
@@ -326,6 +327,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     } else if (e.touches.length === 2) {
       // Pinch zoom preparation
       setIsDragging(false);
+      setIsPinching(true);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       pinchStartDistance.current = Math.hypot(dx, dy);
@@ -414,6 +416,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       (parentEl.style as any).overscrollBehavior = '';
     }
     setIsDragging(false);
+    setIsPinching(false);
     pinchStartDistance.current = 0;
     // Cancel RAF loop
     if (animationFrameRef.current) {
@@ -493,7 +496,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width: `${scale * 100}%`,
               height: `${scale * 100}%`,
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-              transition: (isDragging && !isZooming) ? 'none' : 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              transition: isPinching 
+                ? 'none' 
+                : isDragging 
+                  ? 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
+                  : 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               willChange: 'width, height, transform',
               position: 'absolute',
               top: '50%',
