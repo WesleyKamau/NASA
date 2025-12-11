@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import PhotoCarousel from '@/components/PhotoCarousel';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
+import { useTabletLandscape } from '@/hooks/useTabletLandscape';
 
 interface DesktopSplitViewProps {
   groupPhotos: GroupPhoto[];
@@ -15,25 +16,7 @@ interface DesktopSplitViewProps {
 
 export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [isTabletLandscape, setIsTabletLandscape] = useState(false);
-
-  useEffect(() => {
-    const checkTabletLandscape = () => {
-      const isLandscape = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
-      const isTouchDevice = typeof navigator !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-      const isIPadUA = typeof navigator !== 'undefined' && /(iPad|Macintosh)/.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
-      // Detect any touch device in landscape (iPhone, iPad, etc.)
-      setIsTabletLandscape(Boolean(isLandscape && isTouchDevice));
-    };
-
-    checkTabletLandscape();
-    window.addEventListener('resize', checkTabletLandscape);
-    window.addEventListener('orientationchange', checkTabletLandscape);
-    return () => {
-      window.removeEventListener('resize', checkTabletLandscape);
-      window.removeEventListener('orientationchange', checkTabletLandscape);
-    };
-  }, []);
+  const isTabletLandscape = useTabletLandscape();
 
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card in the right panel

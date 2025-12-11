@@ -119,10 +119,20 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       // Touch device landscape detection (iPhone, iPad, etc.)
       const isLandscapeOrientation = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
       const isTouchDevice = typeof navigator !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-      const isIPadUA = typeof navigator !== 'undefined' && /(iPad|Macintosh)/.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
       const isTabletWidth = typeof window !== 'undefined' && window.innerWidth >= 768;
+      
+      // Improved iPad detection: check for iPad user agent or Macintosh with touch support
+      const isIPadDevice = typeof navigator !== 'undefined' &&
+        (
+          /iPad/.test(navigator.userAgent) ||
+          (
+            /Macintosh/.test(navigator.userAgent) &&
+            navigator.maxTouchPoints && navigator.maxTouchPoints > 1
+          )
+        ) && isTabletWidth;
+      
       setIsLandscape(Boolean(isLandscapeOrientation));
-      setIsIPad(Boolean(isIPadUA && isTabletWidth));
+      setIsIPad(Boolean(isIPadDevice));
       setIsTabletLandscape(Boolean(isLandscapeOrientation && isTouchDevice));
     };
 
@@ -282,7 +292,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     const parentEl = containerRef.current?.parentElement;
     if (parentEl) {
       parentEl.style.touchAction = 'none';
-      (parentEl.style as any).overscrollBehavior = 'contain';
+      parentEl.style.overscrollBehavior = 'contain';
     }
     setShowCenterIndicator(true);
 
@@ -706,7 +716,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 return (
                   <div
                     key={person.id}
-                    className={`absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none`}
+                    className={`absolute transition-all duration-300 touch-none select-none ${(isHighlighted || showWhenZoomed) ? 'cursor-pointer pointer-events-auto' : 'pointer-events-none'}`}
                     style={{
                       left: `${adjustedLocation.x}%`,
                       top: `${adjustedLocation.y}%`,
@@ -714,11 +724,22 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       height: `${adjustedLocation.height}%`,
                     }}
                     onMouseEnter={() => {
-                      setHoveredPersonId(person.id);
-                      pauseAllAuto();
+                      if (isHighlighted || showWhenZoomed) {
+                        setHoveredPersonId(person.id);
+                        pauseAllAuto();
+                      }
                     }}
-                    onMouseLeave={() => setHoveredPersonId(null)}
+                    onMouseLeave={() => {
+                      if (isHighlighted || showWhenZoomed) {
+                        setHoveredPersonId(null);
+                      }
+                    }}
                     onClick={(e) => {
+                      // Only allow clicks if this person is highlighted or shown when zoomed
+                      if (!isHighlighted && !showWhenZoomed) {
+                        return;
+                      }
+                      
                       e.stopPropagation();
                       
                       if (isTabletLandscape) {
@@ -808,7 +829,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
                       return (
                         <div
-                          className={`absolute z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none pointer-events-auto`}
+                          className={`absolute z-20 transition-all duration-300 ease-out touch-none select-none ${shouldRenderLabel ? 'cursor-pointer pointer-events-auto active:scale-95' : 'pointer-events-none'}`}
                           style={{ 
                             top: '100%',
                             left: `${50 + shiftInFacePercent}%`,
@@ -816,6 +837,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             transform: 'translateX(-50%)',
                           }}
                           onClick={(e) => {
+                            // Only allow clicks if label is rendered (person is highlighted or shown when zoomed)
+                            if (!shouldRenderLabel) {
+                              return;
+                            }
+                            
                             e.stopPropagation();
                             
                             if (isTabletLandscape) {
@@ -866,7 +892,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             style={{
                               opacity: shouldRenderLabel ? 1 : 0,
                               visibility: shouldRenderLabel ? 'visible' : 'hidden',
-                              pointerEvents: shouldRenderLabel && !isTabletLandscape ? 'auto' : 'none',
+                              pointerEvents: shouldRenderLabel ? 'auto' : 'none',
                               transform: shouldRenderLabel ? 'scale(1)' : 'scale(0.95)',
                             }}
                           >
