@@ -3,6 +3,7 @@
 import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent } from 'react';
+import PersonImage from './PersonImage';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -24,6 +25,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
   const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
+  const [showCenterCircle, setShowCenterCircle] = useState(false);
+  
+  // Person transition state
+  const [transitioningPerson, setTransitioningPerson] = useState<{
+    person: Person;
+    fromLocation: any;
+    toLocation: any;
+    progress: number;
+  } | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -151,6 +161,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+    
+    // Show center circle after page flip
+    setShowCenterCircle(true);
   }, [currentPhotoIndex]);
 
   // Auto-scroll photos
@@ -218,6 +231,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const pauseAllAuto = useCallback(() => {
     pauseAutoScroll();
     pauseAutoHighlight();
+    // Hide center circle on user interaction
+    setShowCenterCircle(false);
   }, [pauseAutoScroll, pauseAutoHighlight]);
 
   const lockInteraction = useCallback((duration = 280) => {
@@ -231,6 +246,51 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   }, []);
 
   const handlePhotoNavigation = (index: number) => {
+    // Check if current highlighted person exists in both photos for transition
+    const currentPerson = shuffledPeople[highlightedPersonIndex];
+    if (currentPerson && isAutoHighlighting) {
+      const currentLocation = currentPerson.photoLocations.find(
+        loc => loc.photoId === currentPhoto.id
+      );
+      const newPhoto = groupPhotos[index];
+      const newLocation = currentPerson.photoLocations.find(
+        loc => loc.photoId === newPhoto.id
+      );
+      
+      // If person exists in both photos, create transition
+      if (currentLocation && newLocation) {
+        setTransitioningPerson({
+          person: currentPerson,
+          fromLocation: currentLocation,
+          toLocation: newLocation,
+          progress: 0,
+        });
+        
+        // Animate the transition
+        let startTime: number | null = null;
+        const duration = 800; // ms
+        
+        const animate = (timestamp: number) => {
+          if (!startTime) startTime = timestamp;
+          const elapsed = timestamp - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          setTransitioningPerson(prev => 
+            prev ? { ...prev, progress } : null
+          );
+          
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Clear transition after completion
+            setTimeout(() => setTransitioningPerson(null), 100);
+          }
+        };
+        
+        requestAnimationFrame(animate);
+      }
+    }
+    
     setCurrentPhotoIndex(index);
     pauseAllAuto();
   };
@@ -438,7 +498,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               })()}
               
               {/* Morphing indicator - circle that morphs into selected rectangle */}
-              {!isAutoHighlighting && (() => {
+              {(!isAutoHighlighting || showCenterCircle) && (() => {
                 if (!containerRef.current) return null;
                 
                 const rect = containerRef.current.getBoundingClientRect();
@@ -542,6 +602,46 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   </div>
                 );
               })()}
+              
+              {/* Person face transition overlay */}
+              {transitioningPerson && (() => {
+                const { person, fromLocation, toLocation, progress } = transitioningPerson;
+                
+                // Interpolate between fromLocation and toLocation
+                const interpolate = (from: number, to: number) => 
+                  from + (to - from) * progress;
+                
+                const currentLocation = {
+                  x: interpolate(fromLocation.x, toLocation.x),
+                  y: interpolate(fromLocation.y, toLocation.y),
+                  width: interpolate(fromLocation.width, toLocation.width),
+                  height: interpolate(fromLocation.height, toLocation.height),
+                };
+                
+                const adjustedLocation = convertPhotoToContainerCoords(currentLocation);
+                
+                return (
+                  <div
+                    className="absolute z-40 pointer-events-none transition-all duration-100"
+                    style={{
+                      left: `${adjustedLocation.x}%`,
+                      top: `${adjustedLocation.y}%`,
+                      width: `${adjustedLocation.width}%`,
+                      height: `${adjustedLocation.height}%`,
+                      opacity: 1 - Math.abs(progress - 0.5) * 2, // Fade in/out during transition
+                    }}
+                  >
+                    <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-400/60 shadow-lg shadow-yellow-400/50">
+                      <PersonImage 
+                        person={person}
+                        groupPhotos={groupPhotos}
+                        className="transition-opacity duration-300"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+              
               {shuffledPeople.map((person, idx) => {
                 const location = person.photoLocations.find(
                   loc => loc.photoId === currentPhoto.id
