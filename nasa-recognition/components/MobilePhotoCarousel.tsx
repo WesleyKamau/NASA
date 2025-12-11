@@ -371,8 +371,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         setTimeout(() => setIsZooming(false), 120);
       }
     } else if (isDragging && e.touches.length === 1) {
-      // If starting a pan at zero zoom, auto-jump to default zoom once
-      if (scale === 1 && !autoZoomedOnPan) {
+      // If starting a pan at zero zoom and original position, auto-jump to default zoom once
+      const isAtOrigin = scale === 1 && position.x === 0 && position.y === 0;
+      if (isAtOrigin && !autoZoomedOnPan) {
         const defaultZoom = currentPhoto.defaultZoom || 2;
         setIsZooming(true);
         setScale(defaultZoom);
@@ -876,16 +877,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         {/* Zoom controls - compact in top right */}
         {isTouchMode && (
           <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg p-1">
-            {scale > 1 && (
+            {(scale > 1 || position.x !== 0 || position.y !== 0) && (
               <>
                 <button
                   onClick={() => {
                     setScale(1);
                     setPosition({ x: 0, y: 0 });
+                    setAutoZoomedOnPan(false);
                     pauseAllAuto();
                   }}
                   className="p-2 text-white transition-all touch-manipulation"
-                  aria-label="Reset zoom"
+                  aria-label="Reset zoom and position"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
