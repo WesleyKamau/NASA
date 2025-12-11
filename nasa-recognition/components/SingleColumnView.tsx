@@ -30,8 +30,7 @@ export default function SingleColumnView({ groupPhotos, people }: SingleColumnVi
       const portraitTablet = window.innerWidth < 1200; // catch iPad portrait
       
       // Detect landscape tablet (iPad landscape: 1024px-1279px, landscape orientation)
-      const landscapeTablet = touchCapable && 
-                              window.innerWidth >= 1024 && 
+      const landscapeTablet = touchCapable && window.innerWidth >= 1024 && 
                               window.innerWidth < 1280 && 
                               window.matchMedia('(orientation: landscape)').matches;
       
