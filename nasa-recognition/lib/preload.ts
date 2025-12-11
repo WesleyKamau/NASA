@@ -1,5 +1,23 @@
 import { GroupPhoto, Person } from '@/types';
 
+// Cache the preload container to avoid repeated DOM queries
+let preloadImagesContainer: HTMLElement | null = null;
+
+/**
+ * Get or create the preload images container
+ */
+function getPreloadImagesContainer(): HTMLElement {
+  if (!preloadImagesContainer || !document.body.contains(preloadImagesContainer)) {
+    preloadImagesContainer = document.createElement('div');
+    preloadImagesContainer.id = 'preload-images-container';
+    preloadImagesContainer.style.position = 'absolute';
+    preloadImagesContainer.style.left = '-9999px';
+    preloadImagesContainer.style.visibility = 'hidden';
+    document.body.appendChild(preloadImagesContainer);
+  }
+  return preloadImagesContainer;
+}
+
 /**
  * Preload an image by creating an Image element and adding it to the DOM
  */
@@ -9,6 +27,13 @@ export function preloadImage(src: string): Promise<void> {
     img.onload = () => resolve();
     img.onerror = () => reject(new Error(`Failed to preload image: ${src}`));
     img.src = src;
+    
+    // Add to dedicated container to ensure browser caches it properly
+    img.style.display = 'none';
+    img.setAttribute('data-preload', 'true');
+    
+    const container = getPreloadImagesContainer();
+    container.appendChild(img);
   });
 }
 
@@ -17,32 +42,36 @@ export function preloadImage(src: string): Promise<void> {
  */
 export async function preloadCarouselImages(groupPhotos: GroupPhoto[]): Promise<void> {
   const promises = groupPhotos.map(photo => preloadImage(photo.imagePath));
-  try {
-    await Promise.all(promises);
-  } catch (error) {
-    console.warn('Some carousel images failed to preload:', error);
-  }
+  const results = await Promise.allSettled(promises);
+  
+  // Log any failed preloads
+  results.forEach((result, idx) => {
+    if (result.status === 'rejected') {
+      console.warn(`Failed to preload carousel image ${groupPhotos[idx].imagePath}:`, result.reason);
+    }
+  });
 }
 
 /**
  * Preload all person individual images
  */
 export async function preloadPersonImages(people: Person[]): Promise<void> {
-  const validPersonImages = people
-    .filter(person => person.individualPhoto)
-    .map(person => preloadImage(person.individualPhoto!));
+  const validPeople = people.filter(person => person.individualPhoto);
+  const promises = validPeople.map(person => preloadImage(person.individualPhoto!));
+  const results = await Promise.allSettled(promises);
   
-  try {
-    await Promise.all(validPersonImages);
-  } catch (error) {
-    console.warn('Some person images failed to preload:', error);
-  }
+  // Log any failed preloads
+  results.forEach((result, idx) => {
+    if (result.status === 'rejected') {
+      console.warn(`Failed to preload person image ${validPeople[idx].individualPhoto}:`, result.reason);
+    }
+  });
 }
 
 /**
- * Preload carousel images and SVG highlight rectangles
+ * Pre-render SVG highlight rectangles for the carousel.
  * The highlight rectangles are embedded in the carousel component as SVG,
- * so we create invisible elements to ensure they're rendered
+ * so we create invisible elements to ensure they're rendered.
  */
 export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
   const highlightContainer = document.createElement('div');
@@ -60,8 +89,8 @@ export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], peopl
       if (location) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttributeNS(null, 'viewBox', '0 0 100 100');
-        svg.setAttributeNS(null, 'width', '1');
-        svg.setAttributeNS(null, 'height', '1');
+        svg.setAttributeNS(null, 'width', '100');
+        svg.setAttributeNS(null, 'height', '100');
         
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttributeNS(null, 'x', String(location.x));
@@ -79,30 +108,69 @@ export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], peopl
   });
   
   document.body.appendChild(highlightContainer);
+  
+  // Clean up highlights after rendering completes
+  // Double requestAnimationFrame ensures the browser has completed a full paint cycle
+  // First frame: browser commits the DOM changes
+  // Second frame: browser has rendered the SVG elements and they're cached
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cleanupHighlights();
+    });
+  });
 }
+
+// Guard to prevent multiple concurrent preload calls
+let isPreloading = false;
+let preloadAllPromise: Promise<void> | null = null;
 
 /**
  * Comprehensive preload function: loads carousel images, person images, and highlights
  */
-export async function preloadAll(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
-  try {
-    // Start all preloads in parallel
-    await Promise.all([
-      preloadCarouselImages(groupPhotos),
-      preloadPersonImages(people),
-      preloadCarouselHighlights(groupPhotos, people)
-    ]);
-  } catch (error) {
-    console.warn('Preload error:', error);
+export function preloadAll(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
+  // Return existing promise if already preloading
+  if (isPreloading && preloadAllPromise) {
+    return preloadAllPromise;
   }
+  
+  isPreloading = true;
+  preloadAllPromise = (async () => {
+    try {
+      // Start all preloads in parallel and wait for all to settle
+      const results = await Promise.allSettled([
+        preloadCarouselImages(groupPhotos),
+        preloadPersonImages(people),
+        preloadCarouselHighlights(groupPhotos, people)
+      ]);
+
+      // Log any errors from the settled promises
+      results.forEach((result, idx) => {
+        if (result.status === 'rejected') {
+          const preloadName = ['Carousel Images', 'Person Images', 'Carousel Highlights'][idx];
+          console.warn(`Preload error in ${preloadName}:`, result.reason);
+        }
+      });
+    } finally {
+      isPreloading = false;
+      preloadAllPromise = null;
+    }
+  })();
+  
+  return preloadAllPromise;
 }
 
 /**
- * Clean up preloaded highlight container
+ * Clean up preloaded highlight container and preloaded images
  */
 export function cleanupHighlights(): void {
-  const container = document.getElementById('preload-highlights-container');
-  if (container) {
-    container.remove();
+  const highlightContainer = document.getElementById('preload-highlights-container');
+  if (highlightContainer) {
+    highlightContainer.remove();
+  }
+  
+  // Clean up preloaded images container and reset cache
+  if (preloadImagesContainer && document.body.contains(preloadImagesContainer)) {
+    preloadImagesContainer.remove();
+    preloadImagesContainer = null;
   }
 }

@@ -1,5 +1,4 @@
 import { getPeopleData } from '@/lib/data';
-import { preloadAll } from '@/lib/preload';
 import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
 import SLSRocket from '@/components/SLSRocket';
@@ -7,13 +6,6 @@ import ClientHome from '@/components/ClientHome';
 
 export default function Home() {
   const data = getPeopleData();
-
-  // Preload all images and highlights on initial load
-  if (typeof window !== 'undefined') {
-    preloadAll(data.groupPhotos, data.people).catch(error => {
-      console.error('Failed to preload assets:', error);
-    });
-  }
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
