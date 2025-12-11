@@ -4,6 +4,7 @@ import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
+import PersonImage from './PersonImage';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -40,7 +41,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isTabletLandscape, setIsTabletLandscape] = useState(false);
   const [isIPad, setIsIPad] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [isTransitioningPhoto, setIsTransitioningPhoto] = useState(false);
   
+  // Touch/pan state
   // Touch/pan state
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -202,6 +205,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     setPosition({ x: 0, y: 0 });
     // Hide center indicator until user interacts on new photo
     setShowCenterIndicator(false);
+  }, [currentPhotoIndex]);
+
+  // Handle photo transition state for face highlights
+  useEffect(() => {
+    setIsTransitioningPhoto(true);
+    const timer = setTimeout(() => {
+      setIsTransitioningPhoto(false);
+    }, 600); // Duration to keep face visible during/after transition
+    return () => clearTimeout(timer);
   }, [currentPhotoIndex]);
 
   // Auto-scroll photos
@@ -744,6 +756,14 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       </div>
                     )}
                     
+                    {/* Face Image during transition */}
+                    <div 
+                        className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity duration-300"
+                        style={{ opacity: isTransitioningPhoto ? 1 : 0 }}
+                    >
+                        <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" />
+                    </div>
+
                     {/* Highlight border */}
                     <div 
                       className={`absolute inset-0 rounded-lg transition-all duration-500 z-10`}
