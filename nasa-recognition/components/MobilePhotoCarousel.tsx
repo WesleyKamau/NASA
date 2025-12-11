@@ -10,6 +10,16 @@ interface MobilePhotoCarouselProps {
   onPersonClick?: (person: Person) => void;
 }
 
+interface PhotoLocation {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// Container aspect ratio (width / height) - used for letterboxing calculations
+const CONTAINER_ASPECT_RATIO = 3 / 4;
+
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick }: MobilePhotoCarouselProps) {
   const MAX_VISIBLE_LABELS = 1;
   const FACE_HITBOX_PADDING = 10; // Percentage padding to expand face hitboxes
@@ -23,6 +33,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [shuffledPeople, setShuffledPeople] = useState<Person[]>([]);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
+  const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -47,6 +58,41 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const animationFrameRef = useRef<number>(0);
 
   const currentPhoto = groupPhotos[currentPhotoIndex];
+
+  // Helper function to convert photo coordinates to container coordinates
+  // Account for letterboxing when photo aspect ratio differs from container (3:4)
+  const convertPhotoToContainerCoords = (location: PhotoLocation): PhotoLocation => {
+    if (!currentPhoto) return location;
+    
+    // Get photo dimensions (either from loaded state or from data)
+    const photoDims = photoDimensions[currentPhoto.id];
+    const photoWidth = photoDims?.width || currentPhoto.width || 1600;
+    const photoHeight = photoDims?.height || currentPhoto.height || 1000;
+    const PHOTO_ASPECT = photoWidth / photoHeight;
+    
+    // Determine how the image fits in the container
+    if (PHOTO_ASPECT > CONTAINER_ASPECT_RATIO) {
+      // Photo is wider than container - image fills width, letterboxed top/bottom
+      const imageHeightInContainer = CONTAINER_ASPECT_RATIO / PHOTO_ASPECT; // as fraction of container
+      const verticalOffsetPct = (1 - imageHeightInContainer) / 2 * 100; // top padding as %
+      
+      return {
+        ...location,
+        y: location.y * imageHeightInContainer + verticalOffsetPct,
+        height: location.height * imageHeightInContainer,
+      };
+    } else {
+      // Photo is taller than container - image fills height, letterboxed left/right
+      const imageWidthInContainer = PHOTO_ASPECT / CONTAINER_ASPECT_RATIO; // as fraction of container
+      const horizontalOffsetPct = (1 - imageWidthInContainer) / 2 * 100; // left padding as %
+      
+      return {
+        ...location,
+        x: location.x * imageWidthInContainer + horizontalOffsetPct,
+        width: location.width * imageWidthInContainer,
+      };
+    }
+  };
 
   useEffect(() => {
     const detectTouchMode = () => {
@@ -331,11 +377,23 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   return (
     <div className="w-full">
-      {/* Photo viewer */}
-      <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
-        <div 
+      {/* Fallback for aspect-ratio using padding-bottom technique */}
+      <style>
+        {`
+          @supports not (aspect-ratio: 1) {
+            .aspect-3-4-fallback {
+              height: 0 !important;
+              padding-bottom: 75% !important;
+              position: relative !important;
+            }
+          }
+        `}
+      </style>
+      {/* Photo viewer - fixed vertical rectangle container */}
+      <div className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" style={{ width: '100%', maxWidth: '500px', aspectRatio: '3 / 4' }}>
+        <div
           ref={containerRef}
-          className="relative w-full bg-slate-800/50 overflow-hidden touch-none"
+          className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -352,21 +410,29 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               transition: isDragging && !isZooming ? 'none' : 'transform 0.25s ease-out',
               transformOrigin: 'center center',
             }}
-            className="w-full h-full"
+            className="relative w-full h-full"
           >
             <Image
               src={currentPhoto.imagePath}
               alt={currentPhoto.name}
               width={1600}
               height={1000}
-              className="w-full h-auto object-contain pointer-events-none"
+              className="w-full h-full object-contain pointer-events-none"
               priority
               sizes="100vw"
               draggable={false}
+              onLoadingComplete={(img) => {
+                setPhotoDimensions((prev) => {
+                  if (prev[currentPhoto.id]) {
+                    return prev;
+                  }
+                  return { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } };
+                });
+              }}
             />
 
             {/* Interactive regions overlay */}
-            <div className="absolute inset-0 z-10">
+            <div className="absolute inset-0 z-10 w-full h-full">
               {/* Debug: True center point dot */}
               {showDebugHitboxes && (() => {
                 if (!containerRef.current) return null;
@@ -457,14 +523,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 
                 // If a person is selected, morph to their rectangle
                 if (closestLocation) {
+                  const adjustedLocation = convertPhotoToContainerCoords(closestLocation);
                   return (
                     <div 
                       className="absolute z-50 transition-all duration-300 ease-out pointer-events-none"
                       style={{
-                        left: `${closestLocation.x}%`,
-                        top: `${closestLocation.y}%`,
-                        width: `${closestLocation.width}%`,
-                        height: `${closestLocation.height}%`,
+                        left: `${adjustedLocation.x}%`,
+                        top: `${adjustedLocation.y}%`,
+                        width: `${adjustedLocation.width}%`,
+                        height: `${adjustedLocation.height}%`,
                       }}
                     >
                       <div className="absolute inset-0 bg-white/20 border-2 border-white/60 rounded-lg shadow-lg" />
@@ -577,6 +644,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 })();
 
                 // Calculate expanded hitbox for debugging
+                const adjustedLocation = convertPhotoToContainerCoords(location);
                 const expandedLocation = {
                   x: location.x - FACE_HITBOX_PADDING / 2,
                   y: location.y - FACE_HITBOX_PADDING / 2,
@@ -587,12 +655,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 return (
                   <div
                     key={person.id}
-                    className="absolute transition-all duration-300 cursor-pointer pointer-events-auto"
+                    className="absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none"
                     style={{
-                      left: `${location.x}%`,
-                      top: `${location.y}%`,
-                      width: `${location.width}%`,
-                      height: `${location.height}%`,
+                      left: `${adjustedLocation.x}%`,
+                      top: `${adjustedLocation.y}%`,
+                      width: `${adjustedLocation.width}%`,
+                      height: `${adjustedLocation.height}%`,
                     }}
                     onMouseEnter={() => {
                       setHoveredPersonId(person.id);
@@ -673,9 +741,14 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     />
                     
                     {/* Name tag: fluid placement that follows the face, clamped within photo bounds */}
-                    {(isHighlighted || showWhenZoomed) && (() => {
-                      // Calculate face center in photo coordinates
-                      const faceCenterX = location.x + location.width / 2;
+                    {(() => {
+                      const shouldRenderLabel = isHighlighted || showWhenZoomed;
+                      
+                      // Convert location to container coordinates to account for letterboxing
+                      const containerLocation = convertPhotoToContainerCoords(location);
+                      
+                      // Calculate face center in container coordinates
+                      const faceCenterX = containerLocation.x + containerLocation.width / 2;
                       
                       // Get viewport width to adjust estimation for different screen sizes
                       const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
@@ -690,7 +763,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                                          viewportWidth < 768 ? 7 : 
                                          5;
                       
-                      // Estimate label width as percentage of photo width
+                      // Estimate label width as percentage of container width
                       const estimatedLabelWidthPct = person.name.length * scaleFactor + basePadding;
                       const halfLabelWidth = estimatedLabelWidthPct / 2;
                       
@@ -722,15 +795,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                         console.log(`  → Shifting LEFT by ${Math.abs(horizontalShift).toFixed(2)}%`);
                       }
                       
-                      // Convert shift from photo percentage to face rectangle percentage
-                      // horizontalShift is in photo %, we need it relative to face width
-                      const shiftInFacePercent = (horizontalShift / location.width) * 100;
+                      // Convert shift from container percentage to face rectangle percentage
+                      // horizontalShift is in container %, we need it relative to face width
+                      const shiftInFacePercent = (horizontalShift / containerLocation.width) * 100;
                       
-                      console.log(`  → Face width: ${location.width.toFixed(2)}%, shift in face coords: ${shiftInFacePercent.toFixed(2)}%`);
+                      console.log(`  → Face width: ${containerLocation.width.toFixed(2)}%, shift in face coords: ${shiftInFacePercent.toFixed(2)}%`);
                       
                       return (
                         <div
-                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95"
+                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none"
                           style={{ 
                             top: '100%',
                             left: `${50 + shiftInFacePercent}%`,
@@ -754,7 +827,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             }
                           }}
                         >
-                          <div className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95">
+                          {/* Element remains in DOM when hidden to support smooth fade-in/fade-out transitions */}
+                          <div
+                            className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95"
+                            style={{
+                              opacity: shouldRenderLabel ? 1 : 0,
+                              visibility: shouldRenderLabel ? 'visible' : 'hidden',
+                              pointerEvents: shouldRenderLabel ? 'auto' : 'none',
+                              transform: shouldRenderLabel ? 'scale(1)' : 'scale(0.95)',
+                            }}
+                          >
                             <p className="text-white font-semibold text-xs sm:text-sm md:text-lg">
                               {person.name}
                             </p>
