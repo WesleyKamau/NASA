@@ -18,13 +18,13 @@ export default function PersonCard({ person, groupPhotos, onClick, idPrefix = ''
     <button
       id={`person-card-${idPrefix}${person.id}`}
       onClick={onClick}
-      className={`group relative w-full bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 transition-all duration-300 cursor-pointer border border-slate-700/50 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 touch-manipulation ${
+      className={`group relative w-full bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 transition-all duration-300 cursor-pointer border border-slate-700/50 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 touch-manipulation ${
         isWesley ? 'ring-2 ring-blue-500/50' : ''
       }`}
       aria-label={`View ${person.name}'s profile`}
     >
       {/* Photo */}
-      <div className="w-full aspect-square mb-2 sm:mb-3 rounded-lg overflow-hidden bg-slate-800/50 relative">
+      <div className="w-full aspect-square mb-1.5 sm:mb-2 rounded-lg overflow-hidden bg-slate-800/50 relative">
         <PersonImage 
           person={person} 
           groupPhotos={groupPhotos} 
@@ -41,12 +41,12 @@ export default function PersonCard({ person, groupPhotos, onClick, idPrefix = ''
       </div>
 
       {/* Name */}
-      <h3 className="text-white font-semibold text-base sm:text-lg mb-1 truncate text-left">
+      <h3 className="text-white font-semibold text-sm sm:text-base mb-0.5 truncate text-left">
         {person.name}
       </h3>
 
       {/* Description */}
-      <p className="text-slate-300 text-xs sm:text-sm line-clamp-2 text-left">
+      <p className="text-slate-300 text-xs line-clamp-1 text-left">
         {person.description}
       </p>
     </button>
