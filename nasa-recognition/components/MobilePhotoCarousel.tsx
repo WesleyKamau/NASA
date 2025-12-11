@@ -34,6 +34,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
   const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
+  const [showCenterIndicator, setShowCenterIndicator] = useState(false);
+  const [isTabletLandscape, setIsTabletLandscape] = useState(false);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -99,7 +101,14 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
       const touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
       const portraitTablet = typeof window !== 'undefined' && window.innerWidth < 1200;
-      setIsTouchMode(coarse || (touchCapable && portraitTablet));
+      // Force touch mode on iPad landscape to enable pan/zoom handlers
+      setIsTouchMode(coarse || (touchCapable && portraitTablet) || isTabletLandscape);
+
+      // iPad landscape detection
+      const isLandscape = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
+      const isIPadUA = typeof navigator !== 'undefined' && /(iPad|Macintosh)/.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
+      const isTabletWidth = typeof window !== 'undefined' && window.innerWidth >= 768;
+      setIsTabletLandscape(Boolean(isLandscape && isIPadUA && isTabletWidth));
     };
 
     detectTouchMode();
@@ -159,6 +168,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+    // Hide center indicator until user interacts on new photo
+    setShowCenterIndicator(false);
   }, [currentPhotoIndex]);
 
   // Auto-scroll photos
@@ -252,6 +263,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
+    setShowCenterIndicator(true);
 
     if (e.touches.length === 1) {
       setIsDragging(true);
@@ -371,6 +383,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       pauseAllAuto();
     }
     setLastTap(now);
+    setShowCenterIndicator(true);
   };
 
   const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
@@ -457,9 +470,46 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   </div>
                 );
               })()}
+
+              {/* Person image transition: show the highlighted person's image following their rectangle with smooth transition */}
+              {(() => {
+                const person = currentHighlightedPerson;
+                if (!person) return null;
+                const location = person.photoLocations.find(l => l.photoId === currentPhoto.id);
+                if (!location) return null;
+                const adjustedLocation = convertPhotoToContainerCoords(location);
+                const sizePct = Math.min(adjustedLocation.width, adjustedLocation.height);
+                const centerX = adjustedLocation.x + adjustedLocation.width / 2;
+                const centerY = adjustedLocation.y + adjustedLocation.height / 2;
+                return (
+                  <div
+                    key={`${currentPhoto.id}-${person.id}-image`}
+                    className="absolute z-[55] transition-all duration-500 ease-out"
+                    style={{
+                      left: `${centerX}%`,
+                      top: `${centerY}%`,
+                      transform: 'translate(-50%, -50%)',
+                      width: `${sizePct}%`,
+                      height: `${sizePct}%`,
+                      borderRadius: '9999px',
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.35)'
+                    }}
+                  >
+                    <Image
+                      src={person.individualPhoto || '/photos/placeholder-face.jpg'}
+                      alt={person.name}
+                      width={256}
+                      height={256}
+                      className="w-full h-full object-cover"
+                      priority
+                    />
+                  </div>
+                );
+              })()}
               
-              {/* Morphing indicator - circle that morphs into selected rectangle */}
-              {!isAutoHighlighting && (() => {
+              {/* Center indicator: only shows after user interacts on the current photo */}
+              {showCenterIndicator && (() => {
                 if (!containerRef.current) return null;
                 
                 const rect = containerRef.current.getBoundingClientRect();
@@ -655,7 +705,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 return (
                   <div
                     key={person.id}
-                    className="absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none"
+                    className={`absolute transition-all duration-300 cursor-pointer ${isTabletLandscape ? 'pointer-events-none' : 'pointer-events-auto'} touch-none select-none`}
                     style={{
                       left: `${adjustedLocation.x}%`,
                       top: `${adjustedLocation.y}%`,
@@ -669,45 +719,21 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     onMouseLeave={() => setHoveredPersonId(null)}
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('Face clicked:', person.name, person.id);
-                      
-                      // Scroll to the person's card
-                      const personCardId = `person-card-mobile-${person.id}`;
-                      console.log('Looking for card:', personCardId);
-                      const cardElement = document.getElementById(personCardId);
-                      console.log('Card element found:', cardElement);
-                      if (cardElement) {
-                        // Use a timeout to ensure the scroll happens after any layout updates
-                        setTimeout(() => {
-                          // Try multiple scrolling methods for better compatibility
-                          try {
-                            // Method 1: scrollIntoView
-                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          } catch (e) {
-                            // Fallback
-                          }
-                          
-                          // Method 2: window.scrollTo with calculation (as backup/reinforcement)
-                          const rect = cardElement.getBoundingClientRect();
-                          const scrollTop = window.scrollY || document.documentElement.scrollTop;
-                          const targetY = scrollTop + rect.top - (window.innerHeight / 2) + (rect.height / 2);
-                          
-                          // Only use this if scrollIntoView didn't work well or as a second pass
-                          // But since we want smooth scrolling, we should be careful not to conflict
-                          // Let's just ensure we are scrolling the window
-                          window.scrollTo({
-                            top: targetY,
-                            behavior: 'smooth'
-                          });
-                        }, 50);
-
-                        // Add a temporary highlight effect
-                        cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                        setTimeout(() => {
-                          cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                        }, 2000);
+                      if (isTabletLandscape && onPersonClick) {
+                        onPersonClick(person);
                       } else {
-                        console.error('Card element not found for:', personCardId);
+                        // Scroll to the person's card (mobile behavior)
+                        const personCardId = `person-card-mobile-${person.id}`;
+                        const cardElement = document.getElementById(personCardId);
+                        if (cardElement) {
+                          setTimeout(() => {
+                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }, 50);
+                          cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                          setTimeout(() => {
+                            cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                          }, 2000);
+                        }
                       }
                     }}
                   >
@@ -743,64 +769,20 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     {/* Name tag: fluid placement that follows the face, clamped within photo bounds */}
                     {(() => {
                       const shouldRenderLabel = isHighlighted || showWhenZoomed;
-                      
-                      // Convert location to container coordinates to account for letterboxing
-                      const containerLocation = convertPhotoToContainerCoords(location);
-                      
-                      // Calculate face center in container coordinates
-                      const faceCenterX = containerLocation.x + containerLocation.width / 2;
-                      
-                      // Get viewport width to adjust estimation for different screen sizes
+                      const faceCenterX = location.x + location.width / 2;
                       const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
-                      
-                      // Scale estimation based on viewport width
-                      // On small phones (< 400px), use higher estimation
-                      // On tablets/larger (> 768px), use lower estimation
-                      const scaleFactor = viewportWidth < 400 ? 1.3 : 
-                                         viewportWidth < 768 ? 1.1 : 
-                                         0.7;
-                      const basePadding = viewportWidth < 400 ? 9 : 
-                                         viewportWidth < 768 ? 7 : 
-                                         5;
-                      
-                      // Estimate label width as percentage of container width
+                      const scaleFactor = viewportWidth < 400 ? 1.3 : viewportWidth < 768 ? 1.1 : 0.7;
+                      const basePadding = viewportWidth < 400 ? 9 : viewportWidth < 768 ? 7 : 5;
                       const estimatedLabelWidthPct = person.name.length * scaleFactor + basePadding;
                       const halfLabelWidth = estimatedLabelWidthPct / 2;
-                      
-                      // Add buffer zone from edges
                       const edgeBuffer = viewportWidth < 768 ? 4 : 2;
-                      
-                      // Calculate how much the label would overflow on each side (including buffer)
                       const leftOverflow = Math.max(0, (halfLabelWidth + edgeBuffer) - faceCenterX);
                       const rightOverflow = Math.max(0, (faceCenterX + halfLabelWidth + edgeBuffer) - 100);
-                      
-                      console.log(`${person.name}:`, {
-                        faceCenterX: faceCenterX.toFixed(2),
-                        labelWidth: estimatedLabelWidthPct.toFixed(2),
-                        leftOverflow: leftOverflow.toFixed(2),
-                        rightOverflow: rightOverflow.toFixed(2),
-                        viewportWidth,
-                        scaleFactor,
-                      });
-                      
-                      // Calculate shift: if near left edge, shift right; if near right edge, shift left
                       let horizontalShift = 0;
-                      if (leftOverflow > 0) {
-                        // Shift right to prevent left cutoff
-                        horizontalShift = leftOverflow;
-                        console.log(`  → Shifting RIGHT by ${horizontalShift.toFixed(2)}%`);
-                      } else if (rightOverflow > 0) {
-                        // Shift left to prevent right cutoff
-                        horizontalShift = -rightOverflow;
-                        console.log(`  → Shifting LEFT by ${Math.abs(horizontalShift).toFixed(2)}%`);
-                      }
-                      
-                      // Convert shift from container percentage to face rectangle percentage
-                      // horizontalShift is in container %, we need it relative to face width
-                      const shiftInFacePercent = (horizontalShift / containerLocation.width) * 100;
-                      
-                      console.log(`  → Face width: ${containerLocation.width.toFixed(2)}%, shift in face coords: ${shiftInFacePercent.toFixed(2)}%`);
-                      
+                      if (leftOverflow > 0) horizontalShift = leftOverflow;
+                      else if (rightOverflow > 0) horizontalShift = -rightOverflow;
+                      const shiftInFacePercent = (horizontalShift / location.width) * 100;
+
                       return (
                         <div
                           className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none"
@@ -810,24 +792,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             marginTop: '8px',
                             transform: 'translateX(-50%)',
                           }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Scroll to the person's card
-                            const personCardId = `person-card-mobile-${person.id}`;
-                            const cardElement = document.getElementById(personCardId);
-                            if (cardElement) {
-                              setTimeout(() => {
-                                cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              }, 50);
-                              // Add highlight effect
-                              cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                              setTimeout(() => {
-                                cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                              }, 2000);
-                            }
-                          }}
                         >
-                          {/* Element remains in DOM when hidden to support smooth fade-in/fade-out transitions */}
                           <div
                             className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95"
                             style={{
