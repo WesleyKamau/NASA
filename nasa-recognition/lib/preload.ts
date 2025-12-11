@@ -10,10 +10,20 @@ export function preloadImage(src: string): Promise<void> {
     img.onerror = () => reject(new Error(`Failed to preload image: ${src}`));
     img.src = src;
     
-    // Add to DOM to ensure browser caches it properly
+    // Add to dedicated container to ensure browser caches it properly
     img.style.display = 'none';
     img.setAttribute('data-preload', 'true');
-    document.body.appendChild(img);
+    
+    let container = document.getElementById('preload-images-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'preload-images-container';
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.visibility = 'hidden';
+      document.body.appendChild(container);
+    }
+    container.appendChild(img);
   });
 }
 
@@ -89,10 +99,13 @@ export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], peopl
   
   document.body.appendChild(highlightContainer);
   
-  // Clean up highlights after a brief delay to allow rendering
-  setTimeout(() => {
-    cleanupHighlights();
-  }, 100);
+  // Clean up highlights after rendering completes
+  // Use requestAnimationFrame to ensure SVG rendering is complete
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cleanupHighlights();
+    });
+  });
 }
 
 // Guard to prevent multiple concurrent preload calls
@@ -138,12 +151,14 @@ export function preloadAll(groupPhotos: GroupPhoto[], people: Person[]): Promise
  * Clean up preloaded highlight container and preloaded images
  */
 export function cleanupHighlights(): void {
-  const container = document.getElementById('preload-highlights-container');
-  if (container) {
-    container.remove();
+  const highlightContainer = document.getElementById('preload-highlights-container');
+  if (highlightContainer) {
+    highlightContainer.remove();
   }
   
-  // Clean up preloaded images
-  const preloadedImages = document.querySelectorAll('img[data-preload="true"]');
-  preloadedImages.forEach(img => img.remove());
+  // Clean up preloaded images container
+  const imageContainer = document.getElementById('preload-images-container');
+  if (imageContainer) {
+    imageContainer.remove();
+  }
 }
