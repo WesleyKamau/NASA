@@ -23,7 +23,7 @@ export interface PersonImageInfo {
  * 3. First tagged group photo
  * 4. Placeholder (first letter of name)
  */
-export function getPersonImage(person: Person, groupPhotos: GroupPhoto[]): PersonImageInfo {
+export function getPersonImage(person: Person, groupPhotos: GroupPhoto[], ignoreRotation = false): PersonImageInfo {
   // Use individual photo if available
   if (person.individualPhoto) {
     return {
@@ -85,7 +85,7 @@ export function getPersonImage(person: Person, groupPhotos: GroupPhoto[]): Perso
     src: groupPhoto.imagePath,
     backgroundSize,
     backgroundPosition,
-    rotation: photoLocation.rotation || 0,
+    rotation: ignoreRotation ? 0 : (photoLocation.rotation || 0),
     crop: { x, y, width, height },
   };
 }

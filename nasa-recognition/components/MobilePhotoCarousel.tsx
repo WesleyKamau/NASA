@@ -35,8 +35,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isIPad, setIsIPad] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isTransitioningPhoto, setIsTransitioningPhoto] = useState(false);
+  const [previousPhotoIndex, setPreviousPhotoIndex] = useState(0);
+  const [transitionProgress, setTransitionProgress] = useState<'start' | 'middle' | 'end'>('end');
   
-  // Touch/pan state
   // Touch/pan state
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -202,11 +203,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Handle photo transition state for face highlights
   useEffect(() => {
+    setPreviousPhotoIndex(currentPhotoIndex);
     setIsTransitioningPhoto(true);
-    const timer = setTimeout(() => {
+    setTransitionProgress('start');
+    
+    const endTimer = setTimeout(() => {
       setIsTransitioningPhoto(false);
-    }, 600); // Duration to keep face visible during/after transition
-    return () => clearTimeout(timer);
+      setTransitionProgress('end');
+    }, 300); // Match the CSS transition duration
+    
+    return () => {
+      clearTimeout(endTimer);
+    };
   }, [currentPhotoIndex]);
 
   // Auto-scroll photos
@@ -675,7 +683,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       top: `${adjustedLocation.y}%`,
                       width: `${adjustedLocation.width}%`,
                       height: `${adjustedLocation.height}%`,
-                      transform: `rotate(${adjustedLocation.rotation || 0}deg)`,
                     }}
                     onMouseEnter={() => {
                       if (isHighlighted || showWhenZoomed) {
@@ -750,13 +757,31 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       </div>
                     )}
                     
-                    {/* Face Image during transition */}
-                    <div 
-                        className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity duration-300"
-                        style={{ opacity: isTransitioningPhoto ? 1 : 0 }}
-                    >
-                        <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" />
-                    </div>
+                    {/* Face Image during transition - Previous photo (fades out) */}
+                    {isTransitioningPhoto && (() => {
+                      const prevPhoto = groupPhotos[previousPhotoIndex];
+                      const prevLocation = person.photoLocations.find(
+                        loc => loc.photoId === prevPhoto?.id
+                      );
+                      return prevLocation ? (
+                        <div 
+                            className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity duration-300"
+                            style={{ opacity: transitionProgress === 'start' ? 1 : 0 }}
+                        >
+                            <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={prevPhoto.id} />
+                        </div>
+                      ) : null;
+                    })()}
+                    
+                    {/* Face Image during transition - Current photo (fades in) */}
+                    {isTransitioningPhoto && (
+                      <div 
+                          className="absolute inset-0 overflow-hidden rounded-lg z-1 transition-opacity duration-300"
+                          style={{ opacity: transitionProgress === 'start' ? 0 : 1 }}
+                      >
+                          <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={currentPhoto.id} />
+                      </div>
+                    )}
 
                     {/* Highlight border */}
                     <div 
