@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from './MobilePhotoCarousel';
 import PhotoCarousel from './PhotoCarousel';
+import PersonModal from './PersonModal';
 
 interface SingleColumnViewProps {
   groupPhotos: GroupPhoto[];
@@ -12,13 +13,24 @@ interface SingleColumnViewProps {
 
 export default function SingleColumnView({ groupPhotos, people }: SingleColumnViewProps) {
   const [useTouchLayout, setUseTouchLayout] = useState(false);
+  const [isLandscapeTablet, setIsLandscapeTablet] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   useEffect(() => {
     const detect = () => {
-      const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-      const touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-      const portraitTablet = typeof window !== 'undefined' && window.innerWidth < 1200; // catch iPad portrait
+      if (typeof window === 'undefined') return;
+      
+      const coarse = window.matchMedia('(pointer: coarse)').matches;
+      const touchCapable = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const portraitTablet = window.innerWidth < 1200; // catch iPad portrait
+      
+      // Detect landscape tablet (iPad landscape: 1024px-1279px, landscape orientation)
+      const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+      const isTabletWidth = window.innerWidth >= 1024 && window.innerWidth < 1280;
+      const landscapeTablet = touchCapable && isTabletWidth && isLandscape;
+      
       setUseTouchLayout(coarse || (touchCapable && portraitTablet));
+      setIsLandscapeTablet(landscapeTablet);
     };
 
     detect();
@@ -27,7 +39,13 @@ export default function SingleColumnView({ groupPhotos, people }: SingleColumnVi
   }, []);
 
   const handlePersonClick = (person: Person) => {
-    // Scroll to the person's card
+    // iPad landscape uses desktop behavior (modal)
+    if (isLandscapeTablet) {
+      setSelectedPerson(person);
+      return;
+    }
+    
+    // Mobile/portrait tablet behavior: scroll to the person's card
     const personCardId = `person-card-mobile-${person.id}`;
     const cardElement = document.getElementById(personCardId);
     
@@ -75,6 +93,15 @@ export default function SingleColumnView({ groupPhotos, people }: SingleColumnVi
           groupPhotos={groupPhotos} 
           people={people} 
           onPersonClick={handlePersonClick}
+        />
+      )}
+      
+      {/* Person Modal for landscape tablet */}
+      {isLandscapeTablet && selectedPerson && (
+        <PersonModal
+          person={selectedPerson}
+          groupPhotos={groupPhotos}
+          onClose={() => setSelectedPerson(null)}
         />
       )}
     </>
