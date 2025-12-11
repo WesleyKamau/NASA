@@ -12,7 +12,7 @@ interface CenterIndicatorProps {
   isAutoHighlighting: boolean;
   centerIndicatorForce: number;
   convertPhotoToContainerCoords: (location: any) => any;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   FACE_HITBOX_PADDING: number;
 }
 
