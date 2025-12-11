@@ -477,6 +477,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width={1600}
               height={1000}
               className="w-full h-full object-contain pointer-events-none"
+              style={{ imageRendering: 'auto' }}
               priority
               sizes="100vw"
               draggable={false}
