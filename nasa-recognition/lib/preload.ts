@@ -1,5 +1,23 @@
 import { GroupPhoto, Person } from '@/types';
 
+// Cache the preload container to avoid repeated DOM queries
+let preloadImagesContainer: HTMLElement | null = null;
+
+/**
+ * Get or create the preload images container
+ */
+function getPreloadImagesContainer(): HTMLElement {
+  if (!preloadImagesContainer || !document.body.contains(preloadImagesContainer)) {
+    preloadImagesContainer = document.createElement('div');
+    preloadImagesContainer.id = 'preload-images-container';
+    preloadImagesContainer.style.position = 'absolute';
+    preloadImagesContainer.style.left = '-9999px';
+    preloadImagesContainer.style.visibility = 'hidden';
+    document.body.appendChild(preloadImagesContainer);
+  }
+  return preloadImagesContainer;
+}
+
 /**
  * Preload an image by creating an Image element and adding it to the DOM
  */
@@ -14,15 +32,7 @@ export function preloadImage(src: string): Promise<void> {
     img.style.display = 'none';
     img.setAttribute('data-preload', 'true');
     
-    let container = document.getElementById('preload-images-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'preload-images-container';
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.visibility = 'hidden';
-      document.body.appendChild(container);
-    }
+    const container = getPreloadImagesContainer();
     container.appendChild(img);
   });
 }
@@ -100,7 +110,9 @@ export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], peopl
   document.body.appendChild(highlightContainer);
   
   // Clean up highlights after rendering completes
-  // Use requestAnimationFrame to ensure SVG rendering is complete
+  // Double requestAnimationFrame ensures the browser has completed a full paint cycle
+  // First frame: browser commits the DOM changes
+  // Second frame: browser has rendered the SVG elements and they're cached
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       cleanupHighlights();
@@ -156,9 +168,9 @@ export function cleanupHighlights(): void {
     highlightContainer.remove();
   }
   
-  // Clean up preloaded images container
-  const imageContainer = document.getElementById('preload-images-container');
-  if (imageContainer) {
-    imageContainer.remove();
+  // Clean up preloaded images container and reset cache
+  if (preloadImagesContainer && document.body.contains(preloadImagesContainer)) {
+    preloadImagesContainer.remove();
+    preloadImagesContainer = null;
   }
 }
