@@ -39,14 +39,16 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
   if (uniformLayout) {
     // Uniform layout: all people sorted by category, then alphabetically, including Wesley
+    // Filter girlfriend and wesley only once for efficiency
+    const girlfriendPeople = visiblePeople.filter(p => p.category === 'girlfriend');
+    const wesleyPeople = visiblePeople.filter(p => p.id === 'wesley-kamau');
+    
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
       let categoryPeople = visiblePeople.filter(p => p.category === category);
       
       // Merge girlfriend and Wesley into family
       if (category === 'family') {
-        const girlfriend = visiblePeople.filter(p => p.category === 'girlfriend');
-        const wesley = visiblePeople.filter(p => p.id === 'wesley-kamau');
-        categoryPeople = [...categoryPeople, ...girlfriend, ...wesley];
+        categoryPeople = [...categoryPeople, ...girlfriendPeople, ...wesleyPeople];
       }
 
       // Sort alphabetically by name
@@ -67,7 +69,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
             return (
               <div key={category}>
-                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center" style={{background: 'linear-gradient(to right, #60a5fa, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
+                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center gradient-text">
                   {categoryLabels[category]}
                 </h3>
                 <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
@@ -131,7 +133,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
         {/* Me first */}
         {wesley && (
           <div>
-            <h3 className="text-2xl font-bold mb-4" style={{background: 'linear-gradient(to right, #60a5fa, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
+            <h3 className="text-2xl font-bold mb-4 gradient-text">
               Me
             </h3>
             <div className="flex justify-center">
@@ -166,7 +168,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                 </div>
               )}
 
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center" style={{background: 'linear-gradient(to right, #60a5fa, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center gradient-text">
                 {categoryLabels[category]}
               </h3>
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
