@@ -386,8 +386,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         }
         // Reset drag origin to avoid jump after zoom change
         setDragStart({
-          x: e.touches[0].clientX - currentPhoto.zoomTranslation?.x || 0,
-          y: e.touches[0].clientY - currentPhoto.zoomTranslation?.y || 0
+          x: e.touches[0].clientX - (currentPhoto.zoomTranslation?.x ?? 0),
+          y: e.touches[0].clientY - (currentPhoto.zoomTranslation?.y ?? 0)
         });
         setTimeout(() => setIsZooming(false), 300); // Increased to match transition time
         // Don't apply drag yet - wait for zoom animation to complete
