@@ -372,7 +372,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       // If starting a pan at zero zoom, auto-jump to default zoom once
       if (scale === 1 && !autoZoomedOnPan) {
         const defaultZoom = currentPhoto.defaultZoom || 2;
-        lockInteraction(350); // Increased to allow zoom animation to complete
         setIsZooming(true);
         setScale(defaultZoom);
         setAutoZoomedOnPan(true);
@@ -384,16 +383,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         } else {
           setPosition({ x: 0, y: 0 });
         }
-        // Reset drag origin to avoid jump after zoom change
+        // Reset drag origin to allow panning during zoom animation
         setDragStart({
           x: e.touches[0].clientX - (currentPhoto.zoomTranslation?.x ?? 0),
           y: e.touches[0].clientY - (currentPhoto.zoomTranslation?.y ?? 0)
         });
-        setTimeout(() => setIsZooming(false), 300); // Increased to match transition time
-        // Don't apply drag yet - wait for zoom animation to complete
-        return;
+        setTimeout(() => setIsZooming(false), 300);
       }
 
+      // Always apply drag, even during zoom animation for smooth concurrent interaction
       setPosition({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
@@ -495,7 +493,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width: `${scale * 100}%`,
               height: `${scale * 100}%`,
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-              transition: (isDragging || isZooming) ? 'none' : 'width 0.3s ease-out, height 0.3s ease-out, transform 0.3s ease-out',
+              transition: (isDragging && !isZooming) ? 'none' : 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              willChange: 'width, height, transform',
               position: 'absolute',
               top: '50%',
               left: '50%',
