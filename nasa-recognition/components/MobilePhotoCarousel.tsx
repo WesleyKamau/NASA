@@ -345,8 +345,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     e.preventDefault();
     e.stopPropagation();
 
-    if (interactionLocked) return;
-
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -372,7 +370,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       // If starting a pan at zero zoom, auto-jump to default zoom once
       if (scale === 1 && !autoZoomedOnPan) {
         const defaultZoom = currentPhoto.defaultZoom || 2;
-        lockInteraction(320);
+        lockInteraction(350); // Increased to allow zoom animation to complete
         setIsZooming(true);
         setScale(defaultZoom);
         setAutoZoomedOnPan(true);
@@ -386,10 +384,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         }
         // Reset drag origin to avoid jump after zoom change
         setDragStart({
-          x: e.touches[0].clientX - position.x,
-          y: e.touches[0].clientY - position.y
+          x: e.touches[0].clientX - currentPhoto.zoomTranslation?.x || 0,
+          y: e.touches[0].clientY - currentPhoto.zoomTranslation?.y || 0
         });
-        setTimeout(() => setIsZooming(false), 250);
+        setTimeout(() => setIsZooming(false), 300); // Increased to match transition time
+        // Don't apply drag yet - wait for zoom animation to complete
+        return;
       }
 
       setPosition({
@@ -429,18 +429,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     if (now - lastTap < DOUBLE_TAP_DELAY) {
       // Double tap detected - toggle zoom
       if (scale === 1) {
-        lockInteraction(300);
+        lockInteraction(350);
         setIsZooming(true);
         setScale(2);
         setAutoZoomedOnPan(true);
-        setTimeout(() => setIsZooming(false), 250);
+        setTimeout(() => setIsZooming(false), 300);
       } else {
-        lockInteraction(300);
+        lockInteraction(350);
         setIsZooming(true);
         setScale(1);
         setPosition({ x: 0, y: 0 });
         setAutoZoomedOnPan(false);
-        setTimeout(() => setIsZooming(false), 250);
+        setTimeout(() => setIsZooming(false), 300);
       }
       pauseAllAuto();
     }
@@ -493,7 +493,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width: `${scale * 100}%`,
               height: `${scale * 100}%`,
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-              transition: (isDragging || isZooming) ? 'none' : 'width 0.25s ease-out, height 0.25s ease-out, transform 0.25s ease-out',
+              transition: (isDragging || isZooming) ? 'none' : 'width 0.3s ease-out, height 0.3s ease-out, transform 0.3s ease-out',
               position: 'absolute',
               top: '50%',
               left: '50%',
