@@ -30,6 +30,7 @@ interface ClientHomeProps {
 
 export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [useSplitView, setUseSplitView] = useState(false);
+  const [useCompactSplit, setUseCompactSplit] = useState(false);
 
   useEffect(() => {
     const checkLayout = () => {
@@ -40,7 +41,11 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       // Use split view on:
       // 1. XL screens (desktop) - use full DesktopSplitView
       // 2. Touch devices in landscape orientation - use CompactSplitView
-      setUseSplitView(isXL || (isTouchDevice && isLandscape));
+      const shouldUseSplitView = isXL || (isTouchDevice && isLandscape);
+      setUseSplitView(shouldUseSplitView);
+      
+      // Determine if we should use compact version
+      setUseCompactSplit(window.innerWidth < 1280 && shouldUseSplitView);
     };
 
     checkLayout();
@@ -52,9 +57,6 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       window.removeEventListener('orientationchange', checkLayout);
     };
   }, []);
-
-  // Determine if we should use compact version
-  const useCompactSplit = typeof window !== 'undefined' && window.innerWidth < 1280 && useSplitView;
 
   if (useSplitView) {
     if (useCompactSplit) {

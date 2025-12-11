@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
+import { useTabletLandscape } from '@/hooks/useTabletLandscape';
 
 interface CompactSplitViewProps {
   groupPhotos: GroupPhoto[];
@@ -13,24 +14,7 @@ interface CompactSplitViewProps {
 
 export default function CompactSplitView({ groupPhotos, people }: CompactSplitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [isTabletLandscape, setIsTabletLandscape] = useState(false);
-
-  useEffect(() => {
-    const checkTabletLandscape = () => {
-      const isLandscape = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
-      const isTouchDevice = typeof navigator !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-      // Detect any touch device in landscape (iPhone, iPad, etc.)
-      setIsTabletLandscape(Boolean(isLandscape && isTouchDevice));
-    };
-
-    checkTabletLandscape();
-    window.addEventListener('resize', checkTabletLandscape);
-    window.addEventListener('orientationchange', checkTabletLandscape);
-    return () => {
-      window.removeEventListener('resize', checkTabletLandscape);
-      window.removeEventListener('orientationchange', checkTabletLandscape);
-    };
-  }, []);
+  const isTabletLandscape = useTabletLandscape();
 
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card in the right panel
@@ -77,32 +61,8 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
           className="w-1/2 flex-shrink-0 overflow-y-auto bg-slate-900/30 border-l border-slate-700/50"
         >
           <div className="p-2 sm:p-3">
-            {/* Header - more compact
-            <header className="text-center mb-6 sm:mb-8 pt-4 sm:pt-6">
-              <p className="text-xs sm:text-sm md:text-base text-slate-300 max-w-xl mx-auto px-2">
-                One of the most impactful parts of my NASA internship was all of the people I got to meet. This lets you learn more about the people who made it special! :)
-              </p>
-            </header> */}
-
-            {/* Decorative divider
-            <div className="flex items-center gap-2 sm:gap-4 my-6 sm:my-8">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-slate-600" />
-              <div className="text-slate-500 text-lg sm:text-xl animate-spin-slow">✦</div>
-              <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-600 to-slate-600" />
-            </div> */}
-
             {/* People Section */}
             <section className="mb-4 sm:mb-6">
-              {/* <div className="text-center mb-6 sm:mb-8">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-4">
-                  The People
-                </h2>
-                <div className="h-1 w-16 sm:w-24 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mx-auto rounded-full" />
-                <p className="text-slate-400 mt-2 sm:mt-4 text-xs sm:text-sm">
-                  Tap anyone to learn more
-                </p>
-              </div> */}
-              
               <OrganizedPersonGrid
                 people={people}
                 groupPhotos={groupPhotos}
