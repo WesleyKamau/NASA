@@ -332,10 +332,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   return (
     <div className="w-full">
       {/* Photo viewer */}
-      <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+      <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-video">
         <div 
           ref={containerRef}
-          className="relative w-full bg-slate-800/50 overflow-hidden touch-none"
+          className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
