@@ -42,6 +42,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [previousPhotoIndex, setPreviousPhotoIndex] = useState(0);
   const [showDestinationFace, setShowDestinationFace] = useState(false);
   const previousPhotoRef = useRef(0);
+  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const endTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -208,6 +210,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Handle photo transition state for face highlights
   useEffect(() => {
+    // Clear any existing timers to prevent race conditions
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
+    if (endTimerRef.current) {
+      clearTimeout(endTimerRef.current);
+      endTimerRef.current = null;
+    }
+
     if (!ENABLE_FACE_TRANSITION) {
       setIsTransitioningPhoto(false);
       setShowDestinationFace(false);
@@ -222,18 +234,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     setIsTransitioningPhoto(true);
     setShowDestinationFace(false);
 
-    const fadeTimer = setTimeout(() => {
+    fadeTimerRef.current = setTimeout(() => {
       setShowDestinationFace(true);
     }, FACE_FADE_DELAY_MS);
     
-    const endTimer = setTimeout(() => {
+    endTimerRef.current = setTimeout(() => {
       setIsTransitioningPhoto(false);
       setShowDestinationFace(false);
     }, FACE_TRANSITION_TOTAL_MS);
     
     return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(endTimer);
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+      if (endTimerRef.current) clearTimeout(endTimerRef.current);
     };
   }, [currentPhotoIndex]);
 
@@ -780,23 +792,28 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     {/* Face Image during transition - Previous photo (fades out) */}
                     {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (() => {
                       const prevPhoto = groupPhotos[previousPhotoIndex];
+                      if (!prevPhoto) return null;
+                      
                       const prevLocation = person.photoLocations.find(
-                        loc => loc.photoId === prevPhoto?.id
+                        loc => loc.photoId === prevPhoto.id
                       );
-                      return prevLocation ? (
+                      
+                      if (!prevLocation) return null;
+                      
+                      return (
                         <div 
                             className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity"
                             style={{ opacity: showDestinationFace ? 0 : 1, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
                         >
                             <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={prevPhoto.id} priority />
                         </div>
-                      ) : null;
+                      );
                     })()}
                     
                     {/* Face Image during transition - Current photo (fades in) */}
                     {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (
                       <div 
-                          className="absolute inset-0 overflow-hidden rounded-lg z-1 transition-opacity"
+                          className="absolute inset-0 overflow-hidden rounded-lg z-10 transition-opacity"
                           style={{ opacity: showDestinationFace ? 1 : 0, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
                       >
                           <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={currentPhoto.id} priority />

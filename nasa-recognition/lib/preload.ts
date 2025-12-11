@@ -1,7 +1,8 @@
 import { GroupPhoto, Person } from '@/types';
 
 /**
- * Preload an image by creating an Image element and adding it to the DOM
+ * Preload an image by creating an Image object and setting its src.
+ * The image is loaded into memory but is not added to the DOM.
  */
 export function preloadImage(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -40,13 +41,17 @@ export async function preloadPersonImages(people: Person[]): Promise<void> {
 }
 
 /**
- * Preload carousel images and SVG highlight rectangles
+ * Create SVG highlight elements for preloading rendering
  * The highlight rectangles are embedded in the carousel component as SVG,
- * so we create invisible elements to ensure they're rendered
+ * so we create invisible elements (using opacity: 0 and off-screen positioning)
+ * to ensure they're rendered by the browser and preload the SVG rendering pipeline.
  */
-export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
+export async function createHighlightElements(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
   const highlightContainer = document.createElement('div');
-  highlightContainer.style.display = 'none';
+  highlightContainer.style.opacity = '0';
+  highlightContainer.style.pointerEvents = 'none';
+  highlightContainer.style.position = 'absolute';
+  highlightContainer.style.left = '-9999px';
   highlightContainer.id = 'preload-highlights-container';
   
   // Create SVG elements for each highlight rectangle to preload rendering
@@ -79,6 +84,11 @@ export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], peopl
   });
   
   document.body.appendChild(highlightContainer);
+  
+  // Clean up after a short delay to allow rendering
+  setTimeout(() => {
+    cleanupHighlights();
+  }, 1000);
 }
 
 /**
@@ -90,7 +100,7 @@ export async function preloadAll(groupPhotos: GroupPhoto[], people: Person[]): P
     await Promise.all([
       preloadCarouselImages(groupPhotos),
       preloadPersonImages(people),
-      preloadCarouselHighlights(groupPhotos, people)
+      createHighlightElements(groupPhotos, people)
     ]);
   } catch (error) {
     console.warn('Preload error:', error);
