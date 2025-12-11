@@ -63,6 +63,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const autoCycleResetTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const scrollToCardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(0);
   const positionRef = useRef({ x: 0, y: 0 });
@@ -242,12 +244,32 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     if (!isAutoScrolling || groupPhotos.length <= 1) return;
 
     photoScrollTimer.current = setInterval(() => {
-      setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
+      // Clear any lingering face overlays and highlights before auto-advancing
+      setShowCenterIndicator(false);
+      setHighlightedPersonIndex(-1);
+      setIsAutoHighlighting(false);
+
+      if (autoCycleResetTimer.current) {
+        clearTimeout(autoCycleResetTimer.current);
+      }
+
+      setCurrentPhotoIndex(prev => {
+        const next = (prev + 1) % groupPhotos.length;
+        // Resume auto-highlighting shortly after the photo changes
+        autoCycleResetTimer.current = setTimeout(() => {
+          setIsAutoHighlighting(true);
+          setHighlightedPersonIndex(0);
+        }, 350);
+        return next;
+      });
     }, 15000);
 
     return () => {
       if (photoScrollTimer.current) {
         clearInterval(photoScrollTimer.current);
+      }
+      if (autoCycleResetTimer.current) {
+        clearTimeout(autoCycleResetTimer.current);
       }
     };
   }, [isAutoScrolling, groupPhotos.length]);
@@ -282,6 +304,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     
     if (cooldownTimer.current) {
       clearTimeout(cooldownTimer.current);
+    }
+    if (autoCycleResetTimer.current) {
+      clearTimeout(autoCycleResetTimer.current);
     }
     
     // Do not resume auto-scroll automatically
@@ -325,6 +350,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       e.preventDefault();
       e.stopPropagation();
       return;
+    }
+    // Cancel any pending scroll-to-card animations when user resumes touch
+    if (scrollToCardTimeoutRef.current) {
+      clearTimeout(scrollToCardTimeoutRef.current);
+      scrollToCardTimeoutRef.current = undefined;
     }
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
@@ -720,6 +750,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       if (!isHighlighted && !showWhenZoomed) {
                         return;
                       }
+                      pauseAllAuto();
+                      if (scrollToCardTimeoutRef.current) {
+                        clearTimeout(scrollToCardTimeoutRef.current);
+                        scrollToCardTimeoutRef.current = undefined;
+                      }
                       
                       e.stopPropagation();
                       
@@ -751,8 +786,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                         const personCardId = `person-card-mobile-${person.id}`;
                         const cardElement = document.getElementById(personCardId);
                         if (cardElement) {
-                          setTimeout(() => {
+                          scrollToCardTimeoutRef.current = setTimeout(() => {
                             cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            scrollToCardTimeoutRef.current = undefined;
                           }, 50);
                           cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
                           setTimeout(() => {
