@@ -655,7 +655,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 return (
                   <div
                     key={person.id}
-                    className="absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none"
+                    className={`absolute transition-all duration-300 touch-none select-none ${(isHighlighted || showWhenZoomed) ? 'cursor-pointer pointer-events-auto' : 'pointer-events-none'}`}
                     style={{
                       left: `${adjustedLocation.x}%`,
                       top: `${adjustedLocation.y}%`,
@@ -663,11 +663,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       height: `${adjustedLocation.height}%`,
                     }}
                     onMouseEnter={() => {
-                      setHoveredPersonId(person.id);
-                      pauseAllAuto();
+                      if (isHighlighted || showWhenZoomed) {
+                        setHoveredPersonId(person.id);
+                        pauseAllAuto();
+                      }
                     }}
                     onMouseLeave={() => setHoveredPersonId(null)}
                     onClick={(e) => {
+                      // Only allow clicks if this person is highlighted or shown when zoomed
+                      if (!isHighlighted && !showWhenZoomed) {
+                        return;
+                      }
+                      
                       e.stopPropagation();
                       console.log('Face clicked:', person.name, person.id);
                       
@@ -803,7 +810,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       
                       return (
                         <div
-                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none"
+                          className={`absolute z-20 transition-all duration-300 ease-out touch-none select-none ${shouldRenderLabel ? 'cursor-pointer pointer-events-auto active:scale-95' : 'pointer-events-none'}`}
                           style={{ 
                             top: '100%',
                             left: `${50 + shiftInFacePercent}%`,
@@ -811,6 +818,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             transform: 'translateX(-50%)',
                           }}
                           onClick={(e) => {
+                            // Only allow clicks if label is rendered (person is highlighted or shown when zoomed)
+                            if (!shouldRenderLabel) {
+                              return;
+                            }
+                            
                             e.stopPropagation();
                             // Scroll to the person's card
                             const personCardId = `person-card-mobile-${person.id}`;
