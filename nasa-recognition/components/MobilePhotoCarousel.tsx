@@ -345,6 +345,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     e.preventDefault();
     e.stopPropagation();
 
+    if (interactionLocked && !isZooming) return;
+
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
