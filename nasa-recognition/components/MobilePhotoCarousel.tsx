@@ -1,6 +1,6 @@
 'use client';
 
-import { GroupPhoto, Person } from '@/types';
+import { GroupPhoto, Person, PhotoLocation } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
@@ -11,13 +11,6 @@ interface MobilePhotoCarouselProps {
   people: Person[];
   onPersonClick?: (person: Person) => void;
   hideInstructions?: boolean;
-}
-
-interface PhotoLocation {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
 }
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
@@ -682,6 +675,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       top: `${adjustedLocation.y}%`,
                       width: `${adjustedLocation.width}%`,
                       height: `${adjustedLocation.height}%`,
+                      transform: `rotate(${adjustedLocation.rotation || 0}deg)`,
                     }}
                     onMouseEnter={() => {
                       if (isHighlighted || showWhenZoomed) {
