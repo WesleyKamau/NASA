@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import PhotoCarousel from '@/components/PhotoCarousel';
+import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
+import { useTabletLandscape } from '@/hooks/useTabletLandscape';
 
 interface DesktopSplitViewProps {
   groupPhotos: GroupPhoto[];
@@ -14,6 +16,7 @@ interface DesktopSplitViewProps {
 
 export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const isTabletLandscape = useTabletLandscape();
 
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card in the right panel
@@ -31,9 +34,11 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
       // Highlight the card briefly
       cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
       
-      // Open modal after a short delay
+      // Open modal after a short delay (only on desktop, not on touch devices like iPad)
       setTimeout(() => {
-        setSelectedPerson(person);
+        if (!isTabletLandscape) {
+          setSelectedPerson(person);
+        }
         cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
       }, 1200);
     }
@@ -45,11 +50,19 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
         {/* Left side - Photo Carousel (fixed) */}
         <div className="w-1/2 flex-shrink-0 p-8 flex flex-col">
           <div className="flex-1 flex items-center justify-center overflow-hidden">
-            <PhotoCarousel
-              groupPhotos={groupPhotos}
-              people={people}
-              onPersonClick={handlePersonClick}
-            />
+            {isTabletLandscape ? (
+              <MobilePhotoCarousel
+                groupPhotos={groupPhotos}
+                people={people}
+                onPersonClick={handlePersonClick}
+              />
+            ) : (
+              <PhotoCarousel
+                groupPhotos={groupPhotos}
+                people={people}
+                onPersonClick={handlePersonClick}
+              />
+            )}
           </div>
           <p className="text-center text-slate-500 text-sm mt-4">
             Hover over faces to pause • Click to view profiles
