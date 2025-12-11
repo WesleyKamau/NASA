@@ -1,8 +1,6 @@
 # TODO
 
-- [ ] Mobile star angle follows device tilt
-- [ ] Wrap mobile labels into two lines
-- [ ] Recolor face labels and section text
+- [x] Wrap mobile labels into two lines
 - [ ] Center or remove "Me" section text
 - [ ] Add more LinkedIns
 - [ ] Add intern fun photos and feature flow
