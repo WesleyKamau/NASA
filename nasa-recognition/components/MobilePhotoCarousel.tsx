@@ -8,6 +8,7 @@ interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
   people: Person[];
   onPersonClick?: (person: Person) => void;
+  hideInstructions?: boolean;
 }
 
 interface PhotoLocation {
@@ -20,7 +21,7 @@ interface PhotoLocation {
 // Container aspect ratio (width / height) - used for letterboxing calculations
 const CONTAINER_ASPECT_RATIO = 3 / 4;
 
-export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick }: MobilePhotoCarouselProps) {
+export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
   const MAX_VISIBLE_LABELS = 1;
   const FACE_HITBOX_PADDING = 10; // Percentage padding to expand face hitboxes
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
@@ -36,6 +37,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
   const [showCenterIndicator, setShowCenterIndicator] = useState(false);
   const [isTabletLandscape, setIsTabletLandscape] = useState(false);
+  const [isIPad, setIsIPad] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -72,10 +75,19 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     const photoHeight = photoDims?.height || currentPhoto.height || 1000;
     const PHOTO_ASPECT = photoWidth / photoHeight;
     
+    // Calculate actual container aspect ratio from rendered dimensions
+    let actualContainerAspect = CONTAINER_ASPECT_RATIO;
+    if (containerRef.current) {
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        actualContainerAspect = width / height;
+      }
+    }
+    
     // Determine how the image fits in the container
-    if (PHOTO_ASPECT > CONTAINER_ASPECT_RATIO) {
+    if (PHOTO_ASPECT > actualContainerAspect) {
       // Photo is wider than container - image fills width, letterboxed top/bottom
-      const imageHeightInContainer = CONTAINER_ASPECT_RATIO / PHOTO_ASPECT; // as fraction of container
+      const imageHeightInContainer = actualContainerAspect / PHOTO_ASPECT; // as fraction of container
       const verticalOffsetPct = (1 - imageHeightInContainer) / 2 * 100; // top padding as %
       
       return {
@@ -85,7 +97,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       };
     } else {
       // Photo is taller than container - image fills height, letterboxed left/right
-      const imageWidthInContainer = PHOTO_ASPECT / CONTAINER_ASPECT_RATIO; // as fraction of container
+      const imageWidthInContainer = PHOTO_ASPECT / actualContainerAspect; // as fraction of container
       const horizontalOffsetPct = (1 - imageWidthInContainer) / 2 * 100; // left padding as %
       
       return {
@@ -104,11 +116,14 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       // Force touch mode on iPad landscape to enable pan/zoom handlers
       setIsTouchMode(coarse || (touchCapable && portraitTablet) || isTabletLandscape);
 
-      // iPad landscape detection
-      const isLandscape = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
+      // Touch device landscape detection (iPhone, iPad, etc.)
+      const isLandscapeOrientation = typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
+      const isTouchDevice = typeof navigator !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
       const isIPadUA = typeof navigator !== 'undefined' && /(iPad|Macintosh)/.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
       const isTabletWidth = typeof window !== 'undefined' && window.innerWidth >= 768;
-      setIsTabletLandscape(Boolean(isLandscape && isIPadUA && isTabletWidth));
+      setIsLandscape(Boolean(isLandscapeOrientation));
+      setIsIPad(Boolean(isIPadUA && isTabletWidth));
+      setIsTabletLandscape(Boolean(isLandscapeOrientation && isTouchDevice));
     };
 
     detectTouchMode();
@@ -263,6 +278,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
+    // Prevent ancestor containers from intercepting gestures (dual-column layout)
+    const parentEl = containerRef.current?.parentElement;
+    if (parentEl) {
+      parentEl.style.touchAction = 'none';
+      (parentEl.style as any).overscrollBehavior = 'contain';
+    }
     setShowCenterIndicator(true);
 
     if (e.touches.length === 1) {
@@ -355,6 +376,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const handleTouchEnd = () => {
     // Re-enable body scroll
     document.body.style.overflow = '';
+    // Restore ancestor styles
+    const parentEl = containerRef.current?.parentElement;
+    if (parentEl) {
+      parentEl.style.touchAction = '';
+      (parentEl.style as any).overscrollBehavior = '';
+    }
     setIsDragging(false);
     pinchStartDistance.current = 0;
   };
@@ -403,7 +430,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         `}
       </style>
       {/* Photo viewer - fixed vertical rectangle container */}
-      <div className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" style={{ width: '100%', maxWidth: '500px', aspectRatio: '3 / 4' }}>
+      <div 
+        className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" 
+        style={{ 
+          width: '100%', 
+          height: (isIPad || (isLandscape && isTouchMode)) ? '88vh' : undefined,
+          maxWidth: (isIPad || (isLandscape && isTouchMode)) ? undefined : '500px', 
+          aspectRatio: '3 / 4' 
+        }}
+      >
         <div
           ref={containerRef}
           className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
@@ -416,6 +451,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               handleDoubleTap(e as any);
             }
           }}
+          style={{ touchAction: 'none' }}
         >
           <div
             style={{
@@ -444,8 +480,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               }}
             />
 
-            {/* Interactive regions overlay */}
-            <div className="absolute inset-0 z-10 w-full h-full">
+                {/* Interactive regions overlay */}
+                <div className={`absolute inset-0 z-10 w-full h-full ${isTabletLandscape ? 'pointer-events-none' : 'pointer-events-auto'}`}>
               {/* Debug: True center point dot */}
               {showDebugHitboxes && (() => {
                 if (!containerRef.current) return null;
@@ -471,42 +507,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 );
               })()}
 
-              {/* Person image transition: show the highlighted person's image following their rectangle with smooth transition */}
-              {(() => {
-                const person = currentHighlightedPerson;
-                if (!person) return null;
-                const location = person.photoLocations.find(l => l.photoId === currentPhoto.id);
-                if (!location) return null;
-                const adjustedLocation = convertPhotoToContainerCoords(location);
-                const sizePct = Math.min(adjustedLocation.width, adjustedLocation.height);
-                const centerX = adjustedLocation.x + adjustedLocation.width / 2;
-                const centerY = adjustedLocation.y + adjustedLocation.height / 2;
-                return (
-                  <div
-                    key={`${currentPhoto.id}-${person.id}-image`}
-                    className="absolute z-[55] transition-all duration-500 ease-out"
-                    style={{
-                      left: `${centerX}%`,
-                      top: `${centerY}%`,
-                      transform: 'translate(-50%, -50%)',
-                      width: `${sizePct}%`,
-                      height: `${sizePct}%`,
-                      borderRadius: '9999px',
-                      overflow: 'hidden',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.35)'
-                    }}
-                  >
-                    <Image
-                      src={person.individualPhoto || '/photos/placeholder-face.jpg'}
-                      alt={person.name}
-                      width={256}
-                      height={256}
-                      className="w-full h-full object-cover"
-                      priority
-                    />
-                  </div>
-                );
-              })()}
+              {/* Person image transition removed for this branch */}
               
               {/* Center indicator: only shows after user interacts on the current photo */}
               {showCenterIndicator && (() => {
@@ -705,7 +706,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 return (
                   <div
                     key={person.id}
-                    className={`absolute transition-all duration-300 cursor-pointer ${isTabletLandscape ? 'pointer-events-none' : 'pointer-events-auto'} touch-none select-none`}
+                    className={`absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none`}
                     style={{
                       left: `${adjustedLocation.x}%`,
                       top: `${adjustedLocation.y}%`,
@@ -719,8 +720,30 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     onMouseLeave={() => setHoveredPersonId(null)}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isTabletLandscape && onPersonClick) {
-                        onPersonClick(person);
+                      
+                      if (isTabletLandscape) {
+                        // On iPad landscape: scroll to card, but only open modal on mouse clicks (not touch)
+                        const personCardId = `person-card-desktop-${person.id}`;
+                        const cardElement = document.getElementById(personCardId);
+                        if (cardElement) {
+                          const rightPanel = document.getElementById('desktop-right-panel');
+                          if (rightPanel) {
+                            const cardTop = cardElement.offsetTop;
+                            rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
+                          }
+                          cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                          setTimeout(() => {
+                            cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                          }, 2000);
+                        }
+                        
+                        // Only open modal on mouse events, not touch
+                        const isMouseEvent = e.nativeEvent instanceof PointerEvent && e.nativeEvent.pointerType === 'mouse';
+                        if (onPersonClick && isMouseEvent) {
+                          setTimeout(() => {
+                            onPersonClick(person);
+                          }, 1200);
+                        }
                       } else {
                         // Scroll to the person's card (mobile behavior)
                         const personCardId = `person-card-mobile-${person.id}`;
@@ -785,12 +808,57 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
                       return (
                         <div
-                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none"
+                          className={`absolute z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none pointer-events-auto`}
                           style={{ 
                             top: '100%',
                             left: `${50 + shiftInFacePercent}%`,
                             marginTop: '8px',
                             transform: 'translateX(-50%)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            
+                            if (isTabletLandscape) {
+                              // On iPad landscape: scroll to card, but only open modal on mouse clicks (not touch)
+                              const personCardId = `person-card-desktop-${person.id}`;
+                              const cardElement = document.getElementById(personCardId);
+                              if (cardElement) {
+                                const rightPanel = document.getElementById('desktop-right-panel');
+                                if (rightPanel) {
+                                  const cardTop = cardElement.offsetTop;
+                                  rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
+                                }
+                                cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                                setTimeout(() => {
+                                  cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                                }, 2000);
+                              }
+                              
+                              // Only open modal on mouse events, not touch
+                              const isMouseEvent = e.nativeEvent instanceof PointerEvent && e.nativeEvent.pointerType === 'mouse';
+                              if (onPersonClick && isMouseEvent) {
+                                setTimeout(() => {
+                                  onPersonClick(person);
+                                }, 1200);
+                              }
+                            } else {
+                              // Scroll to the person's card (mobile behavior)
+                              const personCardId = `person-card-mobile-${person.id}`;
+                              const cardElement = document.getElementById(personCardId);
+                              if (cardElement) {
+                                cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                                setTimeout(() => {
+                                  cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                                }, 2000);
+                              }
+                              
+                              if (onPersonClick) {
+                                setTimeout(() => {
+                                  onPersonClick(person);
+                                }, 1200);
+                              }
+                            }
                           }}
                         >
                           <div
@@ -798,7 +866,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             style={{
                               opacity: shouldRenderLabel ? 1 : 0,
                               visibility: shouldRenderLabel ? 'visible' : 'hidden',
-                              pointerEvents: shouldRenderLabel ? 'auto' : 'none',
+                              pointerEvents: shouldRenderLabel && !isTabletLandscape ? 'auto' : 'none',
                               transform: shouldRenderLabel ? 'scale(1)' : 'scale(0.95)',
                             }}
                           >
@@ -955,7 +1023,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       </div>
 
       {/* Mobile instructions */}
-      {isTouchMode && (
+      {isTouchMode && !hideInstructions && (
         <div className="mt-3 text-center">
           <p className="text-slate-400 text-sm">
             Pinch or use +/− to zoom • Drag to pan
