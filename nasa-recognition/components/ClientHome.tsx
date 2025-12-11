@@ -6,6 +6,7 @@ import DesktopSplitView from '@/components/DesktopSplitView';
 import CompactSplitView from '@/components/CompactSplitView';
 import SingleColumnView from '@/components/SingleColumnView';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
+import { preloadAll } from '@/lib/preload';
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -31,6 +32,13 @@ interface ClientHomeProps {
 export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [useSplitView, setUseSplitView] = useState(false);
   const [useCompactSplit, setUseCompactSplit] = useState(false);
+
+  // Preload all images and highlights on initial load
+  useEffect(() => {
+    preloadAll(groupPhotos, people).catch(error => {
+      console.error('Failed to preload assets:', error);
+    });
+  }, [groupPhotos, people]);
 
   useEffect(() => {
     const checkLayout = () => {
