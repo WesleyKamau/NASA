@@ -96,7 +96,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
               {isInterns && (
                 <div className="flex items-center gap-4 my-8">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent" />
-                  <div className="text-slate-500 text-sm">✦</div>
+                  <div className="text-slate-500 text-sm animate-spin-slow">✦</div>
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent" />
                 </div>
               )}
