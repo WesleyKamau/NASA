@@ -402,11 +402,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               sizes="100vw"
               draggable={false}
               onLoadingComplete={(img) => {
-                setPhotoDimensions((prev) => (
-                  prev[currentPhoto.id]
-                    ? prev
-                    : { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } }
-                ));
+                setPhotoDimensions((prev) => {
+                  if (prev[currentPhoto.id]) {
+                    return prev;
+                  }
+                  return { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } };
+                });
               }}
             />
 
