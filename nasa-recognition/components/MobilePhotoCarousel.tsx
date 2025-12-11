@@ -36,7 +36,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isLandscape, setIsLandscape] = useState(false);
   const [isTransitioningPhoto, setIsTransitioningPhoto] = useState(false);
   const [previousPhotoIndex, setPreviousPhotoIndex] = useState(0);
-  const [transitionProgress, setTransitionProgress] = useState<'start' | 'middle' | 'end'>('end');
+  const [transitionProgress, setTransitionProgress] = useState<'start' | 'end'>('end');
+  const previousPhotoRef = useRef(0);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -203,14 +204,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Handle photo transition state for face highlights
   useEffect(() => {
-    setPreviousPhotoIndex(currentPhotoIndex);
+    // Capture the actual previous index before updating for transition visuals
+    setPreviousPhotoIndex(previousPhotoRef.current);
+    previousPhotoRef.current = currentPhotoIndex;
+
     setIsTransitioningPhoto(true);
     setTransitionProgress('start');
     
     const endTimer = setTimeout(() => {
       setIsTransitioningPhoto(false);
       setTransitionProgress('end');
-    }, 300); // Match the CSS transition duration
+    }, 400); // Slightly longer to make the fade visible
     
     return () => {
       clearTimeout(endTimer);
@@ -765,10 +769,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       );
                       return prevLocation ? (
                         <div 
-                            className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity duration-300"
+                            className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity duration-400"
                             style={{ opacity: transitionProgress === 'start' ? 1 : 0 }}
                         >
-                            <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={prevPhoto.id} />
+                            <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={prevPhoto.id} priority />
                         </div>
                       ) : null;
                     })()}
@@ -776,10 +780,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     {/* Face Image during transition - Current photo (fades in) */}
                     {isTransitioningPhoto && (
                       <div 
-                          className="absolute inset-0 overflow-hidden rounded-lg z-1 transition-opacity duration-300"
+                          className="absolute inset-0 overflow-hidden rounded-lg z-1 transition-opacity duration-400"
                           style={{ opacity: transitionProgress === 'start' ? 0 : 1 }}
                       >
-                          <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={currentPhoto.id} />
+                          <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={currentPhoto.id} priority />
                       </div>
                     )}
 
