@@ -719,7 +719,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                         pauseAllAuto();
                       }
                     }}
-                    onMouseLeave={() => setHoveredPersonId(null)}
+                    onMouseLeave={() => {
+                      if (isHighlighted || showWhenZoomed) {
+                        setHoveredPersonId(null);
+                      }
+                    }}
                     onClick={(e) => {
                       // Only allow clicks if this person is highlighted or shown when zoomed
                       if (!isHighlighted && !showWhenZoomed) {
