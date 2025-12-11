@@ -28,11 +28,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
-      {/* Animated backgrounds: legacy starfield on mobile/tablet, galaxy on desktop */}
-      <div className="xl:hidden">
+      {/* Animated backgrounds: legacy starfield on mobile/tablet, galaxy on desktop/landscape tablets */}
+      <div className="lg:hidden">
         <StarfieldBackground />
       </div>
-      <div className="hidden xl:block">
+      <div className="hidden lg:block">
         <GalaxyBackground />
       </div>
       
@@ -41,16 +41,16 @@ export default function Home() {
         <SLSRocket />
       </div>
 
-      {/* Desktop Split View (xl screens and above) */}
-      <div className="hidden xl:block relative z-10">
+      {/* Desktop Split View (lg screens and above - includes landscape tablets) */}
+      <div className="hidden lg:block relative z-10">
         <DesktopSplitView
           groupPhotos={data.groupPhotos}
           people={data.people}
         />
       </div>
 
-      {/* Tablet/Mobile View (below xl) */}
-      <main className="xl:hidden relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {/* Mobile View (below lg - portrait phones and portrait tablets) */}
+      <main className="lg:hidden relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header removed per request */}
 
         {/* Photo Carousel Section */}

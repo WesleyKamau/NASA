@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import PhotoCarousel from '@/components/PhotoCarousel';
+import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
@@ -14,8 +15,29 @@ interface DesktopSplitViewProps {
 
 export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  // Detect if this is a touch device (like iPad)
+  useEffect(() => {
+    const detectTouch = () => {
+      const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+      const touchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      setIsTouchDevice(coarse || touchCapable);
+    };
+
+    detectTouch();
+    window.addEventListener('resize', detectTouch);
+    return () => window.removeEventListener('resize', detectTouch);
+  }, []);
 
   const handlePersonClick = (person: Person) => {
+    // For touch devices (like iPad), open the modal directly
+    if (isTouchDevice) {
+      setSelectedPerson(person);
+      return;
+    }
+
+    // For desktop (mouse devices), scroll to card first, then open modal
     // Scroll to the person's card in the right panel
     const personCardId = `person-card-desktop-${person.id}`;
     const cardElement = document.getElementById(personCardId);
@@ -45,14 +67,22 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
         {/* Left side - Photo Carousel (fixed) */}
         <div className="w-1/2 flex-shrink-0 p-8 flex flex-col">
           <div className="flex-1 flex items-center justify-center overflow-hidden">
-            <PhotoCarousel
-              groupPhotos={groupPhotos}
-              people={people}
-              onPersonClick={handlePersonClick}
-            />
+            {isTouchDevice ? (
+              <MobilePhotoCarousel
+                groupPhotos={groupPhotos}
+                people={people}
+                onPersonClick={handlePersonClick}
+              />
+            ) : (
+              <PhotoCarousel
+                groupPhotos={groupPhotos}
+                people={people}
+                onPersonClick={handlePersonClick}
+              />
+            )}
           </div>
           <p className="text-center text-slate-500 text-sm mt-4">
-            Hover over faces to pause • Click to view profiles
+            {isTouchDevice ? 'Tap faces to view profiles • Pinch to zoom' : 'Hover over faces to pause • Click to view profiles'}
           </p>
         </div>
 
