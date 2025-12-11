@@ -23,6 +23,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [shuffledPeople, setShuffledPeople] = useState<Person[]>([]);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
+  const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -49,27 +50,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const currentPhoto = groupPhotos[currentPhotoIndex];
 
   // Helper function to convert photo coordinates to container coordinates
-  // Account for the fixed 3:4 container and centered image positioning
-  const convertPhotoToContainerCoords = (location: any) => {
-    if (!currentPhoto) return location;
-    
-    const CONTAINER_ASPECT = 3 / 4; // width / height
-    const PHOTO_ASPECT = currentPhoto.width / currentPhoto.height;
-    
-    // Image fits in container with height = 100%, width scaled proportionally
-    // Vertical centering: (container height - image height) / 2 / container height = vertical offset
-    const imageHeightInContainer = 1; // 100%
-    const imageWidthInContainer = PHOTO_ASPECT / (1 / CONTAINER_ASPECT); // scaled to maintain aspect
-    
-    // Vertical offset as percentage of container height
-    const verticalOffsetPct = (1 - imageHeightInContainer) / 2 * 100;
-    
-    return {
-      ...location,
-      y: location.y * imageHeightInContainer + verticalOffsetPct,
-      height: location.height * imageHeightInContainer,
-    };
-  };
+  // With a matching aspect ratio this is effectively a pass-through, but we keep
+  // the helper for future adjustments and clarity.
+  const convertPhotoToContainerCoords = (location: any) => location;
 
   useEffect(() => {
     const detectTouchMode = () => {
@@ -354,42 +337,59 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   return (
     <div className="w-full">
-      {/* Photo viewer - fixed vertical rectangle container */}
-      <div className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm" style={{ width: '100%', maxWidth: '500px', aspectRatio: '3 / 4' }}>
-        <div 
-          ref={containerRef}
-          className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
-          onClick={(e) => {
-            if (isTouchMode) {
-              handleDoubleTap(e as any);
-            }
-          }}
-        >
-          <div
-            style={{
-              transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
-              transition: isDragging && !isZooming ? 'none' : 'transform 0.25s ease-out',
-              transformOrigin: 'center center',
-            }}
-            className="w-full h-full flex items-center justify-center"
-          >
-            <Image
-              src={currentPhoto.imagePath}
-              alt={currentPhoto.name}
-              width={1600}
-              height={1000}
-              className="h-full w-auto object-contain pointer-events-none"
-              priority
-              sizes="100vw"
-              draggable={false}
-            />
+      {/* Photo viewer - dynamic aspect ratio container */}
+      {(() => {
+        const intrinsic = photoDimensions[currentPhoto.id];
+        const aspectRatio = intrinsic ? `${intrinsic.width} / ${intrinsic.height}` : '3 / 4';
+        const intrinsicWidth = intrinsic?.width ?? 1600;
+        const intrinsicHeight = intrinsic?.height ?? 1000;
 
-            {/* Interactive regions overlay */}
-            <div className="absolute inset-0 z-10">
+        return (
+          <div
+            className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm"
+            style={{ width: '100%', maxWidth: '500px', aspectRatio }}
+          >
+            <div
+              ref={containerRef}
+              className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
+              onClick={(e) => {
+                if (isTouchMode) {
+                  handleDoubleTap(e as any);
+                }
+              }}
+            >
+              <div
+                style={{
+                  transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                  transition: isDragging && !isZooming ? 'none' : 'transform 0.25s ease-out',
+                  transformOrigin: 'center center',
+                }}
+                className="relative w-full h-full"
+              >
+                <Image
+                  src={currentPhoto.imagePath}
+                  alt={currentPhoto.name}
+                  width={intrinsicWidth}
+                  height={intrinsicHeight}
+                  className="w-full h-full object-contain pointer-events-none"
+                  priority
+                  sizes="100vw"
+                  draggable={false}
+                  onLoadingComplete={(img) => {
+                    setPhotoDimensions((prev) => (
+                      prev[currentPhoto.id]
+                        ? prev
+                        : { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } }
+                    ));
+                  }}
+                />
+
+                {/* Interactive regions overlay */}
+                <div className="absolute inset-0 z-10 w-full h-full">
               {/* Debug: True center point dot */}
               {showDebugHitboxes && (() => {
                 if (!containerRef.current) return null;
@@ -611,7 +611,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 return (
                   <div
                     key={person.id}
-                    className="absolute transition-all duration-300 cursor-pointer pointer-events-auto"
+                    className="absolute transition-all duration-300 cursor-pointer pointer-events-auto touch-none select-none"
                     style={{
                       left: `${location.x}%`,
                       top: `${convertPhotoToContainerCoords(location).y}%`,
@@ -697,7 +697,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     />
                     
                     {/* Name tag: fluid placement that follows the face, clamped within photo bounds */}
-                    {(isHighlighted || showWhenZoomed) && (() => {
+                    {(() => {
+                      const shouldRenderLabel = isHighlighted || showWhenZoomed;
                       // Calculate face center in photo coordinates
                       const faceCenterX = location.x + location.width / 2;
                       
@@ -754,7 +755,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       
                       return (
                         <div
-                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95"
+                          className="absolute pointer-events-auto z-20 transition-all duration-300 ease-out cursor-pointer active:scale-95 touch-none select-none"
                           style={{ 
                             top: '100%',
                             left: `${50 + shiftInFacePercent}%`,
@@ -778,7 +779,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             }
                           }}
                         >
-                          <div className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95">
+                          <div
+                            className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95"
+                            style={{
+                              opacity: shouldRenderLabel ? 1 : 0,
+                              visibility: shouldRenderLabel ? 'visible' : 'hidden',
+                              pointerEvents: shouldRenderLabel ? 'auto' : 'none',
+                              transform: shouldRenderLabel ? 'scale(1)' : 'scale(0.95)',
+                            }}
+                          >
                             <p className="text-white font-semibold text-xs sm:text-sm md:text-lg">
                               {person.name}
                             </p>
@@ -930,6 +939,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           </>
         )}
       </div>
+      );
+      })()}
 
       {/* Mobile instructions */}
       {isTouchMode && (
