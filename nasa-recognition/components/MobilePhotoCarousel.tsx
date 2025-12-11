@@ -329,6 +329,55 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
 
+  // Calculate the scaled image bounds within the fixed container
+  // This accounts for the image being centered in the 3:4 container
+  const getImageBounds = () => {
+    if (!containerRef.current) return { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 };
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+    const containerAspect = containerWidth / containerHeight; // ~0.75 (3:4)
+    
+    // Photo aspect ratio (original image dimensions)
+    // Most photos are landscape, but we need to handle both
+    const photoAspect = 1600 / 1000; // 1.6 (landscape)
+    
+    let displayWidth = containerWidth;
+    let displayHeight = containerHeight;
+    let offsetXPx = 0;
+    let offsetYPx = 0;
+    
+    if (photoAspect > containerAspect) {
+      // Photo is wider than container - height fills container, width has padding
+      displayHeight = containerHeight;
+      displayWidth = containerHeight * photoAspect;
+      offsetXPx = (containerWidth - displayWidth) / 2;
+    } else {
+      // Photo is narrower than container - width fills container, height has padding
+      displayWidth = containerWidth;
+      displayHeight = containerWidth / photoAspect;
+      offsetYPx = (containerHeight - displayHeight) / 2;
+    }
+    
+    // Scale factors: how much the display is scaled relative to original photo percentages
+    // Since photo percentages are 0-100%, and display dimensions can vary, we need to adjust
+    const scaleX = displayWidth / containerWidth;
+    const scaleY = displayHeight / containerHeight;
+    
+    // Offset as percentage of container (where the image starts)
+    const offsetX = (offsetXPx / containerWidth) * 100;
+    const offsetY = (offsetYPx / containerHeight) * 100;
+    
+    return {
+      offsetX,
+      offsetY,
+      scaleX,
+      scaleY,
+    };
+  };
+
+
   return (
     <div className="w-full">
       {/* Photo viewer - fixed vertical rectangle container */}
@@ -584,15 +633,24 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   height: location.height + FACE_HITBOX_PADDING,
                 };
 
+                // Get image bounds to adjust coordinates for centered image
+                const imageBounds = getImageBounds();
+                
+                // Adjust location coordinates for the centered image
+                const adjustedLeft = location.x * imageBounds.scaleX + imageBounds.offsetX;
+                const adjustedTop = location.y * imageBounds.scaleY + imageBounds.offsetY;
+                const adjustedWidth = location.width * imageBounds.scaleX;
+                const adjustedHeight = location.height * imageBounds.scaleY;
+
                 return (
                   <div
                     key={person.id}
                     className="absolute transition-all duration-300 cursor-pointer pointer-events-auto"
                     style={{
-                      left: `${location.x}%`,
-                      top: `${location.y}%`,
-                      width: `${location.width}%`,
-                      height: `${location.height}%`,
+                      left: `${adjustedLeft}%`,
+                      top: `${adjustedTop}%`,
+                      width: `${adjustedWidth}%`,
+                      height: `${adjustedHeight}%`,
                     }}
                     onMouseEnter={() => {
                       setHoveredPersonId(person.id);
