@@ -1,6 +1,6 @@
 'use client';
 
-import { GroupPhoto, Person } from '@/types';
+import { GroupPhoto, Person, PhotoLocation } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent } from 'react';
 import PersonImage from './PersonImage';
@@ -14,6 +14,9 @@ interface MobilePhotoCarouselProps {
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick }: MobilePhotoCarouselProps) {
   const MAX_VISIBLE_LABELS = 1;
   const FACE_HITBOX_PADDING = 10; // Percentage padding to expand face hitboxes
+  const TRANSITION_DURATION_MS = 500; // Duration of person face transition animation
+  const FADE_MIDPOINT = 0.5; // Point at which fade transition peaks
+  const FADE_MULTIPLIER = 2; // Multiplier for fade calculation
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
   const [showDebugHitboxes, setShowDebugHitboxes] = useState(false); // Can be toggled off later
   
@@ -30,10 +33,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   // Person transition state
   const [transitioningPerson, setTransitioningPerson] = useState<{
     person: Person;
-    fromLocation: any;
-    toLocation: any;
+    fromLocation: PhotoLocation;
+    toLocation: PhotoLocation;
     progress: number;
   } | null>(null);
+  const transitionAnimationRef = useRef<number | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -113,6 +117,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     return () => {
       if (interactionLockTimer.current) {
         clearTimeout(interactionLockTimer.current);
+      }
+      // Cleanup animation frame on unmount
+      if (transitionAnimationRef.current) {
+        cancelAnimationFrame(transitionAnimationRef.current);
       }
     };
   }, []);
@@ -246,7 +254,38 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }, duration);
   }, []);
 
+  // Animate person face transition between photos
+  const animatePersonTransition = useCallback(() => {
+    let startTime: number | null = null;
+    
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / TRANSITION_DURATION_MS, 1);
+      
+      setTransitioningPerson(prev => 
+        prev ? { ...prev, progress } : null
+      );
+      
+      if (progress < 1) {
+        transitionAnimationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Clear transition after completion
+        setTransitioningPerson(null);
+        transitionAnimationRef.current = null;
+      }
+    };
+    
+    transitionAnimationRef.current = requestAnimationFrame(animate);
+  }, [TRANSITION_DURATION_MS]);
+
   const handlePhotoNavigation = (index: number) => {
+    // Cancel any ongoing transition animation
+    if (transitionAnimationRef.current) {
+      cancelAnimationFrame(transitionAnimationRef.current);
+      transitionAnimationRef.current = null;
+    }
+    
     // Feature: Person face transition between pages
     // If the currently highlighted person appears in both photos,
     // animate their face rectangle transitioning between the two positions
@@ -269,28 +308,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           progress: 0,
         });
         
-        // Animate the transition using requestAnimationFrame
-        let startTime: number | null = null;
-        const duration = 500; // ms - shorter duration for smoother feel
-        
-        const animate = (timestamp: number) => {
-          if (!startTime) startTime = timestamp;
-          const elapsed = timestamp - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          
-          setTransitioningPerson(prev => 
-            prev ? { ...prev, progress } : null
-          );
-          
-          if (progress < 1) {
-            requestAnimationFrame(animate);
-          } else {
-            // Clear transition after completion
-            setTransitioningPerson(null);
-          }
-        };
-        
-        requestAnimationFrame(animate);
+        animatePersonTransition();
       }
     }
     
@@ -624,9 +642,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 const adjustedLocation = convertPhotoToContainerCoords(currentLocation);
                 
                 // Calculate opacity - fade in first half, fade out second half
-                const opacity = progress < 0.5 
-                  ? progress * 2  // Fade in from 0 to 1 in first half
-                  : 2 - (progress * 2); // Fade out from 1 to 0 in second half
+                const opacity = progress < FADE_MIDPOINT 
+                  ? progress * FADE_MULTIPLIER  // Fade in from 0 to 1 in first half
+                  : FADE_MULTIPLIER - (progress * FADE_MULTIPLIER); // Fade out from 1 to 0 in second half
                 
                 return (
                   <div
