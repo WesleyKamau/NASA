@@ -17,12 +17,17 @@ export function useTabletLandscape() {
     };
 
     checkTabletLandscape();
-    window.addEventListener('resize', checkTabletLandscape);
-    window.addEventListener('orientationchange', checkTabletLandscape);
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkTabletLandscape);
+      window.addEventListener('orientationchange', checkTabletLandscape);
+    }
     
     return () => {
-      window.removeEventListener('resize', checkTabletLandscape);
-      window.removeEventListener('orientationchange', checkTabletLandscape);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', checkTabletLandscape);
+        window.removeEventListener('orientationchange', checkTabletLandscape);
+      }
     };
   }, []);
 

@@ -39,9 +39,16 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
   if (uniformLayout) {
     // Uniform layout: all people sorted by category, then alphabetically, including Wesley
-    // Filter girlfriend and wesley only once for efficiency
-    const girlfriendPeople = visiblePeople.filter(p => p.category === 'girlfriend');
-    const wesleyPeople = visiblePeople.filter(p => p.id === 'wesley-kamau');
+    // Filter girlfriend and wesley only once for efficiency (single pass)
+    const { girlfriendPeople, wesleyPeople } = visiblePeople.reduce((acc, person) => {
+      if (person.category === 'girlfriend') {
+        acc.girlfriendPeople.push(person);
+      }
+      if (person.id === 'wesley-kamau') {
+        acc.wesleyPeople.push(person);
+      }
+      return acc;
+    }, { girlfriendPeople: [] as Person[], wesleyPeople: [] as Person[] });
     
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
       let categoryPeople = visiblePeople.filter(p => p.category === category);
