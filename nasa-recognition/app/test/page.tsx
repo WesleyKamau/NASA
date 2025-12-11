@@ -67,8 +67,8 @@ export default function TestPage() {
       }));
     };
 
-    // Request permissions
-    const requestPermissions = async () => {
+    // Request permissions on user gesture
+    const requestPermissionsOnGesture = async () => {
       try {
         if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
           // iOS 13+
@@ -103,13 +103,134 @@ export default function TestPage() {
       }
     };
 
-    requestPermissions();
+    // Don't auto-request on mount, wait for user to request
+    setPermissionStatus('click button to request');
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
       window.removeEventListener('devicemotion', handleMotion);
     };
   }, []);
+
+  const handleRequestPermissions = async () => {
+    setPermissionStatus('requesting...');
+    setErrorMessage(null);
+
+    try {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        // iOS 13+
+        try {
+          const orientPerm = await (DeviceOrientationEvent as any).requestPermission();
+          const motionPerm = await (DeviceMotionEvent as any).requestPermission();
+          
+          if (orientPerm === 'granted' && motionPerm === 'granted') {
+            setPermissionStatus('granted');
+            setErrorMessage(null);
+            window.addEventListener('deviceorientation', (e: DeviceOrientationEvent) => {
+              const alpha = (e.alpha || 0) % 360;
+              const beta = e.beta || 0;
+              const gamma = e.gamma || 0;
+
+              const normalizedAlpha = Math.sin((alpha * Math.PI) / 180) * 0.3;
+              const normalizedGamma = Math.max(-45, Math.min(45, gamma)) / 45 * 0.3;
+
+              tiltRef.current = {
+                x: normalizedGamma,
+                y: normalizedAlpha,
+              };
+
+              setTiltData((prev) => ({
+                ...prev,
+                alpha,
+                beta,
+                gamma,
+              }));
+            });
+            window.addEventListener('devicemotion', (e: DeviceMotionEvent) => {
+              if (!e.accelerationIncludingGravity) return;
+
+              const acc = e.accelerationIncludingGravity;
+              const x = acc.x || 0;
+              const y = acc.y || 0;
+              const z = acc.z || 0;
+
+              const tiltX = Math.max(-1, Math.min(1, x / 9.8)) * 0.3;
+              const tiltY = Math.max(-1, Math.min(1, y / 9.8)) * 0.3;
+
+              tiltRef.current = {
+                x: tiltX,
+                y: tiltY,
+              };
+
+              setTiltData((prev) => ({
+                ...prev,
+                accelX: x,
+                accelY: y,
+                accelZ: z,
+              }));
+            });
+          } else {
+            setPermissionStatus('denied');
+            setErrorMessage(`Orientation: ${orientPerm}, Motion: ${motionPerm}`);
+          }
+        } catch (e: any) {
+          setPermissionStatus('error');
+          setErrorMessage(`iOS permission error: ${e.message || e}`);
+        }
+      } else {
+        // Android and other devices
+        setPermissionStatus('granted');
+        setErrorMessage(null);
+        window.addEventListener('deviceorientation', (e: DeviceOrientationEvent) => {
+          const alpha = (e.alpha || 0) % 360;
+          const beta = e.beta || 0;
+          const gamma = e.gamma || 0;
+
+          const normalizedAlpha = Math.sin((alpha * Math.PI) / 180) * 0.3;
+          const normalizedGamma = Math.max(-45, Math.min(45, gamma)) / 45 * 0.3;
+
+          tiltRef.current = {
+            x: normalizedGamma,
+            y: normalizedAlpha,
+          };
+
+          setTiltData((prev) => ({
+            ...prev,
+            alpha,
+            beta,
+            gamma,
+          }));
+        });
+        window.addEventListener('devicemotion', (e: DeviceMotionEvent) => {
+          if (!e.accelerationIncludingGravity) return;
+
+          const acc = e.accelerationIncludingGravity;
+          const x = acc.x || 0;
+          const y = acc.y || 0;
+          const z = acc.z || 0;
+
+          const tiltX = Math.max(-1, Math.min(1, x / 9.8)) * 0.3;
+          const tiltY = Math.max(-1, Math.min(1, y / 9.8)) * 0.3;
+
+          tiltRef.current = {
+            x: tiltX,
+            y: tiltY,
+          };
+
+          setTiltData((prev) => ({
+            ...prev,
+            accelX: x,
+            accelY: y,
+            accelZ: z,
+          }));
+        });
+      }
+    } catch (error: any) {
+      console.error('Permission error:', error);
+      setPermissionStatus('error');
+      setErrorMessage(`Error: ${error.message || JSON.stringify(error)}`);
+    }
+  };
 
   // Starfield animation
   useEffect(() => {
@@ -274,11 +395,30 @@ export default function TestPage() {
           </button>
         </div>
 
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-lg p-3 border border-blue-500/30 text-sm text-slate-300">
-          {mode === 'starfield' ? (
-            <p>Tilt your device to see the stars respond to device orientation.</p>
-          ) : (
-            <p>Real-time device orientation and accelerometer data. Grant permissions when prompted.</p>
+        <div className="space-y-2">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-lg p-3 border border-blue-500/30 text-sm text-slate-300">
+            {mode === 'starfield' ? (
+              <p>Tilt your device to see the stars respond to device orientation.</p>
+            ) : (
+              <p>Real-time device orientation and accelerometer data. Grant permissions when prompted.</p>
+            )}
+            <p className="text-xs text-slate-400 mt-2">Status: <span className="text-blue-300 font-semibold">{permissionStatus}</span></p>
+          </div>
+          
+          {permissionStatus === 'click button to request' && (
+            <button
+              onClick={handleRequestPermissions}
+              className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-semibold transition-all shadow-lg shadow-green-600/50"
+            >
+              🎯 Request Device Sensor Access
+            </button>
+          )}
+          
+          {errorMessage && (
+            <div className="bg-red-900/50 p-3 rounded-lg border border-red-500/50">
+              <div className="text-red-300 font-semibold mb-1">⚠️ Error Details</div>
+              <div className="text-red-200 text-xs break-words font-mono">{errorMessage}</div>
+            </div>
           )}
         </div>
       </div>
