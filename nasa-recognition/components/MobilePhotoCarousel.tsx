@@ -15,6 +15,10 @@ interface MobilePhotoCarouselProps {
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
 const CONTAINER_ASPECT_RATIO = 3 / 4;
+const ENABLE_FACE_TRANSITION = true; // Set to false to disable the face fade overlay
+const FACE_FADE_DELAY_MS = 80;       // Delay before starting crossfade so movement is visible
+const FACE_FADE_DURATION_MS = 220;   // Duration of the actual fade between faces
+const FACE_TRANSITION_TOTAL_MS = 350; // Total overlay lifetime to avoid lingering
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
   const MAX_VISIBLE_LABELS = 1;
@@ -36,7 +40,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isLandscape, setIsLandscape] = useState(false);
   const [isTransitioningPhoto, setIsTransitioningPhoto] = useState(false);
   const [previousPhotoIndex, setPreviousPhotoIndex] = useState(0);
-  const [transitionProgress, setTransitionProgress] = useState<'start' | 'end'>('end');
+  const [showDestinationFace, setShowDestinationFace] = useState(false);
   const previousPhotoRef = useRef(0);
   
   // Touch/pan state
@@ -204,19 +208,31 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Handle photo transition state for face highlights
   useEffect(() => {
+    if (!ENABLE_FACE_TRANSITION) {
+      setIsTransitioningPhoto(false);
+      setShowDestinationFace(false);
+      previousPhotoRef.current = currentPhotoIndex;
+      return;
+    }
+
     // Capture the actual previous index before updating for transition visuals
     setPreviousPhotoIndex(previousPhotoRef.current);
     previousPhotoRef.current = currentPhotoIndex;
 
     setIsTransitioningPhoto(true);
-    setTransitionProgress('start');
+    setShowDestinationFace(false);
+
+    const fadeTimer = setTimeout(() => {
+      setShowDestinationFace(true);
+    }, FACE_FADE_DELAY_MS);
     
     const endTimer = setTimeout(() => {
       setIsTransitioningPhoto(false);
-      setTransitionProgress('end');
-    }, 400); // Slightly longer to make the fade visible
+      setShowDestinationFace(false);
+    }, FACE_TRANSITION_TOTAL_MS);
     
     return () => {
+      clearTimeout(fadeTimer);
       clearTimeout(endTimer);
     };
   }, [currentPhotoIndex]);
@@ -762,15 +778,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     )}
                     
                     {/* Face Image during transition - Previous photo (fades out) */}
-                    {isTransitioningPhoto && (() => {
+                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (() => {
                       const prevPhoto = groupPhotos[previousPhotoIndex];
                       const prevLocation = person.photoLocations.find(
                         loc => loc.photoId === prevPhoto?.id
                       );
                       return prevLocation ? (
                         <div 
-                            className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity duration-400"
-                            style={{ opacity: transitionProgress === 'start' ? 1 : 0 }}
+                            className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity"
+                            style={{ opacity: showDestinationFace ? 0 : 1, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
                         >
                             <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={prevPhoto.id} priority />
                         </div>
@@ -778,10 +794,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     })()}
                     
                     {/* Face Image during transition - Current photo (fades in) */}
-                    {isTransitioningPhoto && (
+                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (
                       <div 
-                          className="absolute inset-0 overflow-hidden rounded-lg z-1 transition-opacity duration-400"
-                          style={{ opacity: transitionProgress === 'start' ? 0 : 1 }}
+                          className="absolute inset-0 overflow-hidden rounded-lg z-1 transition-opacity"
+                          style={{ opacity: showDestinationFace ? 1 : 0, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
                       >
                           <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={currentPhoto.id} priority />
                       </div>
