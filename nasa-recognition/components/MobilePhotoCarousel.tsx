@@ -369,8 +369,20 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   return (
     <div className="w-full">
+      {/* Fallback for aspect-ratio using padding-bottom technique */}
+      <style>
+        {`
+          @supports not (aspect-ratio: 1) {
+            .aspect-3-4-fallback {
+              height: 0 !important;
+              padding-bottom: 75% !important;
+              position: relative !important;
+            }
+          }
+        `}
+      </style>
       {/* Photo viewer - fixed vertical rectangle container */}
-      <div className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm" style={{ width: '100%', maxWidth: '500px', aspectRatio: '3 / 4' }}>
+      <div className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" style={{ width: '100%', maxWidth: '500px', aspectRatio: '3 / 4' }}>
         <div
           ref={containerRef}
           className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
