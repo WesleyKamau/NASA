@@ -162,7 +162,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     setScale(1);
     setPosition({ x: 0, y: 0 });
     
-    // Show center circle after page flip
+    // Feature: Show center circle after page flip
+    // The circle persists after page navigation until user interacts
     setShowCenterCircle(true);
   }, [currentPhotoIndex]);
 
@@ -246,7 +247,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   }, []);
 
   const handlePhotoNavigation = (index: number) => {
-    // Check if current highlighted person exists in both photos for transition
+    // Feature: Person face transition between pages
+    // If the currently highlighted person appears in both photos,
+    // animate their face rectangle transitioning between the two positions
     const currentPerson = shuffledPeople[highlightedPersonIndex];
     if (currentPerson && isAutoHighlighting) {
       const currentLocation = currentPerson.photoLocations.find(
@@ -257,7 +260,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         loc => loc.photoId === newPhoto.id
       );
       
-      // If person exists in both photos, create transition
+      // If person exists in both photos, create transition animation
       if (currentLocation && newLocation) {
         setTransitioningPerson({
           person: currentPerson,
@@ -266,9 +269,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           progress: 0,
         });
         
-        // Animate the transition
+        // Animate the transition using requestAnimationFrame
         let startTime: number | null = null;
-        const duration = 800; // ms
+        const duration = 500; // ms - shorter duration for smoother feel
         
         const animate = (timestamp: number) => {
           if (!startTime) startTime = timestamp;
@@ -283,7 +286,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
             requestAnimationFrame(animate);
           } else {
             // Clear transition after completion
-            setTimeout(() => setTransitioningPerson(null), 100);
+            setTransitioningPerson(null);
           }
         };
         
@@ -620,23 +623,31 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 
                 const adjustedLocation = convertPhotoToContainerCoords(currentLocation);
                 
+                // Calculate opacity - fade in first half, fade out second half
+                const opacity = progress < 0.5 
+                  ? progress * 2  // Fade in from 0 to 1 in first half
+                  : 2 - (progress * 2); // Fade out from 1 to 0 in second half
+                
                 return (
                   <div
-                    className="absolute z-40 pointer-events-none transition-all duration-100"
+                    className="absolute z-40 pointer-events-none"
                     style={{
                       left: `${adjustedLocation.x}%`,
                       top: `${adjustedLocation.y}%`,
                       width: `${adjustedLocation.width}%`,
                       height: `${adjustedLocation.height}%`,
-                      opacity: 1 - Math.abs(progress - 0.5) * 2, // Fade in/out during transition
+                      opacity: opacity,
+                      transition: 'none', // Use animation frame for smooth updates
                     }}
                   >
-                    <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-400/60 shadow-lg shadow-yellow-400/50">
+                    <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-yellow-400/80 shadow-xl shadow-yellow-400/60">
                       <PersonImage 
                         person={person}
                         groupPhotos={groupPhotos}
-                        className="transition-opacity duration-300"
+                        className="transition-none"
                       />
+                      {/* Add a bright highlight overlay */}
+                      <div className="absolute inset-0 bg-yellow-400/20 mix-blend-overlay" />
                     </div>
                   </div>
                 );
