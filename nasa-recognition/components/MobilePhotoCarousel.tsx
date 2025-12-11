@@ -553,16 +553,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 if (!containerRef.current) return null;
                 
                 const rect = containerRef.current.getBoundingClientRect();
-                // Use refs for immediate feedback during drag, fall back to state otherwise
-                const currentPos = isDragging ? positionRef.current : position;
-                const currentScale = isDragging ? scaleRef.current : scale;
-                const imageCenterOffsetX = -currentPos.x / (rect.width * currentScale) * 100;
-                const imageCenterOffsetY = -currentPos.y / (rect.height * currentScale) * 100;
+                const imageCenterOffsetX = -position.x / (rect.width * scale) * 100;
+                const imageCenterOffsetY = -position.y / (rect.height * scale) * 100;
                 
                 const visibleCenterX = 50 + imageCenterOffsetX;
                 const visibleCenterY = 50 + imageCenterOffsetY;
                 
-                // Force dependency on centerIndicatorForce to keep updates frequent
+                // Force dependency on centerIndicatorForce to keep updates frequent during drag
                 const dummy = centerIndicatorForce;
                 
                 // Find the closest person whose expanded hitbox contains the center point
