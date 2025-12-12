@@ -65,6 +65,7 @@ function GeneratorContent() {
   const [isBold, setIsBold] = useState<boolean>(OG_IMAGE_CONFIG.isBold);
   const [availableFonts, setAvailableFonts] = useState(FONTS);
   const [isDragging, setIsDragging] = useState(false);
+  const [showRocket, setShowRocket] = useState(true);
   
   const dragStartRef = useRef({ x: 0, y: 0 });
   const rocketRef = useRef<HTMLDivElement>(null);
@@ -183,6 +184,7 @@ function GeneratorContent() {
           </div>
 
         {/* Draggable Rocket */}
+        {showRocket && (
         <div
           ref={rocketRef}
           className={`absolute z-20 group ${isCaptureMode ? '' : 'cursor-move'}`}
@@ -224,6 +226,7 @@ function GeneratorContent() {
             }}
           />
         </div>
+        )}
       </div>
       </div>
 
@@ -305,7 +308,7 @@ function GeneratorContent() {
             </div>
 
             {/* Bold Toggle */}
-            <div className="mb-4">
+            <div className="mb-4 flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
@@ -314,6 +317,16 @@ function GeneratorContent() {
                   className="w-4 h-4 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-blue-500"
                 />
                 <span className="text-gray-400 text-xs uppercase">Bold Text</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={showRocket}
+                  onChange={(e) => setShowRocket(e.target.checked)}
+                  className="w-4 h-4 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-gray-400 text-xs uppercase">Show Rocket</span>
               </label>
             </div>
 
