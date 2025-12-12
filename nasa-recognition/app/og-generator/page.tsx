@@ -7,17 +7,11 @@ import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
 import { ROCKET_CONFIG } from '@/lib/rocketConfig';
 import { OG_IMAGE_CONFIG } from '@/lib/ogConfig';
+import { OG_GENERATOR_CONFIG } from '@/lib/componentsConfig';
 
 const { ROCKET_SIZE: DEFAULT_ROCKET_SIZE, ENGINE_GLOW_OFFSET_X, ENGINE_GLOW_OFFSET_Y } = ROCKET_CONFIG;
 
-const FONTS = [
-  { name: 'Geist Sans', value: 'var(--font-geist-sans)' },
-  { name: 'Inter', value: 'Inter, sans-serif' },
-  { name: 'Roboto', value: 'Roboto, sans-serif' },
-  { name: 'Helvetica Neue', value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-  { name: 'System UI', value: 'system-ui, sans-serif' },
-  { name: 'Monospace', value: 'var(--font-geist-mono)' },
-];
+const FONTS = OG_GENERATOR_CONFIG.AVAILABLE_FONTS;
 
 function GeneratorContent() {
   const searchParams = useSearchParams();

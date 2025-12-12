@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
+import { MOBILE_PHOTO_CAROUSEL_CONFIG } from '@/lib/componentsConfig';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -14,15 +15,15 @@ interface MobilePhotoCarouselProps {
 }
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
-const CONTAINER_ASPECT_RATIO = 3 / 4;
-const ENABLE_FACE_TRANSITION = false; // Set to false to disable the face fade overlay
-const FACE_FADE_DELAY_MS = 80;       // Delay before starting crossfade so movement is visible
-const FACE_FADE_DURATION_MS = 220;   // Duration of the actual fade between faces
-const FACE_TRANSITION_TOTAL_MS = 350; // Total overlay lifetime to avoid lingering
+const CONTAINER_ASPECT_RATIO = MOBILE_PHOTO_CAROUSEL_CONFIG.CONTAINER_ASPECT_RATIO;
+const ENABLE_FACE_TRANSITION = MOBILE_PHOTO_CAROUSEL_CONFIG.ENABLE_FACE_TRANSITION;
+const FACE_FADE_DELAY_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DELAY_MS;
+const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS;
+const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
-  const MAX_VISIBLE_LABELS = 1;
-  const FACE_HITBOX_PADDING = 10; // Percentage padding to expand face hitboxes
+  const MAX_VISIBLE_LABELS = MOBILE_PHOTO_CAROUSEL_CONFIG.MAX_VISIBLE_LABELS;
+  const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
   const [showDebugHitboxes, setShowDebugHitboxes] = useState(false); // Can be toggled off later
   
