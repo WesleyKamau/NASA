@@ -22,17 +22,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: "MSFC Book of Faces",
   description: "Recognizing the amazing people from my NASA internship experience",
-  icons: {
-    icon: [
-      { url: '/favicon.png', sizes: 'any' },
-      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/favicon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: '/favicon.png',
-  },
   openGraph: {
     title: "MSFC Book of Faces",
     description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
