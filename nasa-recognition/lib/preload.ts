@@ -19,7 +19,8 @@ function getPreloadImagesContainer(): HTMLElement {
 }
 
 /**
- * Preload an image by creating an in-memory Image element (added to a hidden container for caching).
+ * Preload an image by creating an Image element and adding it to a hidden container.
+ * This ensures the browser caches the image for faster loading when actually displayed.
  */
 export function preloadImage(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
