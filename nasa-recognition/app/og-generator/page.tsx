@@ -105,7 +105,7 @@ function GeneratorContent() {
   isBold: ${isBold},
   showRocket: ${showRocket},
   useGalaxy: ${useGalaxy},
-} as const;`;
+};`;
     
     navigator.clipboard.writeText(config).then(() => {
       alert('✅ Config copied to clipboard!\n\nPaste this into your og-generator/page.tsx file to set these as defaults.');
