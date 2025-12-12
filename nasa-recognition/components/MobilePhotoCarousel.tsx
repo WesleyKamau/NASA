@@ -164,6 +164,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     };
   }, []);
 
+  // Cleanup scrollToCardTimeoutRef and animationFrameRef on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollToCardTimeoutRef.current) {
+        clearTimeout(scrollToCardTimeoutRef.current);
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
   // Update container dimensions
   useEffect(() => {
     const updateDimensions = () => {
@@ -847,7 +859,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     )}
                     
                     {/* Face Image during transition - Previous photo (fades out) */}
-                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (() => {
+                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && !isAutoCycleRef.current && (isHighlighted || showWhenZoomed) && (() => {
                       const prevPhoto = groupPhotos[previousPhotoIndex];
                       if (!prevPhoto) return null;
                       
@@ -868,7 +880,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     })()}
                     
                     {/* Face Image during transition - Current photo (fades in) */}
-                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (
+                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && !isAutoCycleRef.current && (isHighlighted || showWhenZoomed) && (
                       <div 
                           className="absolute inset-0 overflow-hidden rounded-lg z-10 transition-opacity"
                           style={{ opacity: showDestinationFace ? 1 : 0, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
