@@ -35,6 +35,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
   const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
   const [showCenterIndicator, setShowCenterIndicator] = useState(false);
+  const [overlaysReadyForPhoto, setOverlaysReadyForPhoto] = useState<string | null>(null);
   const [isTabletLandscape, setIsTabletLandscape] = useState(false);
   const [isIPad, setIsIPad] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
@@ -42,6 +43,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [previousPhotoIndex, setPreviousPhotoIndex] = useState(0);
   const [showDestinationFace, setShowDestinationFace] = useState(false);
   const previousPhotoRef = useRef(0);
+  const isAutoCycleRef = useRef(false); // Track if photo change is from auto-cycle (no face transition)
   const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const endTimerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -200,15 +202,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
   }, [currentPhoto, people]);
 
-  // Reset zoom when photo changes
+  // Reset zoom and overlay state when photo changes
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
-    // Hide center indicator until user interacts on new photo
     setShowCenterIndicator(false);
+    // Clear overlay ready state for new photo - prevents rectangles from showing
+    // until the image fully loads, avoiding flash during auto-cycle
+    setOverlaysReadyForPhoto(null);
   }, [currentPhotoIndex]);
 
   // Handle photo transition state for face highlights
+  // Only show face transitions when user manually changes photos, not during auto-cycle
   useEffect(() => {
     // Clear any existing timers to prevent race conditions
     if (fadeTimerRef.current) {
@@ -220,10 +225,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       endTimerRef.current = null;
     }
 
-    if (!ENABLE_FACE_TRANSITION) {
+    // Skip if feature disabled or auto-cycling
+    if (!ENABLE_FACE_TRANSITION || isAutoCycleRef.current) {
       setIsTransitioningPhoto(false);
       setShowDestinationFace(false);
       previousPhotoRef.current = currentPhotoIndex;
+      isAutoCycleRef.current = false; // Reset flag after use
       return;
     }
 
@@ -249,12 +256,25 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     };
   }, [currentPhotoIndex]);
 
-  // Auto-scroll photos
+  // Auto-scroll photos every 15 seconds
   useEffect(() => {
     if (!isAutoScrolling || groupPhotos.length <= 1) return;
 
     photoScrollTimer.current = setInterval(() => {
-      setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
+      // Smoothly fade out current highlight before transitioning
+      setIsAutoHighlighting(false);
+      setHighlightedPersonIndex(-1);
+      
+      // Small delay for smoother visual transition between photos
+      setTimeout(() => {
+        isAutoCycleRef.current = true; // Flag this as auto-cycle (no face transition)
+        setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
+        // Resume auto-highlighting after image loads and transition completes
+        setTimeout(() => {
+          setIsAutoHighlighting(true);
+          setHighlightedPersonIndex(0);
+        }, 400); // Slightly longer to ensure image is loaded
+      }, 100); // Brief pause for smoother transition
     }, 15000);
 
     return () => {
@@ -327,6 +347,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   }, []);
 
   const handlePhotoNavigation = (index: number) => {
+    isAutoCycleRef.current = false; // User-initiated change, enable face transitions
     setCurrentPhotoIndex(index);
     pauseAllAuto();
   };
@@ -571,6 +592,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   }
                   return { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } };
                 });
+                // Mark overlays as ready for this specific photo after image loads
+                setOverlaysReadyForPhoto(currentPhoto.id);
               }}
             />
 
@@ -618,6 +641,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               />
 
               {shuffledPeople.map((person, idx) => {
+                // Two-stage guard: wait for initial render frame AND current photo to load
+                // This prevents rectangles from flashing when auto-cycling to new photos
+                if (overlaysReadyForPhoto !== currentPhoto.id) return null;
+                
                 const location = person.photoLocations.find(
                   loc => loc.photoId === currentPhoto.id
                 );
@@ -625,6 +652,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 if (!location) return null;
 
                 const isHighlighted = isAutoHighlighting && idx === highlightedPersonIndex;
+                
+                // During auto-cycle, only show the highlighted person's overlay
+                if (isAutoHighlighting && !isHighlighted) return null;
 
                 // Calculate responsive text size based on zoom (inverse scaling with more reduction)
                 const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8)));
