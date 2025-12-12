@@ -26,7 +26,7 @@ const fs = require('fs');
   // Wait a moment for animations/fonts to settle
   await new Promise(r => setTimeout(r, 1000));
 
-  const outputPath = path.join(process.cwd(), 'public', 'og-preview.png');
+  const outputPath = path.join(process.cwd(), 'app', 'opengraph-image.png');
   
   // Take screenshot
   await page.screenshot({ 

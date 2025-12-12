@@ -33,35 +33,18 @@ export const metadata: Metadata = {
     ],
     shortcut: '/favicon.png',
   },
-  openGraph: ((): Metadata['openGraph'] => {
-    const base = getBaseUrl();
-    const img = `${base}/og-preview.png`;
-    return {
-      title: "MSFC Book of Faces",
-      description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
-      url: base,
-      siteName: "MSFC Book of Faces",
-      images: [
-        {
-          url: img,
-          width: 1200,
-          height: 630,
-          alt: 'MSFC Book of Faces Preview',
-        },
-      ],
-      locale: 'en_US',
-      type: 'website',
-    };
-  })(),
-  twitter: ((): Metadata['twitter'] => {
-    const base = getBaseUrl();
-    return {
-      card: 'summary_large_image',
-      title: "MSFC Book of Faces",
-      description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
-      images: [`${base}/og-preview.png`],
-    };
-  })(),
+  openGraph: {
+    title: "MSFC Book of Faces",
+    description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
+    siteName: "MSFC Book of Faces",
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "MSFC Book of Faces",
+    description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
+  },
 };
 
 export default function RootLayout({
@@ -69,15 +52,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const base = getBaseUrl();
   return (
     <html lang="en">
-      <head>
-        <meta property="og:image" content={`${base}/og-preview.png`} />
-        <meta property="og:image:secure_url" content={`${base}/og-preview.png`} />
-        <meta name="twitter:image" content={`${base}/og-preview.png`} />
-        <link rel="image_src" href={`${base}/og-preview.png`} />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
