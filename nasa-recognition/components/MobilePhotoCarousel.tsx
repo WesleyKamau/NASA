@@ -67,6 +67,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const autoCycleResetTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const scrollToCardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(0);
   const positionRef = useRef({ x: 0, y: 0 });
@@ -154,10 +156,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     return () => window.removeEventListener('resize', detectTouchMode);
   }, []);
 
+  // Cleanup timers and animation frames on unmount
   useEffect(() => {
     return () => {
       if (interactionLockTimer.current) {
         clearTimeout(interactionLockTimer.current);
+      }
+      if (scrollToCardTimeoutRef.current) {
+        clearTimeout(scrollToCardTimeoutRef.current);
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
@@ -225,8 +234,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       endTimerRef.current = null;
     }
 
-    // Skip if feature disabled or auto-cycling
-    if (!ENABLE_FACE_TRANSITION || isAutoCycleRef.current) {
+    // Skip if feature disabled, initial mount, or auto-cycling
+    if (!ENABLE_FACE_TRANSITION || previousPhotoRef.current === currentPhotoIndex || isAutoCycleRef.current) {
       setIsTransitioningPhoto(false);
       setShowDestinationFace(false);
       previousPhotoRef.current = currentPhotoIndex;
@@ -262,24 +271,35 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
     photoScrollTimer.current = setInterval(() => {
       // Smoothly fade out current highlight before transitioning
-      setIsAutoHighlighting(false);
+      setShowCenterIndicator(false);
       setHighlightedPersonIndex(-1);
-      
+      setIsAutoHighlighting(false);
+
+      if (autoCycleResetTimer.current) {
+        clearTimeout(autoCycleResetTimer.current);
+      }
+
       // Small delay for smoother visual transition between photos
       setTimeout(() => {
         isAutoCycleRef.current = true; // Flag this as auto-cycle (no face transition)
-        setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
-        // Resume auto-highlighting after image loads and transition completes
-        setTimeout(() => {
-          setIsAutoHighlighting(true);
-          setHighlightedPersonIndex(0);
-        }, 400); // Slightly longer to ensure image is loaded
+        setCurrentPhotoIndex(prev => {
+          const next = (prev + 1) % groupPhotos.length;
+          // Resume auto-highlighting after image loads and transition completes
+          autoCycleResetTimer.current = setTimeout(() => {
+            setIsAutoHighlighting(true);
+            setHighlightedPersonIndex(0);
+          }, 400); // Slightly longer to ensure image is loaded
+          return next;
+        });
       }, 100); // Brief pause for smoother transition
     }, 15000);
 
     return () => {
       if (photoScrollTimer.current) {
         clearInterval(photoScrollTimer.current);
+      }
+      if (autoCycleResetTimer.current) {
+        clearTimeout(autoCycleResetTimer.current);
       }
     };
   }, [isAutoScrolling, groupPhotos.length]);
@@ -314,6 +334,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     
     if (cooldownTimer.current) {
       clearTimeout(cooldownTimer.current);
+    }
+    if (autoCycleResetTimer.current) {
+      clearTimeout(autoCycleResetTimer.current);
     }
     
     // Do not resume auto-scroll automatically
@@ -358,6 +381,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       e.preventDefault();
       e.stopPropagation();
       return;
+    }
+    // Cancel any pending scroll-to-card animations when user resumes touch
+    if (scrollToCardTimeoutRef.current) {
+      clearTimeout(scrollToCardTimeoutRef.current);
+      scrollToCardTimeoutRef.current = undefined;
     }
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
@@ -736,6 +764,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   height: location.height + FACE_HITBOX_PADDING,
                 };
 
+                // Determine if face transition overlays should be rendered for this person
+                // Only render during manual transitions (not auto-cycle) for highlighted or visible people
+                const shouldRenderFaceTransition = ENABLE_FACE_TRANSITION && 
+                  isTransitioningPhoto && 
+                  !isAutoCycleRef.current && 
+                  (isHighlighted || showWhenZoomed);
+
                 return (
                   <div
                     key={person.id}
@@ -761,6 +796,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       // Only allow clicks if this person is highlighted or shown when zoomed
                       if (!isHighlighted && !showWhenZoomed) {
                         return;
+                      }
+                      pauseAllAuto();
+                      if (scrollToCardTimeoutRef.current) {
+                        clearTimeout(scrollToCardTimeoutRef.current);
+                        scrollToCardTimeoutRef.current = undefined;
                       }
                       
                       e.stopPropagation();
@@ -793,8 +833,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                         const personCardId = `person-card-mobile-${person.id}`;
                         const cardElement = document.getElementById(personCardId);
                         if (cardElement) {
-                          setTimeout(() => {
+                          scrollToCardTimeoutRef.current = setTimeout(() => {
                             cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            scrollToCardTimeoutRef.current = undefined;
                           }, 50);
                           cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
                           setTimeout(() => {
@@ -820,7 +861,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     )}
                     
                     {/* Face Image during transition - Previous photo (fades out) */}
-                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (() => {
+                    {shouldRenderFaceTransition && (() => {
                       const prevPhoto = groupPhotos[previousPhotoIndex];
                       if (!prevPhoto) return null;
                       
@@ -841,7 +882,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     })()}
                     
                     {/* Face Image during transition - Current photo (fades in) */}
-                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (
+                    {shouldRenderFaceTransition && (
                       <div 
                           className="absolute inset-0 overflow-hidden rounded-lg z-10 transition-opacity"
                           style={{ opacity: showDestinationFace ? 1 : 0, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
