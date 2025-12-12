@@ -22,7 +22,6 @@ const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS
 const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
-  const MAX_VISIBLE_LABELS = MOBILE_PHOTO_CAROUSEL_CONFIG.MAX_VISIBLE_LABELS;
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
   const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
