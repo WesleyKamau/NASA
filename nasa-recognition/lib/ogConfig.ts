@@ -5,4 +5,6 @@ export const OG_IMAGE_CONFIG = {
   fontFamily: '"Instagram Sans", sans-serif',
   fontSize: { line1: 82, line2: 135 },
   isBold: true,
+  showRocket: true,
+  useGalaxy: true,
 };

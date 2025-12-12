@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "validate-data": "tsx scripts/validate-data.ts"
+    "validate-data": "tsx scripts/validate-data.ts",
+    "og": "node scripts/capture-og.js"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

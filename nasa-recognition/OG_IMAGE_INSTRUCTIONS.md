@@ -28,7 +28,7 @@ We have created a dedicated tool to generate the Open Graph image using the actu
    - Launch a headless browser
    - Navigate to the generator page
    - Set the viewport to 1200x630
-   - Save the screenshot to `public/og-preview.png`
+   - Save the screenshot to `app/opengraph-image.png`
 
 ## Why this method?
 This ensures the Open Graph image perfectly matches the website's design, using the exact same React components, fonts, and styling (Tailwind CSS) as the production site.
