@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { GroupPhoto, Person } from '@/types';
+import { preloadAll } from '@/lib/preload';
 import DesktopSplitView from '@/components/DesktopSplitView';
 import CompactSplitView from '@/components/CompactSplitView';
 import SingleColumnView from '@/components/SingleColumnView';
@@ -31,6 +32,24 @@ interface ClientHomeProps {
 export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [useSplitView, setUseSplitView] = useState(false);
   const [useCompactSplit, setUseCompactSplit] = useState(false);
+  const hasPreloaded = useRef(false);
+
+  // Preload all images and highlights on component mount
+  useEffect(() => {
+    if (!hasPreloaded.current) {
+      hasPreloaded.current = true;
+      preloadAll(groupPhotos, people).catch(error => {
+        console.error('Failed to preload assets:', error);
+      });
+    }
+  }, [groupPhotos, people]);
+
+  // Preload all images and highlights on initial load
+  useEffect(() => {
+    preloadAll(groupPhotos, people).catch(error => {
+      console.error('Failed to preload assets:', error);
+    });
+  }, [groupPhotos, people]);
 
   useEffect(() => {
     const checkLayout = () => {
