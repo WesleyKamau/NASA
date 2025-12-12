@@ -2,7 +2,7 @@
 
 # 🚀 NASA Internship Book of Faces
 
-_This app is for me to remember all the people I met during my tiem at MSFC._
+_This app is for me to remember all the people I met during my time at MSFC._
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-61dafb?style=flat-square&logo=react)](https://react.dev/)
