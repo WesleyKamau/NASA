@@ -1,9 +1,10 @@
 'use client';
 
-import { GroupPhoto, Person } from '@/types';
+import { GroupPhoto, Person, PhotoLocation } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
+import PersonImage from './PersonImage';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -12,15 +13,12 @@ interface MobilePhotoCarouselProps {
   hideInstructions?: boolean;
 }
 
-interface PhotoLocation {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 // Container aspect ratio (width / height) - used for letterboxing calculations
 const CONTAINER_ASPECT_RATIO = 3 / 4;
+const ENABLE_FACE_TRANSITION = true; // Set to false to disable the face fade overlay
+const FACE_FADE_DELAY_MS = 80;       // Delay before starting crossfade so movement is visible
+const FACE_FADE_DURATION_MS = 220;   // Duration of the actual fade between faces
+const FACE_TRANSITION_TOTAL_MS = 350; // Total overlay lifetime to avoid lingering
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
   const MAX_VISIBLE_LABELS = 1;
@@ -37,9 +35,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
   const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
   const [showCenterIndicator, setShowCenterIndicator] = useState(false);
+  const [overlaysReadyForPhoto, setOverlaysReadyForPhoto] = useState<string | null>(null);
   const [isTabletLandscape, setIsTabletLandscape] = useState(false);
   const [isIPad, setIsIPad] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [isTransitioningPhoto, setIsTransitioningPhoto] = useState(false);
+  const [previousPhotoIndex, setPreviousPhotoIndex] = useState(0);
+  const [showDestinationFace, setShowDestinationFace] = useState(false);
+  const previousPhotoRef = useRef(0);
+  const isAutoCycleRef = useRef(false); // Track if photo change is from auto-cycle (no face transition)
+  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const endTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -196,20 +202,79 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
   }, [currentPhoto, people]);
 
-  // Reset zoom when photo changes
+  // Reset zoom and overlay state when photo changes
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
-    // Hide center indicator until user interacts on new photo
     setShowCenterIndicator(false);
+    // Clear overlay ready state for new photo - prevents rectangles from showing
+    // until the image fully loads, avoiding flash during auto-cycle
+    setOverlaysReadyForPhoto(null);
   }, [currentPhotoIndex]);
 
-  // Auto-scroll photos
+  // Handle photo transition state for face highlights
+  // Only show face transitions when user manually changes photos, not during auto-cycle
+  useEffect(() => {
+    // Clear any existing timers to prevent race conditions
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
+    if (endTimerRef.current) {
+      clearTimeout(endTimerRef.current);
+      endTimerRef.current = null;
+    }
+
+    // Skip if feature disabled or auto-cycling
+    if (!ENABLE_FACE_TRANSITION || isAutoCycleRef.current) {
+      setIsTransitioningPhoto(false);
+      setShowDestinationFace(false);
+      previousPhotoRef.current = currentPhotoIndex;
+      isAutoCycleRef.current = false; // Reset flag after use
+      return;
+    }
+
+    // Capture the actual previous index before updating for transition visuals
+    setPreviousPhotoIndex(previousPhotoRef.current);
+    previousPhotoRef.current = currentPhotoIndex;
+
+    setIsTransitioningPhoto(true);
+    setShowDestinationFace(false);
+
+    fadeTimerRef.current = setTimeout(() => {
+      setShowDestinationFace(true);
+    }, FACE_FADE_DELAY_MS);
+    
+    endTimerRef.current = setTimeout(() => {
+      setIsTransitioningPhoto(false);
+      setShowDestinationFace(false);
+    }, FACE_TRANSITION_TOTAL_MS);
+    
+    return () => {
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+      if (endTimerRef.current) clearTimeout(endTimerRef.current);
+    };
+  }, [currentPhotoIndex]);
+
+  // Auto-scroll photos every 15 seconds
   useEffect(() => {
     if (!isAutoScrolling || groupPhotos.length <= 1) return;
 
     photoScrollTimer.current = setInterval(() => {
-      setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
+      // Smoothly fade out current highlight before transitioning
+      setIsAutoHighlighting(false);
+      setHighlightedPersonIndex(-1);
+      
+      // Small delay for smoother visual transition between photos
+      setTimeout(() => {
+        isAutoCycleRef.current = true; // Flag this as auto-cycle (no face transition)
+        setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
+        // Resume auto-highlighting after image loads and transition completes
+        setTimeout(() => {
+          setIsAutoHighlighting(true);
+          setHighlightedPersonIndex(0);
+        }, 400); // Slightly longer to ensure image is loaded
+      }, 100); // Brief pause for smoother transition
     }, 15000);
 
     return () => {
@@ -282,6 +347,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   }, []);
 
   const handlePhotoNavigation = (index: number) => {
+    isAutoCycleRef.current = false; // User-initiated change, enable face transitions
     setCurrentPhotoIndex(index);
     pauseAllAuto();
   };
@@ -526,6 +592,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   }
                   return { ...prev, [currentPhoto.id]: { width: img.naturalWidth, height: img.naturalHeight } };
                 });
+                // Mark overlays as ready for this specific photo after image loads
+                setOverlaysReadyForPhoto(currentPhoto.id);
               }}
             />
 
@@ -573,6 +641,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               />
 
               {shuffledPeople.map((person, idx) => {
+                // Two-stage guard: wait for initial render frame AND current photo to load
+                // This prevents rectangles from flashing when auto-cycling to new photos
+                if (overlaysReadyForPhoto !== currentPhoto.id) return null;
+                
                 const location = person.photoLocations.find(
                   loc => loc.photoId === currentPhoto.id
                 );
@@ -580,6 +652,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 if (!location) return null;
 
                 const isHighlighted = isAutoHighlighting && idx === highlightedPersonIndex;
+                
+                // During auto-cycle, only show the highlighted person's overlay
+                if (isAutoHighlighting && !isHighlighted) return null;
 
                 // Calculate responsive text size based on zoom (inverse scaling with more reduction)
                 const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8)));
@@ -744,6 +819,37 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       </div>
                     )}
                     
+                    {/* Face Image during transition - Previous photo (fades out) */}
+                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (() => {
+                      const prevPhoto = groupPhotos[previousPhotoIndex];
+                      if (!prevPhoto) return null;
+                      
+                      const prevLocation = person.photoLocations.find(
+                        loc => loc.photoId === prevPhoto.id
+                      );
+                      
+                      if (!prevLocation) return null;
+                      
+                      return (
+                        <div 
+                            className="absolute inset-0 overflow-hidden rounded-lg z-0 transition-opacity"
+                            style={{ opacity: showDestinationFace ? 0 : 1, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
+                        >
+                            <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={prevPhoto.id} priority />
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Face Image during transition - Current photo (fades in) */}
+                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && (
+                      <div 
+                          className="absolute inset-0 overflow-hidden rounded-lg z-10 transition-opacity"
+                          style={{ opacity: showDestinationFace ? 1 : 0, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
+                      >
+                          <PersonImage person={person} groupPhotos={groupPhotos} className="object-cover" forcePhotoId={currentPhoto.id} priority />
+                      </div>
+                    )}
+
                     {/* Highlight border */}
                     <div 
                       className={`absolute inset-0 rounded-lg transition-all duration-500 z-10`}

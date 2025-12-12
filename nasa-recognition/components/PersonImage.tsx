@@ -10,11 +10,19 @@ interface PersonImageProps {
   groupPhotos: GroupPhoto[];
   className?: string;
   priority?: boolean;
+  forcePhotoId?: string; // Force using a specific photo instead of preferred
 }
 
-export default function PersonImage({ person, groupPhotos, className = '', priority = false }: PersonImageProps) {
+export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId }: PersonImageProps) {
   const [imageError, setImageError] = useState(false);
-  const imageInfo = getPersonImage(person, groupPhotos);
+  
+  // If forcePhotoId is provided, temporarily override the person's preferredPhotoId
+  const personWithForcedPhoto = forcePhotoId ? {
+    ...person,
+    preferredPhotoId: forcePhotoId
+  } : person;
+  
+  const imageInfo = getPersonImage(personWithForcedPhoto, groupPhotos, !!forcePhotoId);
 
   if (imageInfo.type === 'individual' && imageInfo.src && !imageError) {
     return (

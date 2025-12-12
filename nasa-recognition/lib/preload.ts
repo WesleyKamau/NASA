@@ -19,7 +19,8 @@ function getPreloadImagesContainer(): HTMLElement {
 }
 
 /**
- * Preload an image by creating an Image element and adding it to the DOM
+ * Preload an image by creating an Image object and setting its src.
+ * The image is loaded into memory but is not added to the DOM.
  */
 export function preloadImage(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -75,7 +76,10 @@ export async function preloadPersonImages(people: Person[]): Promise<void> {
  */
 export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
   const highlightContainer = document.createElement('div');
-  highlightContainer.style.display = 'none';
+  highlightContainer.style.opacity = '0';
+  highlightContainer.style.pointerEvents = 'none';
+  highlightContainer.style.position = 'absolute';
+  highlightContainer.style.left = '-9999px';
   highlightContainer.id = 'preload-highlights-container';
   
   // Create SVG elements for each highlight rectangle to preload rendering
