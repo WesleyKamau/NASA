@@ -1,14 +1,13 @@
 <div align="center">
 
-# 🚀 NASA Internship Recognition
+# 🚀 NASA Internship Book of Faces
 
-_An interactive digital yearbook celebrating the Spring 2025 NASA internship experience_
+_This app is for me to remember all the people I met during my tiem at MSFC._
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-61dafb?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?style=flat-square&logo=typescript)](https://typescriptlang.org/)
 
-> _"One of the most impactful parts of my NASA internship was all of the people I got to meet."_
 
 </div>
 
@@ -16,12 +15,11 @@ _An interactive digital yearbook celebrating the Spring 2025 NASA internship exp
 
 ## ✨ Features
 
-- **🌌 Starfield Background** - Animated canvas-based starfield
-- **🚀 Flying SLS Rocket** - Configurable rocket animations with real trajectory physics
-- **📸 Interactive Photos** - Click faces in group photos to scroll to their profile
-- **📱 Mobile Optimized** - Touch gestures, pinch-to-zoom, and responsive layouts
-- **⚙️ Rocket Config** - Hidden config page at `/rocket-config` to customize animations
-- **🎯 Setup Tool** - Photo coordinate editor at `/setup` for mapping face locations
+- **🌌 Starfield Background** - Keeping things space themed here
+- **🚀 Flying SLS Rocket** - A fun little rocket in the background to keep things interesting
+- **📸 Interactive Photos** - Click faces in group photos to learn more about the people
+- **📱 Mobile Optimized** - Touch gestures, pinch-to-zoom, and responsive layouts (and still improving!)
+- **🎯 EZ Setup** - Photo coordinate editor at `/setup` for collecting the coordinate data
 
 ## 🛠️ Setup Page
 
@@ -57,10 +55,11 @@ Open [http://localhost:3000](http://localhost:3000)
 - `npm run build` - Production build
 - `npm run start` - Serve production build
 - `npm run validate-data` - Validate people.json
+- `npm run og` - Generate an openGraph image
 
 ## 🎨 Customization
 
-Edit `lib/rocketConfig.ts` to adjust rocket behavior, or use the visual editor at `/rocket-config`.
+Look in `/lib/configs` to tweak things.
 
 ## 📁 Structure
 
@@ -73,10 +72,3 @@ nasa-recognition/
 └── public/          # Static assets
 ```
 
----
-
-<div align="center">
-
-**Made with ❤️ for the NASA internship team**
-
-</div>
