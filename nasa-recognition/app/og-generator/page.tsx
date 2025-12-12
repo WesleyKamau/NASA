@@ -103,6 +103,8 @@ function GeneratorContent() {
   fontFamily: '${fontFamily}',
   fontSize: { line1: ${fontSize.line1}, line2: ${fontSize.line2} },
   isBold: ${isBold},
+  showRocket: ${showRocket},
+  useGalaxy: ${useGalaxy},
 } as const;`;
     
     navigator.clipboard.writeText(config).then(() => {
