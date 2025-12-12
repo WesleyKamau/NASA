@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { STARFIELD_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface Star {
   x: number;
@@ -31,22 +32,22 @@ export default function StarfieldBackground() {
 
     // Create stars
     const stars: Star[] = [];
-    const numStars = 200;
+    const numStars = STARFIELD_CONFIG.NUM_STARS;
 
     for (let i = 0; i < numStars; i++) {
       stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 2,
-        speed: Math.random() * 0.5 + 0.1,
-        opacity: Math.random() * 0.5 + 0.5,
+        size: Math.random() * (STARFIELD_CONFIG.MAX_SIZE - STARFIELD_CONFIG.MIN_SIZE) + STARFIELD_CONFIG.MIN_SIZE,
+        speed: Math.random() * (STARFIELD_CONFIG.MAX_SPEED - STARFIELD_CONFIG.MIN_SPEED) + STARFIELD_CONFIG.MIN_SPEED,
+        opacity: Math.random() * (STARFIELD_CONFIG.MAX_OPACITY - STARFIELD_CONFIG.MIN_OPACITY) + STARFIELD_CONFIG.MIN_OPACITY,
       });
     }
 
     // Animation loop
     let animationId: number;
     const animate = () => {
-      ctx.fillStyle = 'rgba(3, 7, 18, 0.1)';
+      ctx.fillStyle = STARFIELD_CONFIG.BACKGROUND_COLOR;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       stars.forEach((star) => {
@@ -58,7 +59,7 @@ export default function StarfieldBackground() {
         }
 
         // Twinkle effect
-        star.opacity = Math.sin(Date.now() * 0.001 + star.x) * 0.3 + 0.7;
+        star.opacity = Math.sin(Date.now() * STARFIELD_CONFIG.TWINKLE_SPEED + star.x) * STARFIELD_CONFIG.TWINKLE_AMPLITUDE + STARFIELD_CONFIG.TWINKLE_BASE;
 
         // Draw star
         ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
@@ -84,8 +85,11 @@ export default function StarfieldBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className={`fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-      style={{ background: 'linear-gradient(to bottom, #030712, #0f172a)' }}
+      className={`fixed inset-0 pointer-events-none z-0 transition-opacity ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+      style={{ 
+        background: `linear-gradient(to bottom, ${STARFIELD_CONFIG.GRADIENT_START}, ${STARFIELD_CONFIG.GRADIENT_END})`,
+        transitionDuration: `${STARFIELD_CONFIG.FADE_DURATION_MS}ms`
+      }}
     />
   );
 }

@@ -24,8 +24,8 @@ const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TO
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
   const MAX_VISIBLE_LABELS = MOBILE_PHOTO_CAROUSEL_CONFIG.MAX_VISIBLE_LABELS;
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
+  const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
-  const [showDebugHitboxes, setShowDebugHitboxes] = useState(false); // Can be toggled off later
   
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [highlightedPersonIndex, setHighlightedPersonIndex] = useState(0);
@@ -629,7 +629,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 {/* Interactive regions overlay */}
                 <div className={`absolute inset-0 z-10 w-full h-full ${isTabletLandscape ? 'pointer-events-none' : 'pointer-events-auto'}`}>
               {/* Debug: True center point dot */}
-              {showDebugHitboxes && (() => {
+              {SHOW_DEBUG_HITBOXES && (() => {
                 if (!containerRef.current) return null;
                 
                 const rect = containerRef.current.getBoundingClientRect();
@@ -847,7 +847,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     }}
                   >
                     {/* Debug: Show expanded hitbox */}
-                    {showDebugHitboxes && !isAutoHighlighting && (
+                    {SHOW_DEBUG_HITBOXES && !isAutoHighlighting && (
                       <div 
                         className="absolute transition-all duration-300"
                         style={{

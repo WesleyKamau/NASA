@@ -63,3 +63,66 @@ export const GENERAL_COMPONENT_CONFIG = {
   SMOOTH_TRANSITION_DURATION_MS: 300,
   FADE_DURATION_MS: 220,
 } as const;
+
+// ============================================================================
+// Galaxy Background Configuration
+// ============================================================================
+
+export const GALAXY_CONFIG = {
+  // Camera and view settings
+  FOCAL: [0.5, 0.5] as [number, number],
+  ROTATION: [1.0, 0.0] as [number, number],
+  
+  // Star properties
+  STAR_SPEED: 0.5,
+  DENSITY: 1,
+  HUE_SHIFT: 140,
+  GLOW_INTENSITY: 0.3,
+  SATURATION: 0.0,
+  TWINKLE_INTENSITY: 0.3,
+  
+  // Animation settings
+  DISABLE_ANIMATION: false,
+  SPEED: 1.0,
+  ROTATION_SPEED: 0.1,
+  
+  // Interaction settings
+  MOUSE_INTERACTION: true,
+  MOUSE_REPULSION: true,
+  REPULSION_STRENGTH: 2,
+  AUTO_CENTER_REPULSION: 0,
+  
+  // Rendering
+  TRANSPARENT: true,
+} as const;
+
+// ============================================================================
+// Starfield Background Configuration
+// ============================================================================
+
+export const STARFIELD_CONFIG = {
+  // Star generation
+  NUM_STARS: 200,
+  
+  // Star properties
+  MIN_SIZE: 0,
+  MAX_SIZE: 2,
+  MIN_SPEED: 0.1,
+  MAX_SPEED: 0.6,
+  MIN_OPACITY: 0.5,
+  MAX_OPACITY: 1.0,
+  
+  // Animation
+  TRAIL_OPACITY: 0.1,              // Background fade for motion trail effect
+  BACKGROUND_COLOR: 'rgba(3, 7, 18, 0.1)',
+  GRADIENT_START: '#030712',
+  GRADIENT_END: '#0f172a',
+  
+  // Twinkle effect
+  TWINKLE_SPEED: 0.001,            // Speed of the twinkle animation
+  TWINKLE_AMPLITUDE: 0.3,          // How much the opacity varies
+  TWINKLE_BASE: 0.7,               // Base opacity for twinkling
+  
+  // Fade in
+  FADE_DURATION_MS: 1000,          // Duration of initial fade-in
+} as const;
