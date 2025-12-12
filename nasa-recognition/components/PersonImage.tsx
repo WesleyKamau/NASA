@@ -11,10 +11,14 @@ interface PersonImageProps {
   className?: string;
   priority?: boolean;
   forcePhotoId?: string; // Force using a specific photo instead of preferred
+  show?: boolean; // Only render when true (default: true)
 }
 
-export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId }: PersonImageProps) {
+export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId, show = true }: PersonImageProps) {
   const [imageError, setImageError] = useState(false);
+  
+  // Don't render anything unless explicitly shown
+  if (!show) return null;
   
   // If forcePhotoId is provided, temporarily override the person's preferredPhotoId
   const personWithForcedPhoto = forcePhotoId ? {
