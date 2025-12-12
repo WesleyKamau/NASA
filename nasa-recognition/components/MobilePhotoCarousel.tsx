@@ -15,7 +15,7 @@ interface MobilePhotoCarouselProps {
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
 const CONTAINER_ASPECT_RATIO = 3 / 4;
-const ENABLE_FACE_TRANSITION = true; // Set to false to disable the face fade overlay
+const ENABLE_FACE_TRANSITION = false; // Set to false to disable the face fade overlay
 const FACE_FADE_DELAY_MS = 80;       // Delay before starting crossfade so movement is visible
 const FACE_FADE_DURATION_MS = 220;   // Duration of the actual fade between faces
 const FACE_TRANSITION_TOTAL_MS = 350; // Total overlay lifetime to avoid lingering
