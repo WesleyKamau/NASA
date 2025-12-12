@@ -58,7 +58,7 @@ function GeneratorContent() {
   const [fontFamily, setFontFamily] = useState<string>(OG_IMAGE_CONFIG.fontFamily);
   const [fontSize, setFontSize] = useState<{ line1: number; line2: number }>(OG_IMAGE_CONFIG.fontSize);
   const [isBold, setIsBold] = useState<boolean>(OG_IMAGE_CONFIG.isBold);
-  const [availableFonts, setAvailableFonts] = useState<Array<{ name: string; value: string }>>(Array.from(FONTS));
+  const [availableFonts, setAvailableFonts] = useState([...FONTS]);
   const [isDragging, setIsDragging] = useState(false);
   const [showRocket, setShowRocket] = useState(true);
   const [useGalaxy, setUseGalaxy] = useState(true);
