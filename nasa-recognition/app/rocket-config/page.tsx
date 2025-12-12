@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ROCKET_CONFIG } from '@/lib/rocketConfig';
+import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 
 /**
  * Calculate rocket rotation angle based on trajectory.

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
-import { MOBILE_PHOTO_CAROUSEL_CONFIG } from '@/lib/componentsConfig';
+import { MOBILE_PHOTO_CAROUSEL_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];

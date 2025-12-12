@@ -5,9 +5,9 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
-import { ROCKET_CONFIG } from '@/lib/rocketConfig';
-import { OG_IMAGE_CONFIG } from '@/lib/ogConfig';
-import { OG_GENERATOR_CONFIG } from '@/lib/componentsConfig';
+import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
+import { OG_IMAGE_CONFIG } from '@/lib/configs/ogConfig';
+import { OG_GENERATOR_CONFIG } from '@/lib/configs/componentsConfig';
 
 const { ROCKET_SIZE: DEFAULT_ROCKET_SIZE, ENGINE_GLOW_OFFSET_X, ENGINE_GLOW_OFFSET_Y } = ROCKET_CONFIG;
 
