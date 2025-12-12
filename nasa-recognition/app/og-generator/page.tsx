@@ -80,7 +80,7 @@ function GeneratorContent() {
           value: `"${name}", sans-serif`
         })).sort((a, b) => a.name.localeCompare(b.name));
         
-        setAvailableFonts([...Array.from(FONTS), ...systemFonts] as Array<{ name: string; value: string }>);
+        setAvailableFonts([...FONTS, ...systemFonts]);
       } else {
         alert('Your browser does not support accessing local fonts. Try Chrome or Edge on desktop.');
       }
