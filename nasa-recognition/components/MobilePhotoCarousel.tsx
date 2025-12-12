@@ -156,17 +156,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     return () => window.removeEventListener('resize', detectTouchMode);
   }, []);
 
+  // Cleanup timers and animation frames on unmount
   useEffect(() => {
     return () => {
       if (interactionLockTimer.current) {
         clearTimeout(interactionLockTimer.current);
       }
-    };
-  }, []);
-
-  // Cleanup scrollToCardTimeoutRef and animationFrameRef on unmount
-  useEffect(() => {
-    return () => {
       if (scrollToCardTimeoutRef.current) {
         clearTimeout(scrollToCardTimeoutRef.current);
       }
@@ -769,6 +764,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   height: location.height + FACE_HITBOX_PADDING,
                 };
 
+                // Determine if face transition overlays should be rendered for this person
+                // Only render during manual transitions (not auto-cycle) for highlighted or visible people
+                const shouldRenderFaceTransition = ENABLE_FACE_TRANSITION && 
+                  isTransitioningPhoto && 
+                  !isAutoCycleRef.current && 
+                  (isHighlighted || showWhenZoomed);
+
                 return (
                   <div
                     key={person.id}
@@ -859,7 +861,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     )}
                     
                     {/* Face Image during transition - Previous photo (fades out) */}
-                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && !isAutoCycleRef.current && (isHighlighted || showWhenZoomed) && (() => {
+                    {shouldRenderFaceTransition && (() => {
                       const prevPhoto = groupPhotos[previousPhotoIndex];
                       if (!prevPhoto) return null;
                       
@@ -880,7 +882,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     })()}
                     
                     {/* Face Image during transition - Current photo (fades in) */}
-                    {ENABLE_FACE_TRANSITION && isTransitioningPhoto && !isAutoCycleRef.current && (isHighlighted || showWhenZoomed) && (
+                    {shouldRenderFaceTransition && (
                       <div 
                           className="absolute inset-0 overflow-hidden rounded-lg z-10 transition-opacity"
                           style={{ opacity: showDestinationFace ? 1 : 0, transitionDuration: `${FACE_FADE_DURATION_MS}ms` }}
