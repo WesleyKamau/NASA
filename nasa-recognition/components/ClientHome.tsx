@@ -7,7 +7,6 @@ import DesktopSplitView from '@/components/DesktopSplitView';
 import CompactSplitView from '@/components/CompactSplitView';
 import SingleColumnView from '@/components/SingleColumnView';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
-import { preloadAll } from '@/lib/preload';
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
