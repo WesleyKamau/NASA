@@ -19,8 +19,8 @@ function getPreloadImagesContainer(): HTMLElement {
 }
 
 /**
- * Preload an image by creating an Image object and setting its src.
- * The image is loaded into memory but is not added to the DOM.
+ * Preload an image by creating an Image element and adding it to a hidden container.
+ * This ensures the browser caches the image for faster loading when actually displayed.
  */
 export function preloadImage(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -75,6 +75,12 @@ export async function preloadPersonImages(people: Person[]): Promise<void> {
  * so we create invisible elements to ensure they're rendered.
  */
 export async function preloadCarouselHighlights(groupPhotos: GroupPhoto[], people: Person[]): Promise<void> {
+  // Check if container already exists and remove it to avoid duplicates
+  const existingContainer = document.getElementById('preload-highlights-container');
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+  
   const highlightContainer = document.createElement('div');
   highlightContainer.style.opacity = '0';
   highlightContainer.style.pointerEvents = 'none';

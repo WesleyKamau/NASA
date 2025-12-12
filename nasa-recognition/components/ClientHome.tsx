@@ -44,13 +44,6 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
     }
   }, [groupPhotos, people]);
 
-  // Preload all images and highlights on initial load
-  useEffect(() => {
-    preloadAll(groupPhotos, people).catch(error => {
-      console.error('Failed to preload assets:', error);
-    });
-  }, [groupPhotos, people]);
-
   useEffect(() => {
     const checkLayout = () => {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
