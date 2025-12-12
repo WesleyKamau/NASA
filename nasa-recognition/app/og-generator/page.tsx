@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import StarfieldBackground from '@/components/StarfieldBackground';
+import GalaxyBackground from '@/components/GalaxyBackground';
 import { ROCKET_CONFIG } from '@/lib/rocketConfig';
 import { OG_IMAGE_CONFIG } from '@/lib/ogConfig';
 
@@ -66,6 +67,7 @@ function GeneratorContent() {
   const [availableFonts, setAvailableFonts] = useState(FONTS);
   const [isDragging, setIsDragging] = useState(false);
   const [showRocket, setShowRocket] = useState(true);
+  const [useGalaxy, setUseGalaxy] = useState(true);
   
   const dragStartRef = useRef({ x: 0, y: 0 });
   const rocketRef = useRef<HTMLDivElement>(null);
@@ -165,9 +167,9 @@ function GeneratorContent() {
 
         {/* 1200x630 Preview Area */}
         <div className="relative w-[1200px] h-[630px] bg-black overflow-hidden isolate">
-          {/* Starfield Container - transform forces it to be contained within this div */}
+          {/* Background Container - transform forces it to be contained within this div */}
           <div className="absolute inset-0 transform">
-            <StarfieldBackground />
+            {useGalaxy ? <GalaxyBackground /> : <StarfieldBackground />}
           </div>
           
           {/* Main Content Container - Centered */}
@@ -307,7 +309,7 @@ function GeneratorContent() {
               />
             </div>
 
-            {/* Bold Toggle */}
+            {/* Bold Toggle & Show Rocket Toggle */}
             <div className="mb-4 flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -327,6 +329,19 @@ function GeneratorContent() {
                   className="w-4 h-4 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-blue-500"
                 />
                 <span className="text-gray-400 text-xs uppercase">Show Rocket</span>
+              </label>
+            </div>
+
+            {/* Background Toggle */}
+            <div className="mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={useGalaxy}
+                  onChange={(e) => setUseGalaxy(e.target.checked)}
+                  className="w-4 h-4 bg-gray-800 border border-gray-700 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-gray-400 text-xs uppercase">Use Galaxy (vs Starfield)</span>
               </label>
             </div>
 
