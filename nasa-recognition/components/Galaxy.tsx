@@ -1,5 +1,6 @@
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
+import { GALAXY_CONFIG } from '@/lib/configs/componentsConfig';
 
 const vertexShader = `
 attribute vec2 uv;
@@ -189,22 +190,22 @@ interface GalaxyProps {
 }
 
 export default function Galaxy({
-  focal = [0.5, 0.5],
-  rotation = [1.0, 0.0],
-  starSpeed = 0.5,
-  density = 1,
-  hueShift = 140,
-  disableAnimation = false,
-  speed = 1.0,
-  mouseInteraction = true,
-  glowIntensity = 0.3,
-  saturation = 0.0,
-  mouseRepulsion = true,
-  repulsionStrength = 2,
-  twinkleIntensity = 0.3,
-  rotationSpeed = 0.1,
-  autoCenterRepulsion = 0,
-  transparent = true,
+  focal = GALAXY_CONFIG.FOCAL,
+  rotation = GALAXY_CONFIG.ROTATION,
+  starSpeed = GALAXY_CONFIG.STAR_SPEED,
+  density = GALAXY_CONFIG.DENSITY,
+  hueShift = GALAXY_CONFIG.HUE_SHIFT,
+  disableAnimation = GALAXY_CONFIG.DISABLE_ANIMATION,
+  speed = GALAXY_CONFIG.SPEED,
+  mouseInteraction = GALAXY_CONFIG.MOUSE_INTERACTION,
+  glowIntensity = GALAXY_CONFIG.GLOW_INTENSITY,
+  saturation = GALAXY_CONFIG.SATURATION,
+  mouseRepulsion = GALAXY_CONFIG.MOUSE_REPULSION,
+  repulsionStrength = GALAXY_CONFIG.REPULSION_STRENGTH,
+  twinkleIntensity = GALAXY_CONFIG.TWINKLE_INTENSITY,
+  rotationSpeed = GALAXY_CONFIG.ROTATION_SPEED,
+  autoCenterRepulsion = GALAXY_CONFIG.AUTO_CENTER_REPULSION,
+  transparent = GALAXY_CONFIG.TRANSPARENT,
   ...rest
 }: GalaxyProps) {
   const ctnDom = useRef<HTMLDivElement>(null);

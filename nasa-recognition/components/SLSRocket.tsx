@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ROCKET_CONFIG } from '@/lib/rocketConfig';
+import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 
 // Destructure config for easier access
 const {
