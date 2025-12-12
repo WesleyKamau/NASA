@@ -156,12 +156,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     return () => window.removeEventListener('resize', detectTouchMode);
   }, []);
 
-  // Avoid initial flash of overlays by delaying their first render to the next frame
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setOverlaysReady(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
-
   useEffect(() => {
     return () => {
       if (interactionLockTimer.current) {
