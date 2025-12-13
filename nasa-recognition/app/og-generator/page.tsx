@@ -58,7 +58,7 @@ function GeneratorContent() {
   const [fontFamily, setFontFamily] = useState<string>(OG_IMAGE_CONFIG.fontFamily);
   const [fontSize, setFontSize] = useState<{ line1: number; line2: number }>(OG_IMAGE_CONFIG.fontSize);
   const [isBold, setIsBold] = useState<boolean>(OG_IMAGE_CONFIG.isBold);
-  const [availableFonts, setAvailableFonts] = useState([...FONTS]);
+  const [availableFonts, setAvailableFonts] = useState<Array<{ name: string; value: string }>>(Array.from(FONTS));
   const [isDragging, setIsDragging] = useState(false);
   const [showRocket, setShowRocket] = useState(true);
   const [useGalaxy, setUseGalaxy] = useState(true);
@@ -80,7 +80,7 @@ function GeneratorContent() {
           value: `"${name}", sans-serif`
         })).sort((a, b) => a.name.localeCompare(b.name));
         
-        setAvailableFonts([...FONTS, ...systemFonts]);
+        setAvailableFonts([...Array.from(FONTS), ...systemFonts] as Array<{ name: string; value: string }>);
       } else {
         alert('Your browser does not support accessing local fonts. Try Chrome or Edge on desktop.');
       }
