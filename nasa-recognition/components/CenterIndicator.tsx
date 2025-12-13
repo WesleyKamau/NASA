@@ -39,9 +39,6 @@ export default function CenterIndicator({
   const visibleCenterX = 50 + imageCenterOffsetX;
   const visibleCenterY = 50 + imageCenterOffsetY;
 
-  // Force dependency on centerIndicatorForce to keep updates frequent during drag
-  const dummy = centerIndicatorForce;
-
   // Find the closest person whose expanded hitbox contains the center point
   const closestPersonData = React.useMemo(() => {
     let closestPerson: Person | null = null;
@@ -88,7 +85,7 @@ export default function CenterIndicator({
     }
 
     return { closestPerson, closestLocation };
-  }, [isAutoHighlighting, shuffledPeople, currentPhoto.id, visibleCenterX, visibleCenterY, FACE_HITBOX_PADDING]);
+  }, [isAutoHighlighting, shuffledPeople, currentPhoto.id, visibleCenterX, visibleCenterY, FACE_HITBOX_PADDING, centerIndicatorForce]);
 
   // Notify parent of highlighted person change
   React.useEffect(() => {

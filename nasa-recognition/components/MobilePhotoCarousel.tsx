@@ -372,7 +372,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     highlightCooldownTimer.current = setTimeout(() => {
       setIsAutoHighlighting(true);
     }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
-  }, []);
+  }, [AUTO_RESUME_MS]);
 
   // Handle external highlighting from grid hover (for bidirectional highlighting)
   useEffect(() => {
