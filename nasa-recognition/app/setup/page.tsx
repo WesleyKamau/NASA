@@ -58,7 +58,8 @@ export default function SetupPage() {
       person.photoLocations.forEach(location => {
         const rectId = `${person.id}-${location.photoId}`;
         initialIds.add(rectId);
-        const details = detailsMap.get(person.id)!;
+        const details = detailsMap.get(person.id);
+        if (!details) return; // Safety check, though this should never happen
         existingRects.push({
           x: location.x,
           y: location.y,
@@ -382,6 +383,7 @@ function PersonDetailModal({ person, personData, rectangles, groupPhotos, onSave
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
+      tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
       <div className="bg-slate-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
