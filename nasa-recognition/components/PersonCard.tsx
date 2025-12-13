@@ -9,16 +9,25 @@ interface PersonCardProps {
   onClick?: () => void;
   idPrefix?: string;
   priority?: boolean;
+  isHighlighted?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export default function PersonCard({ person, groupPhotos, onClick, idPrefix = '', priority = false }: PersonCardProps) {
+export default function PersonCard({ person, groupPhotos, onClick, idPrefix = '', priority = false, isHighlighted = false, onMouseEnter, onMouseLeave }: PersonCardProps) {
   const isWesley = person.id === 'wesley-kamau';
   
   return (
     <button
       id={`person-card-${idPrefix}${person.id}`}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={`group relative w-full bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 transition-all duration-300 cursor-pointer border border-slate-700/50 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 touch-manipulation ${
+        isHighlighted 
+          ? 'border-white/60 shadow-lg shadow-white/40' 
+          : ''
+      } ${
         isWesley ? 'ring-2 ring-blue-500/50' : ''
       }`}
       aria-label={`View ${person.name}'s profile`}

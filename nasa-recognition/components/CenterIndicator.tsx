@@ -14,6 +14,7 @@ interface CenterIndicatorProps {
   convertPhotoToContainerCoords: (location: any) => any;
   containerRef: React.RefObject<HTMLDivElement | null>;
   FACE_HITBOX_PADDING: number;
+  onHighlightedPersonChange?: (personId: string | null) => void;
 }
 
 export default function CenterIndicator({
@@ -27,6 +28,7 @@ export default function CenterIndicator({
   convertPhotoToContainerCoords,
   containerRef,
   FACE_HITBOX_PADDING,
+  onHighlightedPersonChange,
 }: CenterIndicatorProps) {
   if (!show || !containerRef.current) return null;
 
@@ -83,6 +85,13 @@ export default function CenterIndicator({
       closestLocation = peopleInsideHitbox[0].location;
     }
   }
+
+  // Notify parent of highlighted person change
+  React.useEffect(() => {
+    if (!isAutoHighlighting) {
+      onHighlightedPersonChange?.(closestPerson?.id || null);
+    }
+  }, [closestPerson?.id, isAutoHighlighting, onHighlightedPersonChange]);
 
   // Calculate average face rectangle size for the circle
   const avgFaceSize =

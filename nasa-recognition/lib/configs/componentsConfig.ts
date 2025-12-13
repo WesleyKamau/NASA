@@ -58,10 +58,27 @@ export const GENERAL_COMPONENT_CONFIG = {
   // Auto-highlight settings for carousels
   AUTO_HIGHLIGHT_DELAY_MS: 100,
   AUTO_HIGHLIGHT_RESUME_MS: 400,
+  AUTO_RESUME_SECONDS: 20,              // Resume auto cycles after this many seconds of inactivity
   
   // Transition timings
   SMOOTH_TRANSITION_DURATION_MS: 300,
   FADE_DURATION_MS: 220,
+} as const;
+
+// ============================================================================
+// Bidirectional Highlighting Configuration
+// ============================================================================
+
+export const BIDIRECTIONAL_HIGHLIGHT_CONFIG = {
+  // When a user hovers/taps a tile, should the corresponding face highlight in carousel?
+  // Set to false to disable tile hover → face highlight
+  ENABLE_TILE_HOVER_HIGHLIGHT: true,
+  
+  // Highlight appearance
+  HIGHLIGHT_DURATION_MS: 300,           // Smooth transition duration for highlights
+  
+  // Scale factor for tile glow effect
+  GLOW_INTENSITY: 0.6,                  // 0-1, controls shadow intensity
 } as const;
 
 // ============================================================================
