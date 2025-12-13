@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import CoordinatePicker from '@/components/CoordinatePicker';
 import PersonImage from '@/components/PersonImage';
 import { getPeopleData } from '@/lib/data';
-import { Person, PhotoLocation, Category } from '@/types';
+import { Person, PhotoLocation, Category, GroupPhoto } from '@/types';
 
 interface Rectangle {
   x: number;
@@ -50,7 +50,7 @@ export default function SetupPage() {
         id: person.id,
         name: person.name,
         description: person.description || '',
-        linkedIn: (person as any).linkedIn || '',
+        linkedIn: person.linkedIn || '',
         category: person.category || 'staff',
       });
       
@@ -58,13 +58,7 @@ export default function SetupPage() {
       person.photoLocations.forEach(location => {
         const rectId = `${person.id}-${location.photoId}`;
         initialIds.add(rectId);
-        const details = detailsMap.get(person.id) || {
-          id: person.id,
-          name: person.name,
-          description: person.description || '',
-          linkedIn: '',
-          category: person.category || 'staff',
-        };
+        const details = detailsMap.get(person.id)!;
         existingRects.push({
           x: location.x,
           y: location.y,
@@ -85,7 +79,7 @@ export default function SetupPage() {
     setPersonDetails(detailsMap);
     setAllRectangles(existingRects);
     setInitialRectangleIds(initialIds);
-  }, []);
+  }, [data]);
 
   const toggleProfilePhoto = (personId: string, photoId: string) => {
     setAllRectangles(prev => prev.map(rect => {
@@ -260,6 +254,7 @@ export default function SetupPage() {
                       photoId: photo.id,
                       description: personDetails.get(r.personId)?.description,
                       linkedIn: personDetails.get(r.personId)?.linkedIn,
+                      category: personDetails.get(r.personId)?.category,
                     }))
                   ]);
                 }}
@@ -353,7 +348,7 @@ interface PersonDetailModalProps {
   person: PersonDetails;
   personData?: Person;
   rectangles: Rectangle[];
-  groupPhotos: any[];
+  groupPhotos: GroupPhoto[];
   onSave: (details: PersonDetails) => void;
   onClose: () => void;
 }
@@ -366,20 +361,36 @@ function PersonDetailModal({ person, personData, rectangles, groupPhotos, onSave
     onSave(formData);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   // Get unique photos this person appears in
-  const photoNames = new Set(rectangles.map(r => {
-    const photo = groupPhotos.find(p => p.id === r.photoId);
-    return photo?.name;
-  }));
+  const photoNames = new Set(
+    rectangles
+      .map(r => {
+        const photo = groupPhotos.find(p => p.id === r.photoId);
+        return photo?.name;
+      })
+      .filter((name): name is string => name !== undefined)
+  );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={handleKeyDown}
+    >
       <div className="bg-slate-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-slate-900 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">{person.name}</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white text-2xl"
+            aria-label="Close dialog"
           >
             ×
           </button>
@@ -418,8 +429,10 @@ function PersonDetailModal({ person, personData, rectangles, groupPhotos, onSave
               className="w-full px-4 py-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
             >
               <option value="staff">Staff</option>
-              <option value="intern">Intern</option>
-              <option value="visitor">Visitor</option>
+              <option value="interns">Interns</option>
+              <option value="girlfriend">Girlfriend</option>
+              <option value="family">Family</option>
+              <option value="sil-lab">SIL Lab</option>
             </select>
           </div>
 
