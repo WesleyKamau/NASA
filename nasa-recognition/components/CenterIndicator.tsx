@@ -43,55 +43,59 @@ export default function CenterIndicator({
   const dummy = centerIndicatorForce;
 
   // Find the closest person whose expanded hitbox contains the center point
-  let closestPerson: Person | null = null;
-  let closestLocation = null;
+  const closestPersonData = React.useMemo(() => {
+    let closestPerson: Person | null = null;
+    let closestLocation = null;
 
-  if (!isAutoHighlighting) {
-    const peopleInsideHitbox = shuffledPeople
-      .map(p => {
-        const loc = p.photoLocations.find(l => l.photoId === currentPhoto.id);
-        if (!loc) return null;
+    if (!isAutoHighlighting) {
+      const peopleInsideHitbox = shuffledPeople
+        .map(p => {
+          const loc = p.photoLocations.find(l => l.photoId === currentPhoto.id);
+          if (!loc) return null;
 
-        // Calculate expanded hitbox
-        const expandedX = loc.x - FACE_HITBOX_PADDING / 2;
-        const expandedY = loc.y - FACE_HITBOX_PADDING / 2;
-        const expandedWidth = loc.width + FACE_HITBOX_PADDING;
-        const expandedHeight = loc.height + FACE_HITBOX_PADDING;
+          // Calculate expanded hitbox
+          const expandedX = loc.x - FACE_HITBOX_PADDING / 2;
+          const expandedY = loc.y - FACE_HITBOX_PADDING / 2;
+          const expandedWidth = loc.width + FACE_HITBOX_PADDING;
+          const expandedHeight = loc.height + FACE_HITBOX_PADDING;
 
-        // Check if center point is inside the expanded hitbox
-        const isInside =
-          visibleCenterX >= expandedX &&
-          visibleCenterX <= expandedX + expandedWidth &&
-          visibleCenterY >= expandedY &&
-          visibleCenterY <= expandedY + expandedHeight;
+          // Check if center point is inside the expanded hitbox
+          const isInside =
+            visibleCenterX >= expandedX &&
+            visibleCenterX <= expandedX + expandedWidth &&
+            visibleCenterY >= expandedY &&
+            visibleCenterY <= expandedY + expandedHeight;
 
-        if (!isInside) return null;
+          if (!isInside) return null;
 
-        // Calculate distance to face center for sorting
-        const pCenterX = loc.x + loc.width / 2;
-        const pCenterY = loc.y + loc.height / 2;
-        const dx = pCenterX - visibleCenterX;
-        const dy = pCenterY - visibleCenterY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+          // Calculate distance to face center for sorting
+          const pCenterX = loc.x + loc.width / 2;
+          const pCenterY = loc.y + loc.height / 2;
+          const dx = pCenterX - visibleCenterX;
+          const dy = pCenterY - visibleCenterY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-        return { person: p, location: loc, expandedLocation: { x: expandedX, y: expandedY, width: expandedWidth, height: expandedHeight }, distance };
-      })
-      .filter((item): item is { person: Person; location: any; expandedLocation: any; distance: number } => item !== null)
-      .sort((a, b) => a.distance - b.distance);
+          return { person: p, location: loc, expandedLocation: { x: expandedX, y: expandedY, width: expandedWidth, height: expandedHeight }, distance };
+        })
+        .filter((item): item is { person: Person; location: any; expandedLocation: any; distance: number } => item !== null)
+        .sort((a, b) => a.distance - b.distance);
 
-    if (peopleInsideHitbox.length > 0) {
-      closestPerson = peopleInsideHitbox[0].person;
-      // Use the actual face location, not the expanded hitbox
-      closestLocation = peopleInsideHitbox[0].location;
+      if (peopleInsideHitbox.length > 0) {
+        closestPerson = peopleInsideHitbox[0].person;
+        // Use the actual face location, not the expanded hitbox
+        closestLocation = peopleInsideHitbox[0].location;
+      }
     }
-  }
+
+    return { closestPerson, closestLocation };
+  }, [isAutoHighlighting, shuffledPeople, currentPhoto.id, visibleCenterX, visibleCenterY, FACE_HITBOX_PADDING]);
 
   // Notify parent of highlighted person change
   React.useEffect(() => {
     if (!isAutoHighlighting) {
-      onHighlightedPersonChange?.(closestPerson?.id || null);
+      onHighlightedPersonChange?.(closestPersonData.closestPerson?.id || null);
     }
-  }, [closestPerson?.id, isAutoHighlighting, onHighlightedPersonChange]);
+  }, [closestPersonData.closestPerson?.id, isAutoHighlighting, onHighlightedPersonChange]);
 
   // Calculate average face rectangle size for the circle
   const avgFaceSize =
@@ -102,8 +106,8 @@ export default function CenterIndicator({
     }, 0) / Math.max(shuffledPeople.length, 1);
 
   // If a person is selected, morph to their rectangle
-  if (closestLocation) {
-    const adjustedLocation = convertPhotoToContainerCoords(closestLocation);
+  if (closestPersonData.closestLocation) {
+    const adjustedLocation = convertPhotoToContainerCoords(closestPersonData.closestLocation);
     return (
       <div
         className="absolute z-50 pointer-events-none"
