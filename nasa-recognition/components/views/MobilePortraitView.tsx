@@ -5,6 +5,7 @@ import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
+import BackToTop from '@/components/BackToTop';
 
 interface MobilePortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -13,92 +14,115 @@ interface MobilePortraitViewProps {
 
 export default function MobilePortraitView({ groupPhotos, people }: MobilePortraitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(true);
-  const [onboardingStep, setOnboardingStep] = useState(0);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const [dismissedCallouts, setDismissedCallouts] = useState<Set<string>>(new Set());
 
-  // Check if user has seen onboarding before
+  // Load dismissed callouts from localStorage
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-    if (hasSeenOnboarding === 'true') {
-      setShowOnboarding(false);
+    const dismissed = localStorage.getItem('dismissedCallouts');
+    if (dismissed) {
+      setDismissedCallouts(new Set(JSON.parse(dismissed)));
     }
   }, []);
 
-  // Hide scroll hint after user scrolls
+  // Hide scroll hint after user scrolls with fade transition
   useEffect(() => {
+    let fadeTimeout: NodeJS.Timeout;
+    
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setShowScrollHint(false);
+      if (window.scrollY > 100 && showScrollHint) {
+        fadeTimeout = setTimeout(() => {
+          setShowScrollHint(false);
+        }, 300);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (fadeTimeout) clearTimeout(fadeTimeout);
+    };
+  }, [showScrollHint]);
 
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('hasSeenOnboarding', 'true');
-    setShowOnboarding(false);
+  const dismissCallout = (id: string) => {
+    const newDismissed = new Set(dismissedCallouts);
+    newDismissed.add(id);
+    setDismissedCallouts(newDismissed);
+    localStorage.setItem('dismissedCallouts', JSON.stringify(Array.from(newDismissed)));
   };
 
   const handlePersonClick = (person: Person) => {
-    setSelectedPerson(person);
-  };
-
-  const onboardingSteps = [
-    {
-      title: "Welcome!",
-      description: "Tap faces on photos to learn about the amazing people from my NASA internship",
-      icon: "👋"
-    },
-    {
-      title: "Pan & Zoom",
-      description: "Use two fingers to zoom and drag to pan around photos",
-      icon: "🔍"
-    },
-    {
-      title: "Scroll Down",
-      description: "Scroll down to see everyone's profiles",
-      icon: "📖"
-    },
-    {
-      title: "Tap to Learn More",
-      description: "Tap on any profile card to see full details and swipe down to close",
-      icon: "✨"
+    // Scroll to the person's card
+    const personCardId = `person-card-mobile-portrait-${person.id}`;
+    const cardElement = document.getElementById(personCardId);
+    
+    if (cardElement) {
+      setTimeout(() => {
+        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add highlight effect
+        cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        setTimeout(() => {
+          cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        }, 2000);
+      }, 50);
     }
-  ];
+  };
 
   return (
     <>
-      {/* Main Content - Continuous Scroll */}
+      {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-10 min-h-screen">
-        {/* Photo Carousel Section - Larger for touch interaction */}
-        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
+        {/* Photo Carousel Section - Full viewport height */}
+        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6 bg-black/20 backdrop-blur-sm">
           <div className="w-full max-w-2xl">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
               people={people}
               onPersonClick={handlePersonClick}
-              hideInstructions={showOnboarding}
             />
             
-            {/* Instructions below carousel */}
-            <div className="mt-6 text-center space-y-2">
-              <p className="text-slate-400 text-sm font-light tracking-wide">
-                Tap faces to interact • Pinch to zoom
-              </p>
-            </div>
+            {/* Intuitive callout for pinch to zoom */}
+            {!dismissedCallouts.has('zoom') && (
+              <div className="mt-6 relative">
+                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-xl p-4 shadow-2xl">
+                  <button
+                    onClick={() => dismissCallout('zoom')}
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white text-xs transition-all"
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl flex-shrink-0">🔍</div>
+                    <div className="flex-1 pr-4">
+                      <p className="text-white text-sm font-medium mb-1">
+                        Pinch to Zoom
+                      </p>
+                      <p className="text-slate-400 text-xs">
+                        Use two fingers to zoom in and explore faces
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Scroll Hint - Animated */}
-          {showScrollHint && !showOnboarding && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-              <p className="text-slate-400 text-sm font-light">
-                Scroll to see profiles
+          {/* Scroll Hint - Smooth fade animation */}
+          <div 
+            className={`absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-700 ${
+              showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+            }`}
+          >
+            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 shadow-xl">
+              <p className="text-white text-sm font-light">
+                Scroll to see more
               </p>
+            </div>
+            <div className="animate-bounce-slow">
               <svg 
-                className="w-6 h-6 text-slate-400" 
+                className="w-6 h-6 text-white/60" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -106,35 +130,37 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
-          )}
+          </div>
         </section>
 
-        {/* Decorative Transition */}
-        <div className="relative z-10 py-8">
-          <div className="flex items-center gap-4 px-4 opacity-50">
+        {/* Decorative Transition with blur */}
+        <div className="relative z-10 py-12 bg-gradient-to-b from-black/20 to-transparent">
+          <div className="flex items-center gap-6 px-4 opacity-50">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <div className="text-white/40 text-xl animate-spin-slow">✦</div>
+            <div className="text-white/40 text-2xl animate-spin-slow">✦</div>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
         </div>
 
-        {/* Intro Text */}
-        <div className="relative z-10 px-6 pb-12 text-center">
-          <p className="text-lg font-light leading-relaxed text-slate-200 max-w-2xl mx-auto">
-            One of the most impactful parts of my NASA internship was all of the people I got to meet. 
-            This lets you learn more about the people who made it special! :)
-          </p>
+        {/* Intro Text with dark blur card */}
+        <div className="relative z-10 px-4 pb-16">
+          <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
+            <p className="text-lg font-light leading-relaxed text-slate-200 text-center">
+              One of the most impactful parts of my NASA internship was all of the people I got to meet. 
+              This lets you learn more about the people who made it special! :)
+            </p>
+          </div>
         </div>
 
-        {/* People Section */}
-        <section className="relative z-10 px-4 pb-16">
+        {/* People Section with modern styling */}
+        <section className="relative z-10 px-4 pb-20">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-4 tracking-tight">
+            <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-6 tracking-tight">
               The People
             </h2>
-            <div className="h-1 w-20 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mx-auto rounded-full" />
-            <p className="text-slate-400 mt-4 text-sm font-light">
-              Tap anyone to learn more
+            <div className="h-1 w-24 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mx-auto rounded-full opacity-80" />
+            <p className="text-slate-400 mt-6 font-light tracking-wide">
+              Tap on faces or names to jump to profiles
             </p>
           </div>
 
@@ -147,76 +173,18 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
           />
         </section>
 
-        {/* Footer */}
-        <footer className="relative z-10 text-center py-8 px-4 border-t border-white/5">
-          <p className="text-slate-500 text-sm font-light">
-            Made by <a className="text-slate-400 hover:text-white transition-colors" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
-          </p>
+        {/* Back to Top Button */}
+        <BackToTop />
+
+        {/* Footer with blur */}
+        <footer className="relative z-10 bg-black/30 backdrop-blur-md border-t border-white/5">
+          <div className="text-center py-8 px-4">
+            <p className="text-slate-500 text-sm font-light">
+              Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
+            </p>
+          </div>
         </footer>
       </main>
-
-      {/* Onboarding Overlay */}
-      {showOnboarding && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-2xl p-8 max-w-sm w-full shadow-2xl">
-            <div className="text-center mb-6">
-              <div className="text-6xl mb-4">{onboardingSteps[onboardingStep].icon}</div>
-              <h3 className="text-2xl font-bold text-white mb-3">
-                {onboardingSteps[onboardingStep].title}
-              </h3>
-              <p className="text-slate-300 text-base leading-relaxed">
-                {onboardingSteps[onboardingStep].description}
-              </p>
-            </div>
-
-            {/* Progress Dots */}
-            <div className="flex justify-center gap-2 mb-6">
-              {onboardingSteps.map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    index === onboardingStep
-                      ? 'w-8 bg-gradient-to-r from-blue-500 to-purple-500'
-                      : 'w-2 bg-white/20'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex gap-3">
-              {onboardingStep > 0 && (
-                <button
-                  onClick={() => setOnboardingStep(onboardingStep - 1)}
-                  className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 font-medium"
-                >
-                  Back
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  if (onboardingStep < onboardingSteps.length - 1) {
-                    setOnboardingStep(onboardingStep + 1);
-                  } else {
-                    handleOnboardingComplete();
-                  }
-                }}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg transition-all duration-200 font-medium shadow-lg"
-              >
-                {onboardingStep < onboardingSteps.length - 1 ? 'Next' : 'Get Started'}
-              </button>
-            </div>
-
-            {/* Skip Button */}
-            <button
-              onClick={handleOnboardingComplete}
-              className="w-full mt-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
-            >
-              Skip Tutorial
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Person Modal */}
       {selectedPerson && (

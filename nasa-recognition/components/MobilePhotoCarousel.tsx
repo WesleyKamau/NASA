@@ -721,19 +721,21 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               {/* Person image transition removed for this branch */}
               
               {/* Center indicator component */}
-              <CenterIndicator
-                show={showCenterIndicator}
-                position={position}
-                scale={scale}
-                currentPhoto={currentPhoto}
-                shuffledPeople={shuffledPeople}
-                isAutoHighlighting={isAutoHighlighting}
-                centerIndicatorForce={centerIndicatorForce}
-                convertPhotoToContainerCoords={convertPhotoToContainerCoords}
-                containerRef={containerRef}
-                FACE_HITBOX_PADDING={FACE_HITBOX_PADDING}
-                onHighlightedPersonChange={onHighlightedPersonChange}
-              />
+              {showCenterIndicator && (
+                <CenterIndicator
+                  show={showCenterIndicator}
+                  position={position}
+                  scale={scale}
+                  currentPhoto={currentPhoto}
+                  shuffledPeople={shuffledPeople}
+                  isAutoHighlighting={isAutoHighlighting}
+                  centerIndicatorForce={centerIndicatorForce}
+                  convertPhotoToContainerCoords={convertPhotoToContainerCoords}
+                  containerRef={containerRef}
+                  FACE_HITBOX_PADDING={FACE_HITBOX_PADDING}
+                  onHighlightedPersonChange={onHighlightedPersonChange}
+                />
+              )}
 
               {shuffledPeople.map((person, idx) => {
                 // Two-stage guard: wait for initial render frame AND current photo to load

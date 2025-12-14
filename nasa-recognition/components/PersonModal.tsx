@@ -13,7 +13,10 @@ interface PersonModalProps {
 export default function PersonModal({ person, groupPhotos, onClose }: PersonModalProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragY, setDragY] = useState(0);
+  const [velocity, setVelocity] = useState(0);
   const startY = useRef(0);
+  const lastY = useRef(0);
+  const lastTime = useRef(0);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,24 +35,40 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
   }, [onClose]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Only enable swipe from the top handle area on mobile
-    const target = e.target as HTMLElement;
-    if (target.closest('.swipe-handle') || target.closest('.modal-header')) {
-      startY.current = e.touches[0].clientY;
-      setIsDragging(true);
-    }
+    const touch = e.touches[0];
+    startY.current = touch.clientY;
+    lastY.current = touch.clientY;
+    lastTime.current = Date.now();
+    setIsDragging(true);
+    setVelocity(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     
-    const currentY = e.touches[0].clientY;
+    const touch = e.touches[0];
+    const currentY = touch.clientY;
     const deltaY = currentY - startY.current;
+    const timeDelta = Date.now() - lastTime.current;
     
-    // Only allow downward swipes
-    if (deltaY > 0) {
-      setDragY(deltaY);
+    // Calculate velocity for momentum
+    if (timeDelta > 0) {
+      const currentVelocity = (currentY - lastY.current) / timeDelta;
+      setVelocity(currentVelocity);
     }
+    
+    // Only allow downward swipes, with resistance at the top
+    if (deltaY > 0) {
+      // Add resistance curve
+      const resistance = Math.min(1, deltaY / 500);
+      setDragY(deltaY * (1 - resistance * 0.3));
+    } else {
+      // Light resistance when swiping up
+      setDragY(deltaY * 0.2);
+    }
+    
+    lastY.current = currentY;
+    lastTime.current = Date.now();
   };
 
   const handleTouchEnd = () => {
@@ -57,13 +76,22 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     
     setIsDragging(false);
     
-    // If dragged more than 100px, close the modal
-    if (dragY > 100) {
-      onClose();
+    // Close if dragged more than 120px or has significant downward velocity
+    const shouldClose = dragY > 120 || (dragY > 50 && velocity > 0.5);
+    
+    if (shouldClose) {
+      // Animate out with momentum
+      const finalDragY = Math.max(dragY, 200);
+      setDragY(finalDragY);
+      setTimeout(() => {
+        onClose();
+      }, 150);
     } else {
-      // Snap back to original position
+      // Snap back with spring animation
       setDragY(0);
     }
+    
+    setVelocity(0);
   };
 
   return (
@@ -73,10 +101,11 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     >
       <div
         ref={modalRef}
-        className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl transition-transform"
+        className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl"
         style={{
           transform: `translateY(${dragY}px)`,
-          opacity: dragY > 0 ? Math.max(0.5, 1 - dragY / 300) : 1
+          opacity: dragY > 0 ? Math.max(0.3, 1 - dragY / 400) : 1,
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out'
         }}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
@@ -95,7 +124,7 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
         </button>
 
         {/* Swipe indicator for mobile - now functional */}
-        <div className="sm:hidden swipe-handle absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-600 rounded-full cursor-grab active:cursor-grabbing" />
+        <div className="sm:hidden swipe-handle absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-500/50 rounded-full" />
 
         <div className="flex flex-col gap-6 pt-4 sm:pt-0 modal-header">
           {/* Photo and basic info */}
