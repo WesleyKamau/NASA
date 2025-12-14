@@ -10,7 +10,7 @@ interface CarouselNameTagProps {
   onClick?: (e: React.MouseEvent) => void;
   className?: string;
   style?: React.CSSProperties;
-  variant?: 'mobile' | 'gradient';
+  variant?: 'mobile' | 'gradient' | 'desktop';
 }
 
 export default function CarouselNameTag({ 
