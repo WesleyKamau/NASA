@@ -3,9 +3,12 @@ import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
 import SLSRocket from '@/components/SLSRocket';
 import ClientHome from '@/components/ClientHome';
+import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 export default function Home() {
   const data = getPeopleData();
+
+  const rocketZIndex = GENERAL_COMPONENT_CONFIG.ROCKET_POSITION === 'on_top_of_blur' ? 'z-30' : 'z-10';
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
@@ -18,7 +21,7 @@ export default function Home() {
       </div>
       
       {/* Flying SLS rocket decoration - positioned absolutely within page */}
-      <div className="absolute inset-0 pointer-events-none overflow-x-hidden">
+      <div className={`absolute inset-0 pointer-events-none overflow-x-hidden ${rocketZIndex}`}>
         <SLSRocket />
       </div>
 

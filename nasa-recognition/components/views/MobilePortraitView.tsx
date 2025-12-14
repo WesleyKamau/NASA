@@ -8,6 +8,7 @@ import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
+import TMinusCounter from '@/components/TMinusCounter';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobilePortraitViewProps {
@@ -109,12 +110,12 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
       {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
       <div 
         ref={blurLayerRef}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-0 transition-opacity duration-0"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20 transition-opacity duration-0"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
       />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
-      <main className="relative z-10 min-h-screen">
+      <main className="relative z-40 min-h-screen">
         {/* Photo Carousel Section - Full viewport height */}
         <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
           <div className="w-full max-w-2xl">
@@ -217,7 +218,10 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
         {/* Footer with blur */}
         <footer className="relative z-10 bg-black/30 backdrop-blur-md border-t border-white/5">
-          <div className="text-center py-8 px-4">
+          <div className="text-center py-6 px-4 space-y-2.5">
+            <div className="flex items-center justify-center">
+              <TMinusCounter />
+            </div>
             <p className="text-slate-500 text-sm font-light">
               Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
             </p>

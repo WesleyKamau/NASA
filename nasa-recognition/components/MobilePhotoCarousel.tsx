@@ -65,6 +65,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const pinchStartDistance = useRef(0);
   const pinchStartScale = useRef(1);
   const pinchStartCenter = useRef({ x: 0, y: 0 });
+  const touchMoveHandlerRef = useRef<(event: TouchEvent) => void>(() => {});
   const interactionLockTimer = useRef<NodeJS.Timeout | null>(null);
   
   const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -503,10 +504,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    // Always prevent default and propagation to stop scrolling
-    e.preventDefault();
-    e.stopPropagation();
-
     if (interactionLocked && !isZooming) return;
 
     if (e.touches.length === 2) {
@@ -555,6 +552,27 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       }
 
       // Always apply drag, even during zoom animation for smooth concurrent interaction
+
+  useEffect(() => {
+    touchMoveHandlerRef.current = handleTouchMove;
+  }, [handleTouchMove]);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const listener: EventListener = (event) => {
+      const touchEvent = event as unknown as TouchEvent;
+      touchEvent.preventDefault();
+      touchEvent.stopPropagation();
+      touchMoveHandlerRef.current(touchEvent);
+    };
+
+    element.addEventListener('touchmove', listener, { passive: false });
+    return () => {
+      element.removeEventListener('touchmove', listener);
+    };
+  }, []);
       setPosition({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
@@ -642,7 +660,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           ref={containerRef}
           className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
           onClick={(e) => {
@@ -679,7 +696,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               style={{ imageRendering: 'auto' }}
               priority
               draggable={false}
-              onLoadingComplete={(img) => {
+              onLoad={(e) => {
+                const img = e.currentTarget;
                 setPhotoDimensions((prev) => {
                   if (prev[currentPhoto.id]) {
                     return prev;

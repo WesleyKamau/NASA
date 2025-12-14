@@ -5,8 +5,9 @@ import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
+import TMinusCounter from '@/components/TMinusCounter';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
-import { BIDIRECTIONAL_HIGHLIGHT_CONFIG } from '@/lib/configs/componentsConfig';
+import { BIDIRECTIONAL_HIGHLIGHT_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobileLandscapeViewProps {
   groupPhotos: GroupPhoto[];
@@ -49,7 +50,13 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden relative z-10">
+      {/* Blur overlay for background */}
+      <div 
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20"
+        style={{ opacity: GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY }}
+      />
+      
+      <div className="flex h-screen overflow-hidden relative z-40">
         {/* Left side - Photo Carousel (fixed) - more compact */}
         <div className="w-1/2 flex-shrink-0 p-1 sm:p-2 flex flex-col items-center justify-center">
           <MobilePhotoCarousel
@@ -68,7 +75,7 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
           className="w-1/2 flex-shrink-0 overflow-y-auto bg-black/40 backdrop-blur-md border-l border-white/10"
           style={{
             touchAction: 'pan-y',
-            webkitOverflowScrolling: 'touch',
+            WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain'
           } as React.CSSProperties}
         >
@@ -87,7 +94,10 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
             </section>
 
             {/* Footer */}
-            <footer className="text-center py-4 sm:py-6 border-t border-white/5 mt-4">
+            <footer className="text-center py-3 sm:py-4 border-t border-white/5 mt-4 space-y-2">
+              <div className="flex justify-center">
+                <TMinusCounter />
+              </div>
               <p className="text-slate-500 text-xs sm:text-sm font-light">
                 Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
               </p>

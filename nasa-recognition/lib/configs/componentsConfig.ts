@@ -58,6 +58,9 @@ export const GENERAL_COMPONENT_CONFIG = {
   // Background configuration
   BACKGROUND_TYPE: 'starfield' as 'starfield' | 'galaxy', // Toggle between 'starfield' and 'galaxy'
   
+  // Rocket Layer Configuration
+  ROCKET_POSITION: 'behind_blur' as 'behind_blur' | 'on_top_of_blur',
+
   // Interaction delays
   SCROLL_TO_CARD_DELAY_MS: 10, // Delay before scrolling to card after click
 
