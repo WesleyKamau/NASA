@@ -31,3 +31,11 @@
 	- `components/DesktopSplitView.tsx`
 	- `components/CompactSplitView.tsx`
 - **Branch**: `fix/ipad-column-drag`
+- 
+## Mobile: Center Circle Visibility During Auto-Cycle [FIXED]
+
+- **Issue**: When a user manually pans the photo carousel on mobile and then waits for the auto-cycle timer to resume, the center circle indicator remains visible during the auto-cycle transition instead of disappearing.
+- **Root Cause**: The `showCenterIndicator` state was set to `true` during touch interactions but was not explicitly cleared when auto-highlighting resumed after the inactivity timeout.
+- **Solution Implemented**: Added `setShowCenterIndicator(false)` in the auto-highlighting resume effect (when `isAutoHighlighting` becomes `true`) to ensure the indicator is hidden when the auto-cycle resumes after user inactivity.
+- **File Modified**: `components/MobilePhotoCarousel.tsx`
+- **Branch**: `fix/mobile-center-circle-auto-cycle`
