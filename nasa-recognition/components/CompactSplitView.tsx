@@ -68,7 +68,7 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
           className="w-1/2 flex-shrink-0 overflow-y-auto bg-slate-900/30 border-l border-slate-700/50"
           style={{
             touchAction: 'pan-y',
-            WebkitOverflowScrolling: 'touch',
+            webkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain'
           } as React.CSSProperties}
         >
