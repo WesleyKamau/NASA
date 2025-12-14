@@ -96,7 +96,7 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
           className="flex-1 overflow-y-auto bg-black/40 backdrop-blur-md border-l border-white/10"
           style={{
             touchAction: 'pan-y',
-            webkitOverflowScrolling: 'touch',
+            WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain'
           } as React.CSSProperties}
         >
