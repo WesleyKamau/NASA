@@ -48,89 +48,60 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950 transition-opacity duration-1000 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-700 ${
         isComplete ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Subtle animated background stars */}
-      {LOADING_SCREEN_CONFIG.SHOW_STARS && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(40)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-[1px] h-[1px] bg-white rounded-full animate-twinkle"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                opacity: Math.random() * 0.4 + 0.1,
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-950" />
 
-      {/* Technical Grid Background */}
-      {LOADING_SCREEN_CONFIG.SHOW_GRID && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div 
-            className="absolute inset-[-100%] w-[300%] h-[300%] opacity-[0.15] animate-grid-pan"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)
-              `,
-              backgroundSize: '60px 60px',
-              transform: 'perspective(500px) rotateX(60deg)',
-              transformOrigin: 'center top',
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-transparent to-slate-950" />
-        </div>
-      )}
-
-      {/* Ambient Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950/50 to-slate-950 pointer-events-none" />
-
-      {/* Main Content - Floating in void */}
-      <div className="relative z-10 flex flex-col items-center gap-12">
+      {/* Main Content - Glassmorphic Card */}
+      <div className="relative z-10 px-8 py-12 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl max-w-md w-full mx-4">
         
-        {/* Typography */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-2xl">
-            MSFC Book of Faces
-          </h1>
-          <p className="text-slate-500 text-xs font-medium tracking-[0.3em] uppercase opacity-80">
-            by Wesley Kamau
-          </p>
-        </div>
+        {/* Content Container */}
+        <div className="flex flex-col items-center gap-10">
+          
+          {/* Typography */}
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+              MSFC Book of Faces
+            </h1>
+            <p className="text-slate-400 text-xs font-medium tracking-[0.3em] uppercase">
+              by Wesley Kamau
+            </p>
+          </div>
 
-        {/* Ultra Minimal Progress */}
-        <div className="w-32 h-[2px] bg-slate-800/50 rounded-full overflow-hidden backdrop-blur-sm">
-          <div
-            className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+          {/* Progress Bar Container */}
+          <div className="w-full space-y-3">
+            {/* Progress Bar */}
+            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            
+            {/* Progress Text */}
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500 font-light">Loading</span>
+              <span className="text-slate-400 font-mono">{Math.round(progress)}%</span>
+            </div>
+          </div>
+
+          {/* Loading Indicator Dots */}
+          <div className="flex gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-1.5 h-1.5 rounded-full bg-white/40"
+                style={{
+                  animation: `pulse 1.5s ease-in-out ${i * 0.15}s infinite`,
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.5); }
-        }
-        @keyframes grid-pan {
-          0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-          100% { transform: perspective(500px) rotateX(60deg) translateY(60px); }
-        }
-        .animate-twinkle {
-          animation: twinkle 4s ease-in-out infinite;
-        }
-        .animate-grid-pan {
-          animation: grid-pan 2s linear infinite;
-        }
-      `}</style>
     </div>
   );
 }

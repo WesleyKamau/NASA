@@ -154,7 +154,8 @@ export const STARFIELD_CONFIG = {
 export const LOADING_SCREEN_CONFIG = {
   // Background style toggles
   SHOW_STARS: true,               // Set to true for the starry background
-  SHOW_GRID: false,                 // Set to true for the technical grid background
+  SHOW_GRID: false,                // Set to true for the technical grid background
+  SHOW_SPLIT_VIEW_MIMIC: true,     // Set to true for the split view mimic background
   
   // Animation settings
   MIN_LOADING_TIME_MS: 2000,
