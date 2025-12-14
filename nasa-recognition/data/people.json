@@ -1556,6 +1556,46 @@
       "category": "sil-lab",
       "individualPhoto": "/photos/individual/lakiesha-hawkins.jpg",
       "photoLocations": []
+    },
+    {
+      "id": "justin-pociask",
+      "name": "Justin Pociask",
+      "description": "",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "crew-71-astronaut-1",
+      "name": "Crew 71 Astronaut 1",
+      "description": "Member of Crew 71 that visited MSFC",
+      "category": "astronaut",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "crew-71-astronaut-2",
+      "name": "Crew 71 Astronaut 2",
+      "description": "Member of Crew 71 that visited MSFC",
+      "category": "astronaut",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "crew-71-astronaut-3",
+      "name": "Crew 71 Astronaut 3",
+      "description": "Member of Crew 71 that visited MSFC",
+      "category": "astronaut",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "crew-71-astronaut-4",
+      "name": "Crew 71 Astronaut 4",
+      "description": "Member of Crew 71 that visited MSFC",
+      "category": "astronaut",
+      "individualPhoto": null,
+      "photoLocations": []
     }
   ],
   "groupPhotos": [

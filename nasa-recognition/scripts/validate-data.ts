@@ -24,7 +24,7 @@ interface Person {
   id: string;
   name: string;
   description: string;
-  category: 'staff' | 'interns' | 'girlfriend' | 'family';
+  category: 'staff' | 'interns' | 'girlfriend' | 'family' | 'sil-lab' | 'astronaut';
   individualPhoto: string | null;
   photoLocations: PhotoLocation[];
   hidden?: boolean;
@@ -34,7 +34,7 @@ interface GroupPhoto {
   id: string;
   name: string;
   imagePath: string;
-  category: 'staff' | 'interns' | 'girlfriend' | 'family';
+  category: 'staff' | 'interns' | 'girlfriend' | 'family' | 'sil-lab' | 'astronaut';
 }
 
 interface PeopleData {
@@ -62,7 +62,7 @@ function validateData() {
       // Check for required fields
       if (!person.id) errors.push('Missing id');
       if (!person.name) errors.push('Missing name');
-      if (!person.description) errors.push('Missing description');
+      if (person.description === undefined || person.description === null) errors.push('Missing description');
       if (!person.category) errors.push('Missing category');
 
       // Check for duplicate IDs
@@ -72,7 +72,7 @@ function validateData() {
       ids.add(person.id);
 
       // Validate category
-      if (person.category && !['staff', 'interns', 'girlfriend', 'family'].includes(person.category)) {
+      if (person.category && !['staff', 'interns', 'girlfriend', 'family', 'sil-lab', 'astronaut'].includes(person.category)) {
         errors.push(`Invalid category: ${person.category}`);
       }
 
@@ -115,7 +115,7 @@ function validateData() {
       if (!photo.imagePath) errors.push('Missing imagePath');
       if (!photo.category) errors.push('Missing category');
 
-      if (photo.category && !['staff', 'interns', 'girlfriend', 'family'].includes(photo.category)) {
+      if (photo.category && !['staff', 'interns', 'girlfriend', 'family', 'sil-lab', 'astronaut'].includes(photo.category)) {
         errors.push(`Invalid category: ${photo.category}`);
       }
 
@@ -132,6 +132,8 @@ function validateData() {
     console.log(`   - Interns: ${data.people.filter(p => p.category === 'interns').length}`);
     console.log(`   - Girlfriend: ${data.people.filter(p => p.category === 'girlfriend').length}`);
     console.log(`   - Family: ${data.people.filter(p => p.category === 'family').length}`);
+    console.log(`   - SIL Lab: ${data.people.filter(p => p.category === 'sil-lab').length}`);
+    console.log(`   - Astronauts: ${data.people.filter(p => p.category === 'astronaut').length}`);
     console.log(`   - Hidden from display: ${data.people.filter(p => p.hidden).length}`);
     console.log(`   - With individual photos: ${data.people.filter(p => p.individualPhoto).length}`);
     console.log(`   - In group photos: ${data.people.filter(p => p.photoLocations.length > 0).length}`);

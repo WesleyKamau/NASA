@@ -1,4 +1,4 @@
-export type Category = 'staff' | 'interns' | 'girlfriend' | 'family' | 'sil-lab';
+export type Category = 'staff' | 'interns' | 'girlfriend' | 'family' | 'sil-lab' | 'astronaut';
 
 export interface PhotoLocation {
   photoId: string;

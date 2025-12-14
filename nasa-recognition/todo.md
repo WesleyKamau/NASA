@@ -15,6 +15,8 @@
 - [ ] Add some sort of scrolling callout, or some sort of guided tour after loading that shows the user how to use the app
 - [x] Highlighting someone's face (either by mouse hover on desktop or by selecting on the mobile carousel) will cause the corresponding tile to highlight as well, without scrolling or anything
 - [x] Improve setup page: Add LinkedIn profile input field and description editor with face previews during person setup.
+- [x] Add Justin Pociask to the data as a staff member
+- [x] Add new "astronaut" category and add the 4 members of crew 71 that visited MSFC to the data
 
 ## Scroll/Drag: Person column (iPad + Desktop) [FIXED]
 
