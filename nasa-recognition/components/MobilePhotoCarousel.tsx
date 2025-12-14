@@ -346,6 +346,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       setPosition({ x: 0, y: 0 });
       setAutoZoomedOnPan(false);
       setIsZooming(false);
+      setShowCenterIndicator(false); // Hide center indicator when auto-cycle resumes
     }
   }, [isAutoHighlighting]);
 

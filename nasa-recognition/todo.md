@@ -15,3 +15,11 @@
 - [ ] Add some sort of scrolling callout, or some sort of guided tour after loading that shows the user how to use the app
 - [x] Highlighting someone's face (either by mouse hover on desktop or by selecting on the mobile carousel) will cause the corresponding tile to highlight as well, without scrolling or anything
 - [x] Improve setup page: Add LinkedIn profile input field and description editor with face previews during person setup.
+
+## Mobile: Center Circle Visibility During Auto-Cycle [FIXED]
+
+- **Issue**: When a user manually pans the photo carousel on mobile and then waits for the auto-cycle timer to resume, the center circle indicator remains visible during the auto-cycle transition instead of disappearing.
+- **Root Cause**: The `showCenterIndicator` state was set to `true` during touch interactions but was not explicitly cleared when auto-highlighting resumed after the inactivity timeout.
+- **Solution Implemented**: Added `setShowCenterIndicator(false)` in the auto-highlighting resume effect (when `isAutoHighlighting` becomes `true`) to ensure the indicator is hidden when the auto-cycle resumes after user inactivity.
+- **File Modified**: `components/MobilePhotoCarousel.tsx`
+- **Branch**: `fix/mobile-center-circle-auto-cycle`
