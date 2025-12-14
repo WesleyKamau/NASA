@@ -96,7 +96,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     cooldownTimer.current = setTimeout(() => {
       setIsAutoScrolling(true);
     }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
-  }, []);
+  }, [AUTO_RESUME_MS]);
 
   const pauseAutoHighlight = useCallback(() => {
     setIsAutoHighlighting(false);
@@ -108,7 +108,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     highlightCooldownTimer.current = setTimeout(() => {
       setIsAutoHighlighting(true);
     }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
-  }, []);
+  }, [AUTO_RESUME_MS]);
 
   const pauseAllAuto = useCallback(() => {
     pauseAutoScroll();
@@ -129,6 +129,11 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   useEffect(() => {
     // Default: stop auto-highlighting while external highlight is active
     if (highlightedPersonId === null) {
+      // Clear any pending highlight cooldown timer to prevent unexpected state changes
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
       setIsAutoHighlighting(true);
       setHighlightedPersonIndex(0);
       return;
@@ -158,6 +163,45 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     pauseAutoScroll();
   }, [highlightedPersonId, shuffledPeople, pauseAutoScroll]);
 
+  // Find the closest hovered person (only one at a time)
+  const getHoveredPerson = useCallback((): Person | null => {
+    if (isAutoHighlighting || !isMouseInside) return null;
+    
+    const pos = isTouching ? touchPos : mousePos;
+    let closestPerson: Person | null = null;
+    let minDistance = Infinity;
+
+    shuffledPeople.forEach(person => {
+      const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
+      if (!location) return;
+
+      const expandedX = location.x - FACE_HITBOX_PADDING / 2;
+      const expandedY = location.y - FACE_HITBOX_PADDING / 2;
+      const expandedWidth = location.width + FACE_HITBOX_PADDING;
+      const expandedHeight = location.height + FACE_HITBOX_PADDING;
+
+      // Check if inside hitbox
+      const isInside = pos.x >= expandedX && 
+                      pos.x <= expandedX + expandedWidth &&
+                      pos.y >= expandedY && 
+                      pos.y <= expandedY + expandedHeight;
+
+      if (isInside) {
+        // Calculate distance from center of hitbox
+        const centerX = location.x + location.width / 2;
+        const centerY = location.y + location.height / 2;
+        const distance = Math.sqrt(Math.pow(pos.x - centerX, 2) + Math.pow(pos.y - centerY, 2));
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPerson = person;
+        }
+      }
+    });
+
+    return closestPerson;
+  }, [isAutoHighlighting, isMouseInside, isTouching, touchPos, mousePos, shuffledPeople, currentPhoto]);
+
   // Track hovered person and notify parent (Carousel -> Grid)
   useEffect(() => {
     // Only trigger if mouse is actually inside the carousel
@@ -178,7 +222,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
       lastHoveredPersonIdRef.current = hoveredPerson?.id || null;
       onHighlightedPersonChange?.(hoveredPerson?.id || null);
     }
-  }, [mousePos, isAutoHighlighting, currentPhoto, shuffledPeople, isMouseInside]);
+  }, [mousePos, isAutoHighlighting, currentPhoto, shuffledPeople, isMouseInside, getHoveredPerson, onHighlightedPersonChange]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isTouching) return; // Don't update mouse pos during touch
@@ -220,47 +264,6 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
            pos.y >= expandedY && 
            pos.y <= expandedY + expandedHeight;
   };
-
-  // Find the closest hovered person (only one at a time)
-  const getHoveredPerson = (): Person | null => {
-    if (isAutoHighlighting || !isMouseInside) return null;
-    
-    const pos = isTouching ? touchPos : mousePos;
-    let closestPerson: Person | null = null;
-    let minDistance = Infinity;
-
-    shuffledPeople.forEach(person => {
-      const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
-      if (!location) return;
-
-      const expandedX = location.x - FACE_HITBOX_PADDING / 2;
-      const expandedY = location.y - FACE_HITBOX_PADDING / 2;
-      const expandedWidth = location.width + FACE_HITBOX_PADDING;
-      const expandedHeight = location.height + FACE_HITBOX_PADDING;
-
-      // Check if inside hitbox
-      const isInside = pos.x >= expandedX && 
-                      pos.x <= expandedX + expandedWidth &&
-                      pos.y >= expandedY && 
-                      pos.y <= expandedY + expandedHeight;
-
-      if (isInside) {
-        // Calculate distance from center of hitbox
-        const centerX = location.x + location.width / 2;
-        const centerY = location.y + location.height / 2;
-        const distance = Math.sqrt(Math.pow(pos.x - centerX, 2) + Math.pow(pos.y - centerY, 2));
-
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestPerson = person;
-        }
-      }
-    });
-
-    return closestPerson;
-  };
-
-  const currentHighlightedPerson = highlightedPersonIndex >= 0 ? shuffledPeople[highlightedPersonIndex] : undefined;
 
   return (
     <div className="w-full">

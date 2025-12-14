@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';

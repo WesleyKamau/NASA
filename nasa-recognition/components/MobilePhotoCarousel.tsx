@@ -372,12 +372,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     highlightCooldownTimer.current = setTimeout(() => {
       setIsAutoHighlighting(true);
     }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
-  }, []);
+  }, [AUTO_RESUME_MS]);
 
   // Handle external highlighting from grid hover (for bidirectional highlighting)
   useEffect(() => {
-    if (!highlightedPersonId || highlightedPersonId === '' || shuffledPeople.length === 0) {
+    if (!highlightedPersonId || shuffledPeople.length === 0) {
       // External highlight cleared: immediately reset highlight and resume auto-highlighting
+      // Clear any pending highlight cooldown timer to prevent unexpected state changes
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
       setIsAutoHighlighting(true);
       setHighlightedPersonIndex(0);
       return;
@@ -388,6 +393,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
     if (personIndex === -1) {
       // Tile person not in this photo: resume auto-highlight/auto-cycle
+      // Clear any pending highlight cooldown timer to prevent unexpected state changes
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
       setIsAutoHighlighting(true);
       setHighlightedPersonIndex(0);
       return;
