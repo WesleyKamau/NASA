@@ -8,6 +8,7 @@ import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
+import { BIDIRECTIONAL_HIGHLIGHT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface DesktopSplitViewProps {
   groupPhotos: GroupPhoto[];
@@ -16,9 +17,13 @@ interface DesktopSplitViewProps {
 
 export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [highlightedPersonId, setHighlightedPersonId] = useState<string | null>(null);
   const isTabletLandscape = useTabletLandscape();
 
   const handlePersonClick = (person: Person) => {
+    // Highlight the person's tile
+    setHighlightedPersonId(person.id);
+
     // Scroll to the person's card in the right panel
     const personCardId = `person-card-desktop-${person.id}`;
     const cardElement = document.getElementById(personCardId);
@@ -31,7 +36,7 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
         rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
       }
       
-      // Highlight the card briefly
+      // Highlight the card briefly (yellow for click, white for hover is from isHighlighted)
       cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
       
       // Open modal after a short delay (only on desktop, not on touch devices like iPad)
@@ -55,12 +60,16 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
                 groupPhotos={groupPhotos}
                 people={people}
                 onPersonClick={handlePersonClick}
+                highlightedPersonId={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? highlightedPersonId : undefined}
+                onHighlightedPersonChange={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? setHighlightedPersonId : undefined}
               />
             ) : (
               <PhotoCarousel
                 groupPhotos={groupPhotos}
                 people={people}
                 onPersonClick={handlePersonClick}
+                highlightedPersonId={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? highlightedPersonId : undefined}
+                onHighlightedPersonChange={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? setHighlightedPersonId : undefined}
               />
             )}
           </div>
@@ -106,6 +115,8 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
                 groupPhotos={groupPhotos}
                 onPersonClick={setSelectedPerson}
                 idPrefix="desktop-"
+                highlightedPersonId={highlightedPersonId}
+                onPersonHover={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? setHighlightedPersonId : undefined}
               />
             </section>
 

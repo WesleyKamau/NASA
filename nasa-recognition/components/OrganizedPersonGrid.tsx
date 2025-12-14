@@ -11,6 +11,8 @@ interface OrganizedPersonGridProps {
   onPersonClick?: (person: Person) => void;
   idPrefix?: string;
   uniformLayout?: boolean;
+  highlightedPersonId?: string | null;
+  onPersonHover?: (personId: string | null) => void;
 }
 
 const categoryOrder: Category[] = ['family', 'staff', 'sil-lab', 'interns'];
@@ -23,7 +25,7 @@ const categoryLabels: Record<Category, string> = {
   'interns': 'Fellow Interns'
 };
 
-export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false }: OrganizedPersonGridProps) {
+export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false, highlightedPersonId = null, onPersonHover }: OrganizedPersonGridProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   const handlePersonClick = (person: Person) => {
@@ -88,6 +90,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                         onClick={() => handlePersonClick(person)}
                         idPrefix={idPrefix}
                         priority={false}
+                        isHighlighted={highlightedPersonId === person.id}
+                        onMouseEnter={() => onPersonHover?.(person.id)}
+                        onMouseLeave={() => onPersonHover?.(null)}
                       />
                     </div>
                   ))}
@@ -151,6 +156,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                   onClick={() => handlePersonClick(wesley)}
                   idPrefix={idPrefix}
                   priority={true}
+                  isHighlighted={highlightedPersonId === wesley.id}
+                  onMouseEnter={() => onPersonHover?.(wesley.id)}
+                  onMouseLeave={() => onPersonHover?.(null)}
                 />
               </div>
             </div>
@@ -187,6 +195,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                       onClick={() => handlePersonClick(person)}
                       idPrefix={idPrefix}
                       priority={true}
+                      isHighlighted={highlightedPersonId === person.id}
+                      onMouseEnter={() => onPersonHover?.(person.id)}
+                      onMouseLeave={() => onPersonHover?.(null)}
                     />
                   </div>
                 ))}

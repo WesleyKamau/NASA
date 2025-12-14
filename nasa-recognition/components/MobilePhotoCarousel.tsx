@@ -5,13 +5,15 @@ import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
-import { MOBILE_PHOTO_CAROUSEL_CONFIG } from '@/lib/configs/componentsConfig';
+import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
   people: Person[];
   onPersonClick?: (person: Person) => void;
   hideInstructions?: boolean;
+  highlightedPersonId?: string | null;
+  onHighlightedPersonChange?: (personId: string | null) => void;
 }
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
@@ -21,10 +23,11 @@ const FACE_FADE_DELAY_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DELAY_MS;
 const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS;
 const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
 
-export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions }: MobilePhotoCarouselProps) {
+export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
   const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
+  const AUTO_RESUME_MS = GENERAL_COMPONENT_CONFIG.AUTO_RESUME_SECONDS * 1000;
   
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [highlightedPersonIndex, setHighlightedPersonIndex] = useState(0);
@@ -221,6 +224,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     setOverlaysReadyForPhoto(null);
   }, [currentPhotoIndex]);
 
+  // Ensure overlays become visible shortly after photo render (even before onLoad)
+  // This helps iPad landscape where initial load may hide overlays until next flip
+  useEffect(() => {
+    if (!currentPhoto) return;
+    const t = setTimeout(() => {
+      setOverlaysReadyForPhoto(prev => prev ?? currentPhoto.id);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [currentPhoto]);
+
   // Handle photo transition state for face highlights
   // Only show face transitions when user manually changes photos, not during auto-cycle
   useEffect(() => {
@@ -288,6 +301,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           autoCycleResetTimer.current = setTimeout(() => {
             setIsAutoHighlighting(true);
             setHighlightedPersonIndex(0);
+            // Sync initial highlight after auto-cycle
+            // Note: shuffledPeople might not be updated yet if it depends on currentPhoto effect
+            // But we can't access the new shuffled list here easily.
+            // The effect on [currentPhoto] will handle the shuffle and initial sync.
           }, 400); // Slightly longer to ensure image is loaded
           return next;
         });
@@ -309,7 +326,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     if (!isAutoHighlighting || shuffledPeople.length === 0) return;
 
     highlightTimer.current = setInterval(() => {
-      setHighlightedPersonIndex(prev => (prev + 1) % shuffledPeople.length);
+      setHighlightedPersonIndex(prev => {
+        const next = (prev + 1) % shuffledPeople.length;
+        return next;
+      });
     }, 2500);
 
     return () => {
@@ -351,8 +371,52 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     
     highlightCooldownTimer.current = setTimeout(() => {
       setIsAutoHighlighting(true);
-    }, 45000); // Resume after 45 seconds of no interaction
-  }, []);
+    }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
+  }, [AUTO_RESUME_MS]);
+
+  // Handle external highlighting from grid hover (for bidirectional highlighting)
+  useEffect(() => {
+    if (!highlightedPersonId || shuffledPeople.length === 0) {
+      // External highlight cleared: immediately reset highlight and resume auto-highlighting
+      // Clear any pending highlight cooldown timer to prevent unexpected state changes
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
+      setIsAutoHighlighting(true);
+      setHighlightedPersonIndex(0);
+      return;
+    }
+
+    // Find the index of the highlighted person in the shuffled array
+    const personIndex = shuffledPeople.findIndex(p => p.id === highlightedPersonId);
+
+    if (personIndex === -1) {
+      // Tile person not in this photo: resume auto-highlight/auto-cycle
+      // Clear any pending highlight cooldown timer to prevent unexpected state changes
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
+      setIsAutoHighlighting(true);
+      setHighlightedPersonIndex(0);
+      return;
+    }
+
+    // External highlight active and in-photo: clear timers and disable auto-highlighting immediately
+    if (highlightTimer.current) {
+      clearInterval(highlightTimer.current);
+      highlightTimer.current = undefined;
+    }
+    if (highlightCooldownTimer.current) {
+      clearTimeout(highlightCooldownTimer.current);
+      highlightCooldownTimer.current = undefined;
+    }
+    
+    setIsAutoHighlighting(false);
+    setHighlightedPersonIndex(personIndex);
+    pauseAutoScroll();
+  }, [highlightedPersonId, shuffledPeople, pauseAutoScroll]);
 
   const pauseAllAuto = useCallback(() => {
     pauseAutoScroll();
@@ -666,6 +730,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 convertPhotoToContainerCoords={convertPhotoToContainerCoords}
                 containerRef={containerRef}
                 FACE_HITBOX_PADDING={FACE_HITBOX_PADDING}
+                onHighlightedPersonChange={onHighlightedPersonChange}
               />
 
               {shuffledPeople.map((person, idx) => {

@@ -6,6 +6,7 @@ import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
+import { BIDIRECTIONAL_HIGHLIGHT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface CompactSplitViewProps {
   groupPhotos: GroupPhoto[];
@@ -14,9 +15,13 @@ interface CompactSplitViewProps {
 
 export default function CompactSplitView({ groupPhotos, people }: CompactSplitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [highlightedPersonId, setHighlightedPersonId] = useState<string | null>(null);
   const isTabletLandscape = useTabletLandscape();
 
   const handlePersonClick = (person: Person) => {
+    // Highlight the person's tile
+    setHighlightedPersonId(person.id);
+
     // Scroll to the person's card in the right panel
     const personCardId = `person-card-desktop-${person.id}`;
     const cardElement = document.getElementById(personCardId);
@@ -29,7 +34,7 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
         rightPanel.scrollTo({ top: cardTop - 50, behavior: 'smooth' });
       }
       
-      // Highlight the card briefly
+      // Highlight the card briefly (yellow for click, white for hover is from isHighlighted)
       cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
       
       // Open modal after a short delay (only on desktop, not on touch devices like iPad)
@@ -52,6 +57,8 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
             people={people}
             onPersonClick={handlePersonClick}
             hideInstructions={true}
+            highlightedPersonId={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? highlightedPersonId : undefined}
+            onHighlightedPersonChange={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? setHighlightedPersonId : undefined}
           />
         </div>
 
@@ -69,6 +76,8 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
                 onPersonClick={setSelectedPerson}
                 idPrefix="desktop-"
                 uniformLayout={true}
+                highlightedPersonId={highlightedPersonId}
+                onPersonHover={BIDIRECTIONAL_HIGHLIGHT_CONFIG.ENABLE_TILE_HOVER_HIGHLIGHT ? setHighlightedPersonId : undefined}
               />
             </section>
 

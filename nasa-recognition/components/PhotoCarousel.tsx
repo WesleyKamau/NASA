@@ -3,19 +3,24 @@
 import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface PhotoCarouselProps {
   groupPhotos: GroupPhoto[];
   people: Person[];
   onPersonClick?: (person: Person) => void;
+  highlightedPersonId?: string | null;
+  onHighlightedPersonChange?: (personId: string | null) => void;
 }
 
-export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: PhotoCarouselProps) {
+export default function PhotoCarousel({ groupPhotos, people, onPersonClick, highlightedPersonId, onHighlightedPersonChange }: PhotoCarouselProps) {
   const FACE_HITBOX_PADDING = 10; // Percentage padding to expand face hitboxes
+  const AUTO_RESUME_MS = GENERAL_COMPONENT_CONFIG.AUTO_RESUME_SECONDS * 1000;
   const [showDebugHitboxes, setShowDebugHitboxes] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 }); // percentage position
   const [touchPos, setTouchPos] = useState({ x: 50, y: 50 }); // percentage position for touch
   const [isTouching, setIsTouching] = useState(false);
+  const [isMouseInside, setIsMouseInside] = useState(false);
   
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [highlightedPersonIndex, setHighlightedPersonIndex] = useState(0);
@@ -28,6 +33,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
   const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastHoveredPersonIdRef = useRef<string | null>(null);
 
   const currentPhoto = groupPhotos[currentPhotoIndex];
 
@@ -82,27 +88,27 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
 
   const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);
-    
+
     if (cooldownTimer.current) {
       clearTimeout(cooldownTimer.current);
     }
-    
+
     cooldownTimer.current = setTimeout(() => {
       setIsAutoScrolling(true);
-    }, 45000); // Resume after 45 seconds of no interaction
-  }, []);
+    }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
+  }, [AUTO_RESUME_MS]);
 
   const pauseAutoHighlight = useCallback(() => {
     setIsAutoHighlighting(false);
-    
+
     if (highlightCooldownTimer.current) {
       clearTimeout(highlightCooldownTimer.current);
     }
-    
+
     highlightCooldownTimer.current = setTimeout(() => {
       setIsAutoHighlighting(true);
-    }, 45000); // Resume after 45 seconds of no interaction
-  }, []);
+    }, AUTO_RESUME_MS); // Resume after configured seconds of no interaction
+  }, [AUTO_RESUME_MS]);
 
   const pauseAllAuto = useCallback(() => {
     pauseAutoScroll();
@@ -119,49 +125,47 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
     onPersonClick?.(person);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isTouching) return; // Don't update mouse pos during touch
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setMousePos({ x, y });
-  };
+  // Handle external highlight change (Grid -> Carousel)
+  useEffect(() => {
+    // Default: stop auto-highlighting while external highlight is active
+    if (highlightedPersonId === null) {
+      // Clear any pending highlight cooldown timer to prevent unexpected state changes
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
+      setIsAutoHighlighting(true);
+      setHighlightedPersonIndex(0);
+      return;
+    }
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!containerRef.current || e.touches.length === 0) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-    const y = ((touch.clientY - rect.top) / rect.height) * 100;
-    setTouchPos({ x, y });
-    setIsTouching(true);
-  };
+    const index = shuffledPeople.findIndex(p => p.id === highlightedPersonId);
 
-  const handleTouchEnd = () => {
-    setIsTouching(false);
-  };
+    if (index === -1) {
+      // Tile person not in this photo: resume auto-highlight/auto-cycle
+      setIsAutoHighlighting(true);
+      setHighlightedPersonIndex(0);
+      return;
+    }
 
-  const isInsideExpandedHitbox = (person: Person) => {
-    const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
-    if (!location) return false;
+    // External highlight active and in-photo: clear timers and disable auto-highlighting immediately
+    if (highlightTimer.current) {
+      clearInterval(highlightTimer.current);
+      highlightTimer.current = undefined;
+    }
+    if (highlightCooldownTimer.current) {
+      clearTimeout(highlightCooldownTimer.current);
+      highlightCooldownTimer.current = undefined;
+    }
 
-    const expandedX = location.x - FACE_HITBOX_PADDING / 2;
-    const expandedY = location.y - FACE_HITBOX_PADDING / 2;
-    const expandedWidth = location.width + FACE_HITBOX_PADDING;
-    const expandedHeight = location.height + FACE_HITBOX_PADDING;
-
-    // Use touch position if touching, otherwise mouse position
-    const pos = isTouching ? touchPos : mousePos;
-
-    return pos.x >= expandedX && 
-           pos.x <= expandedX + expandedWidth &&
-           pos.y >= expandedY && 
-           pos.y <= expandedY + expandedHeight;
-  };
+    setIsAutoHighlighting(false);
+    setHighlightedPersonIndex(index);
+    pauseAutoScroll();
+  }, [highlightedPersonId, shuffledPeople, pauseAutoScroll]);
 
   // Find the closest hovered person (only one at a time)
-  const getHoveredPerson = (): Person | null => {
-    if (isAutoHighlighting) return null;
+  const getHoveredPerson = useCallback((): Person | null => {
+    if (isAutoHighlighting || !isMouseInside) return null;
     
     const pos = isTouching ? touchPos : mousePos;
     let closestPerson: Person | null = null;
@@ -196,9 +200,70 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
     });
 
     return closestPerson;
+  }, [isAutoHighlighting, isMouseInside, isTouching, touchPos, mousePos, shuffledPeople, currentPhoto]);
+
+  // Track hovered person and notify parent (Carousel -> Grid)
+  useEffect(() => {
+    // Only trigger if mouse is actually inside the carousel
+    if (!isMouseInside) {
+      if (lastHoveredPersonIdRef.current !== null) {
+        lastHoveredPersonIdRef.current = null;
+        onHighlightedPersonChange?.(null);
+      }
+      return;
+    }
+
+    // Don't trigger if auto-highlighting is active (unless we want auto-highlight to sync too)
+    // But getHoveredPerson returns null if isAutoHighlighting is true anyway.
+    const hoveredPerson = getHoveredPerson();
+    
+    // Only notify if changed
+    if (hoveredPerson?.id !== lastHoveredPersonIdRef.current) {
+      lastHoveredPersonIdRef.current = hoveredPerson?.id || null;
+      onHighlightedPersonChange?.(hoveredPerson?.id || null);
+    }
+  }, [mousePos, isAutoHighlighting, currentPhoto, shuffledPeople, isMouseInside, getHoveredPerson, onHighlightedPersonChange]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current || isTouching) return; // Don't update mouse pos during touch
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+    setIsMouseInside(true);
   };
 
-  const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!containerRef.current || e.touches.length === 0) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    setTouchPos({ x, y });
+    setIsTouching(true);
+  };
+
+  const handleTouchEnd = () => {
+    setIsTouching(false);
+  };
+
+  const isInsideExpandedHitbox = (person: Person) => {
+    const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
+    if (!location) return false;
+
+    const expandedX = location.x - FACE_HITBOX_PADDING / 2;
+    const expandedY = location.y - FACE_HITBOX_PADDING / 2;
+    const expandedWidth = location.width + FACE_HITBOX_PADDING;
+    const expandedHeight = location.height + FACE_HITBOX_PADDING;
+
+    // Use touch position if touching, otherwise mouse position
+    const pos = isTouching ? touchPos : mousePos;
+
+    return pos.x >= expandedX && 
+           pos.x <= expandedX + expandedWidth &&
+           pos.y >= expandedY && 
+           pos.y <= expandedY + expandedHeight;
+  };
 
   return (
     <div className="w-full">
@@ -208,7 +273,10 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
           ref={containerRef}
           className="relative w-full bg-slate-800/50"
           onMouseMove={handleMouseMove}
-          onMouseLeave={() => { setMousePos({ x: 50, y: 50 }); setIsTouching(false); }}
+          onMouseLeave={() => { 
+            setIsMouseInside(false);
+            setIsTouching(false);
+          }}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
@@ -234,7 +302,8 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
                 
                 if (!location) return null;
 
-                const isHighlighted = idx === highlightedPersonIndex && isAutoHighlighting;
+                const isExternalHighlight = highlightedPersonId === person.id;
+                const isHighlighted = (idx === highlightedPersonIndex && isAutoHighlighting);
                 const isHovered = !isAutoHighlighting && hoveredPerson?.id === person.id;
               
               // Calculate expanded hitbox for debugging
@@ -282,7 +351,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
                       className={`absolute inset-0 rounded-lg transition-all duration-500 ${
                         isHighlighted 
                           ? 'ring-4 ring-yellow-400 shadow-lg shadow-yellow-400/50 scale-105' 
-                          : isHovered
+                          : (isHovered || isExternalHighlight)
                             ? 'ring-4 ring-white shadow-lg shadow-white/30 scale-105'
                             : 'ring-2 ring-white/0'
                       }`}
@@ -291,7 +360,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick }: Ph
                     {/* Name tag - appears on highlight or hover */}
                     <div 
                       className={`absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full whitespace-nowrap transition-all duration-300 ${
-                        (isHighlighted || isHovered) ? 'opacity-100' : 'opacity-0'
+                        (isHighlighted || isHovered || isExternalHighlight) ? 'opacity-100' : 'opacity-0'
                       }`}
                     >
                       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-xl">
