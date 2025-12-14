@@ -351,9 +351,9 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
                     <div 
                       className={`absolute inset-0 rounded-lg transition-all duration-500 ${
                         isHighlighted 
-                          ? 'ring-4 ring-yellow-400 shadow-lg shadow-yellow-400/50 scale-105' 
+                          ? 'ring-2 ring-white/80 shadow-[0_0_20px_rgba(255,255,255,0.4)] scale-105' 
                           : (isHovered || isExternalHighlight)
-                            ? 'ring-4 ring-white shadow-lg shadow-white/30 scale-105'
+                            ? 'ring-2 ring-white/60 shadow-[0_0_15px_rgba(255,255,255,0.2)] scale-105'
                             : 'ring-2 ring-white/0'
                       }`}
                     />
@@ -376,21 +376,21 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
 
         {/* Photo name overlay */}
         <div className="absolute top-4 left-4 z-20">
-          <div className="bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <h3 className="text-white font-semibold text-lg">{currentPhoto.name}</h3>
+          <div className="bg-black/50 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10">
+            <h3 className="text-white font-semibold text-sm md:text-lg tracking-wide">{currentPhoto.name}</h3>
           </div>
         </div>
 
         {/* Navigation dots */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-black/40 backdrop-blur-lg px-4 py-2 rounded-full border border-white/10">
           {groupPhotos.map((photo, index) => (
             <button
               key={photo.id}
               onClick={() => handlePhotoNavigation(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+              className={`transition-all duration-300 rounded-full ${
                 index === currentPhotoIndex
-                  ? 'bg-white w-8'
-                  : 'bg-white/40 hover:bg-white/70'
+                  ? 'bg-white/80 w-3 h-3'
+                  : 'bg-white/30 hover:bg-white/60 w-2 h-2'
               }`}
               aria-label={`View ${photo.name}`}
             />
@@ -402,20 +402,20 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
           <>
             <button
               onClick={() => handlePhotoNavigation((currentPhotoIndex - 1 + groupPhotos.length) % groupPhotos.length)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:scale-110"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 backdrop-blur-xl text-white p-2.5 rounded-full transition-all duration-200 hover:scale-110 border border-white/10"
               aria-label="Previous photo"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
               onClick={() => handlePhotoNavigation((currentPhotoIndex + 1) % groupPhotos.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:scale-110"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 backdrop-blur-xl text-white p-2.5 rounded-full transition-all duration-200 hover:scale-110 border border-white/10"
               aria-label="Next photo"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </>

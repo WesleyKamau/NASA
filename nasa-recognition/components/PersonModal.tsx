@@ -28,17 +28,17 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/85 backdrop-blur-lg animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative bg-gradient-to-br from-slate-800 to-slate-900 border-t sm:border border-slate-700 rounded-t-2xl sm:rounded-xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl shadow-blue-500/20 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto"
+        className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 sm:top-4 sm:right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600/50 active:bg-slate-600/70 text-white transition-colors touch-manipulation z-10"
+          className="absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-all duration-200 touch-manipulation z-10 backdrop-blur-sm"
           aria-label="Close"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,8 +80,8 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
               </h2>
 
               {person.description && (
-                <div className="bg-slate-800/50 rounded-lg p-4 mb-4 flex-grow">
-                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
+                <div className="bg-white/5 rounded-xl p-5 mb-6 flex-grow border border-white/10 backdrop-blur-sm">
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed font-light">
                     {person.description}
                   </p>
                 </div>
@@ -95,7 +95,7 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
               href={person.linkedIn}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors font-medium touch-manipulation"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600/80 hover:bg-blue-600 active:bg-blue-700 text-white rounded-lg transition-all font-medium touch-manipulation backdrop-blur-sm border border-blue-500/50"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
@@ -107,7 +107,7 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
           {/* Close button at bottom for mobile */}
           <button
             onClick={onClose}
-            className="sm:hidden w-full py-3 bg-slate-700/50 hover:bg-slate-600/50 active:bg-slate-600/70 text-white rounded-lg transition-colors font-medium touch-manipulation"
+            className="sm:hidden w-full py-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-lg transition-all font-medium touch-manipulation backdrop-blur-sm border border-white/10"
           >
             Close
           </button>
