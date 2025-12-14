@@ -4,9 +4,10 @@ import { useEffect, useState, useRef } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import { preloadAll } from '@/lib/preload';
 import { useLoadingContext } from '@/components/LoadingWrapper';
-import DesktopSplitView from '@/components/DesktopSplitView';
-import CompactSplitView from '@/components/CompactSplitView';
-import SingleColumnView from '@/components/SingleColumnView';
+import DualColumnView from '@/components/views/DualColumnView';
+import MobileLandscapeView from '@/components/views/MobileLandscapeView';
+import SingleColumnView from '@/components/views/SingleColumnView';
+import MobilePortraitView from '@/components/views/MobilePortraitView';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -33,6 +34,7 @@ interface ClientHomeProps {
 export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [useSplitView, setUseSplitView] = useState(false);
   const [useCompactSplit, setUseCompactSplit] = useState(false);
+  const [useMobilePortrait, setUseMobilePortrait] = useState(false);
   const hasPreloaded = useRef(false);
   const loadingContext = useLoadingContext();
 
@@ -58,11 +60,15 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const isXL = window.innerWidth >= 1280;
+      const isPortraitPhone = !isLandscape && window.innerWidth < 768 && isTouchDevice;
+      
+      // Use MobilePortraitView for portrait phones
+      setUseMobilePortrait(isPortraitPhone);
       
       // Use split view on:
-      // 1. XL screens (desktop) - use full DesktopSplitView
-      // 2. Touch devices in landscape orientation - use CompactSplitView
-      const shouldUseSplitView = isXL || (isTouchDevice && isLandscape);
+      // 1. XL screens (desktop) - use full DualColumnView
+      // 2. Touch devices in landscape orientation - use MobileLandscapeView
+      const shouldUseSplitView = isXL || (isTouchDevice && isLandscape && !isPortraitPhone);
       setUseSplitView(shouldUseSplitView);
       
       // Determine if we should use compact version
@@ -79,17 +85,26 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
     };
   }, []);
 
+  if (useMobilePortrait) {
+    return (
+      <MobilePortraitView
+        groupPhotos={groupPhotos}
+        people={people}
+      />
+    );
+  }
+
   if (useSplitView) {
     if (useCompactSplit) {
       return (
-        <CompactSplitView
+        <MobileLandscapeView
           groupPhotos={groupPhotos}
           people={people}
         />
       );
     }
     return (
-      <DesktopSplitView
+      <DualColumnView
         groupPhotos={groupPhotos}
         people={people}
       />

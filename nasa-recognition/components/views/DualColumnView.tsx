@@ -10,12 +10,12 @@ import BackToTop from '@/components/BackToTop';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
 import { BIDIRECTIONAL_HIGHLIGHT_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
-interface DesktopSplitViewProps {
+interface DualColumnViewProps {
   groupPhotos: GroupPhoto[];
   people: Person[];
 }
 
-export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitViewProps) {
+export default function DualColumnView({ groupPhotos, people }: DualColumnViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [highlightedPersonId, setHighlightedPersonId] = useState<string | null>(null);
   const isTabletLandscape = useTabletLandscape();

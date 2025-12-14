@@ -8,12 +8,12 @@ import PersonModal from '@/components/PersonModal';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
 import { BIDIRECTIONAL_HIGHLIGHT_CONFIG } from '@/lib/configs/componentsConfig';
 
-interface CompactSplitViewProps {
+interface MobileLandscapeViewProps {
   groupPhotos: GroupPhoto[];
   people: Person[];
 }
 
-export default function CompactSplitView({ groupPhotos, people }: CompactSplitViewProps) {
+export default function MobileLandscapeView({ groupPhotos, people }: MobileLandscapeViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [highlightedPersonId, setHighlightedPersonId] = useState<string | null>(null);
   const isTabletLandscape = useTabletLandscape();

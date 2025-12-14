@@ -1,7 +1,7 @@
 'use client';
 
 import { Person, GroupPhoto } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PersonImage from './PersonImage';
 
 interface PersonModalProps {
@@ -11,6 +11,11 @@ interface PersonModalProps {
 }
 
 export default function PersonModal({ person, groupPhotos, onClose }: PersonModalProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const startY = useRef(0);
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -26,14 +31,57 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     };
   }, [onClose]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Only enable swipe from the top handle area on mobile
+    const target = e.target as HTMLElement;
+    if (target.closest('.swipe-handle') || target.closest('.modal-header')) {
+      startY.current = e.touches[0].clientY;
+      setIsDragging(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY.current;
+    
+    // Only allow downward swipes
+    if (deltaY > 0) {
+      setDragY(deltaY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    // If dragged more than 100px, close the modal
+    if (dragY > 100) {
+      onClose();
+    } else {
+      // Snap back to original position
+      setDragY(0);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/85 backdrop-blur-lg animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl"
+        ref={modalRef}
+        className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl transition-transform"
+        style={{
+          transform: `translateY(${dragY}px)`,
+          opacity: dragY > 0 ? Math.max(0.5, 1 - dragY / 300) : 1
+        }}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Close button */}
         <button
@@ -46,10 +94,10 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
           </svg>
         </button>
 
-        {/* Swipe indicator for mobile */}
-        <div className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-600 rounded-full" />
+        {/* Swipe indicator for mobile - now functional */}
+        <div className="sm:hidden swipe-handle absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-600 rounded-full cursor-grab active:cursor-grabbing" />
 
-        <div className="flex flex-col gap-6 pt-4 sm:pt-0">
+        <div className="flex flex-col gap-6 pt-4 sm:pt-0 modal-header">
           {/* Photo and basic info */}
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Photo */}

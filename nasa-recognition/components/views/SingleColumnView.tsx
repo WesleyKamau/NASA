@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { GroupPhoto, Person } from '@/types';
-import MobilePhotoCarousel from './MobilePhotoCarousel';
-import PhotoCarousel from './PhotoCarousel';
+import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
+import PhotoCarousel from '@/components/PhotoCarousel';
 
 interface SingleColumnViewProps {
   groupPhotos: GroupPhoto[];
