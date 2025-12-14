@@ -82,6 +82,11 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
         <div 
           id="desktop-right-panel"
           className="w-1/2 flex-shrink-0 overflow-y-auto bg-slate-900/30 border-l border-slate-700/50"
+          style={{
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          } as React.CSSProperties}
         >
           <div className="p-8">
             {/* Header removed per request */}
