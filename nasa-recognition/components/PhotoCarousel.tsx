@@ -4,6 +4,7 @@ import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import CarouselNameTag from './CarouselNameTag';
 
 interface PhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -358,15 +359,12 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
                     />
                     
                     {/* Name tag - appears on highlight or hover */}
-                    <div 
-                      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full whitespace-nowrap transition-all duration-300 ${
-                        (isHighlighted || isHovered || isExternalHighlight) ? 'opacity-100' : 'opacity-0'
-                      }`}
-                    >
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-xl">
-                        {person.name}
-                      </div>
-                    </div>
+                    <CarouselNameTag
+                      person={person}
+                      isVisible={isHighlighted || isHovered || isExternalHighlight}
+                      location={location}
+                      onClick={() => handlePersonClick(person)}
+                    />
                   </button>
                 </div>
               );

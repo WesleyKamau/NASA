@@ -10,7 +10,7 @@
 - [ ] Fixing the transitions between faces
 - [ ] Add tests
 - [ ] Smaller center circle on iPad
-- [ ] Migrate the mobile labels to the desktop carousel
+- [x] Migrate the mobile labels to the desktop carousel
 - [ ] Improve loading animation and experience
 - [ ] Add some sort of scrolling callout, or some sort of guided tour after loading that shows the user how to use the app
 - [x] Highlighting someone's face (either by mouse hover on desktop or by selecting on the mobile carousel) will cause the corresponding tile to highlight as well, without scrolling or anything
