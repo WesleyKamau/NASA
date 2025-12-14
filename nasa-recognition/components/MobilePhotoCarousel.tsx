@@ -976,6 +976,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       person={person}
                       isVisible={isHighlighted || showWhenZoomed}
                       location={location}
+                      variant="mobile"
                       onClick={(e) => {
                         if (isTabletLandscape) {
                           // On iPad landscape: scroll to card, but only open modal on mouse clicks (not touch)
