@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import { preloadAll } from '@/lib/preload';
+import { useLoadingContext } from '@/components/LoadingWrapper';
 import DesktopSplitView from '@/components/DesktopSplitView';
 import CompactSplitView from '@/components/CompactSplitView';
 import SingleColumnView from '@/components/SingleColumnView';
@@ -33,16 +34,24 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [useSplitView, setUseSplitView] = useState(false);
   const [useCompactSplit, setUseCompactSplit] = useState(false);
   const hasPreloaded = useRef(false);
+  const loadingContext = useLoadingContext();
 
   // Preload all images and highlights on component mount
   useEffect(() => {
     if (!hasPreloaded.current) {
       hasPreloaded.current = true;
-      preloadAll(groupPhotos, people).catch(error => {
-        console.error('Failed to preload assets:', error);
-      });
+      preloadAll(groupPhotos, people)
+        .then(() => {
+          // Signal that assets are loaded
+          loadingContext?.setAssetsLoaded(true);
+        })
+        .catch(error => {
+          console.error('Failed to preload assets:', error);
+          // Even if preload fails, don't block the UI
+          loadingContext?.setAssetsLoaded(true);
+        });
     }
-  }, [groupPhotos, people]);
+  }, [groupPhotos, people, loadingContext]);
 
   useEffect(() => {
     const checkLayout = () => {

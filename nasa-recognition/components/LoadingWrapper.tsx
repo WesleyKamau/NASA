@@ -1,40 +1,56 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import LoadingScreen from './LoadingScreen';
 
 interface LoadingWrapperProps {
   children: React.ReactNode;
 }
 
+interface LoadingContextType {
+  setAssetsLoaded: (loaded: boolean) => void;
+}
+
+const LoadingContext = createContext<LoadingContextType | null>(null);
+
+export function useLoadingContext() {
+  return useContext(LoadingContext);
+}
+
 export default function LoadingWrapper({ children }: LoadingWrapperProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
-    // Preload critical assets
-    const preloadAssets = async () => {
-      // Wait for fonts and initial render
+    // Wait for fonts to load
+    const loadFonts = async () => {
       if (document.fonts) {
         await document.fonts.ready;
       }
-      // Additional preload logic can go here
+      setFontsLoaded(true);
     };
 
-    preloadAssets();
+    loadFonts();
   }, []);
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
-    // Slight delay before showing content for smooth transition
     setTimeout(() => {
       setShowContent(true);
     }, 100);
   };
 
   return (
-    <>
-      {isLoading && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
+    <LoadingContext.Provider value={{ setAssetsLoaded }}>
+      {isLoading && (
+        <LoadingScreen 
+          onLoadingComplete={handleLoadingComplete}
+          assetsLoaded={assetsLoaded}
+          fontsLoaded={fontsLoaded}
+        />
+      )}
       <div
         className={`transition-opacity duration-500 ${
           showContent ? 'opacity-100' : 'opacity-0'
@@ -42,6 +58,6 @@ export default function LoadingWrapper({ children }: LoadingWrapperProps) {
       >
         {children}
       </div>
-    </>
+    </LoadingContext.Provider>
   );
 }

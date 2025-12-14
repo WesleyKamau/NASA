@@ -5,42 +5,56 @@ import { LOADING_SCREEN_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface LoadingScreenProps {
   onLoadingComplete?: () => void;
+  assetsLoaded: boolean;
+  fontsLoaded: boolean;
 }
 
-export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
+export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLoaded }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [shouldHide, setShouldHide] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
+  // Ensure minimum display time for smooth UX
   useEffect(() => {
-    // Simulate loading progress with a smooth curve
-    const duration = 2000; // 2 seconds
-    const steps = 60;
-    const interval = duration / steps;
-    let currentStep = 0;
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, LOADING_SCREEN_CONFIG.MIN_LOADING_TIME_MS);
 
-    const timer = setInterval(() => {
-      currentStep++;
-      // Use easing function for smooth progress (ease-out cubic)
-      const rawProgress = currentStep / steps;
-      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
-      setProgress(Math.min(easedProgress * 100, 100));
+    return () => clearTimeout(timer);
+  }, []);
 
-      if (currentStep >= steps) {
-        clearInterval(timer);
-        setIsComplete(true);
-        // Start fade out
+  // Smooth progress animation that follows actual loading
+  useEffect(() => {
+    const targetProgress = fontsLoaded && assetsLoaded ? 100 : 
+                          fontsLoaded ? 60 : 
+                          assetsLoaded ? 70 : 30;
+
+    const animateProgress = () => {
+      setProgress(current => {
+        const diff = targetProgress - current;
+        if (Math.abs(diff) < 0.1) return targetProgress;
+        // Faster interpolation for more responsive feel
+        return current + diff * 0.2;
+      });
+    };
+
+    const interval = setInterval(animateProgress, 30);
+    return () => clearInterval(interval);
+  }, [fontsLoaded, assetsLoaded]);
+
+  // Complete when min time elapsed, all assets loaded, AND progress bar reached 100%
+  useEffect(() => {
+    if (minTimeElapsed && assetsLoaded && fontsLoaded && progress >= 100) {
+      setIsComplete(true);
+      setTimeout(() => {
+        setShouldHide(true);
         setTimeout(() => {
-          setShouldHide(true);
-          setTimeout(() => {
-            onLoadingComplete?.();
-          }, 600); // Wait for fade out animation
-        }, 400);
-      }
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [onLoadingComplete]);
+          onLoadingComplete?.();
+        }, 300);
+      }, 150);
+    }
+  }, [minTimeElapsed, assetsLoaded, fontsLoaded, progress, onLoadingComplete]);
 
   if (shouldHide) {
     return null;
@@ -48,7 +62,7 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-700 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-400 ${
         isComplete ? 'opacity-0' : 'opacity-100'
       }`}
     >
