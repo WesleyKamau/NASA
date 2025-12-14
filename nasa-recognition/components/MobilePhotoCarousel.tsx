@@ -438,8 +438,27 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   const handlePhotoNavigation = (index: number) => {
     isAutoCycleRef.current = false; // User-initiated change, enable face transitions
+    // Briefly clear highlight before resuming
+    setIsAutoHighlighting(false);
+    setHighlightedPersonIndex(-1);
     setCurrentPhotoIndex(index);
     pauseAllAuto();
+
+    if (highlightCooldownTimer.current) {
+      clearTimeout(highlightCooldownTimer.current);
+    }
+    setIsAutoHighlighting(true);
+    setHighlightedPersonIndex(0);
+
+    // Resume auto photo cycling shortly after manual navigation
+    if (cooldownTimer.current) {
+      clearTimeout(cooldownTimer.current);
+    }
+    cooldownTimer.current = setTimeout(() => {
+      if (groupPhotos.length > 1) {
+        setIsAutoScrolling(true);
+      }
+    }, 500);
   };
 
   // Mobile touch handlers
