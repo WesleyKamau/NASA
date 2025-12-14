@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
+import CarouselNameTag from './CarouselNameTag';
 import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
@@ -971,99 +972,55 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                       }}
                     />
                     
-                    {/* Name tag: fluid placement that follows the face, clamped within photo bounds */}
-                    {(() => {
-                      const shouldRenderLabel = isHighlighted || showWhenZoomed;
-                      const faceCenterX = location.x + location.width / 2;
-                      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
-                      const scaleFactor = viewportWidth < 400 ? 1.3 : viewportWidth < 768 ? 1.1 : 0.7;
-                      const basePadding = viewportWidth < 400 ? 9 : viewportWidth < 768 ? 7 : 5;
-                      const estimatedLabelWidthPct = person.name.length * scaleFactor + basePadding;
-                      const halfLabelWidth = estimatedLabelWidthPct / 2;
-                      const edgeBuffer = viewportWidth < 768 ? 4 : 2;
-                      const leftOverflow = Math.max(0, (halfLabelWidth + edgeBuffer) - faceCenterX);
-                      const rightOverflow = Math.max(0, (faceCenterX + halfLabelWidth + edgeBuffer) - 100);
-                      let horizontalShift = 0;
-                      if (leftOverflow > 0) horizontalShift = leftOverflow;
-                      else if (rightOverflow > 0) horizontalShift = -rightOverflow;
-                      const shiftInFacePercent = (horizontalShift / location.width) * 100;
-
-                      return (
-                        <div
-                          className={`absolute z-20 transition-all duration-300 ease-out touch-none select-none ${shouldRenderLabel ? 'cursor-pointer pointer-events-auto active:scale-95' : 'pointer-events-none'}`}
-                          style={{ 
-                            top: '100%',
-                            left: `${50 + shiftInFacePercent}%`,
-                            marginTop: '8px',
-                            transform: 'translateX(-50%)',
-                          }}
-                          onClick={(e) => {
-                            // Only allow clicks if label is rendered (person is highlighted or shown when zoomed)
-                            if (!shouldRenderLabel) {
-                              return;
+                    <CarouselNameTag
+                      person={person}
+                      isVisible={isHighlighted || showWhenZoomed}
+                      location={location}
+                      variant="mobile"
+                      onClick={(e) => {
+                        if (isTabletLandscape) {
+                          // On iPad landscape: scroll to card, but only open modal on mouse clicks (not touch)
+                          const personCardId = `person-card-desktop-${person.id}`;
+                          const cardElement = document.getElementById(personCardId);
+                          if (cardElement) {
+                            const rightPanel = document.getElementById('desktop-right-panel');
+                            if (rightPanel) {
+                              const cardTop = cardElement.offsetTop;
+                              rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
                             }
-                            
-                            e.stopPropagation();
-                            
-                            if (isTabletLandscape) {
-                              // On iPad landscape: scroll to card, but only open modal on mouse clicks (not touch)
-                              const personCardId = `person-card-desktop-${person.id}`;
-                              const cardElement = document.getElementById(personCardId);
-                              if (cardElement) {
-                                const rightPanel = document.getElementById('desktop-right-panel');
-                                if (rightPanel) {
-                                  const cardTop = cardElement.offsetTop;
-                                  rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
-                                }
-                                cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                                setTimeout(() => {
-                                  cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                                }, 2000);
-                              }
-                              
-                              // Only open modal on mouse events, not touch
-                              const isMouseEvent = e.nativeEvent instanceof PointerEvent && e.nativeEvent.pointerType === 'mouse';
-                              if (onPersonClick && isMouseEvent) {
-                                setTimeout(() => {
-                                  onPersonClick(person);
-                                }, 1200);
-                              }
-                            } else {
-                              // Scroll to the person's card (mobile behavior)
-                              const personCardId = `person-card-mobile-${person.id}`;
-                              const cardElement = document.getElementById(personCardId);
-                              if (cardElement) {
-                                cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                                setTimeout(() => {
-                                  cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                                }, 2000);
-                              }
-                              
-                              if (onPersonClick) {
-                                setTimeout(() => {
-                                  onPersonClick(person);
-                                }, 1200);
-                              }
-                            }
-                          }}
-                        >
-                          <div
-                            className="bg-slate-900/95 backdrop-blur-sm border border-blue-500/50 rounded-lg px-3 py-1.5 shadow-xl shadow-blue-500/30 whitespace-nowrap transition-all duration-150 active:bg-slate-700/95 active:border-blue-400 animate-in fade-in slide-in-from-bottom-2 zoom-in-95"
-                            style={{
-                              opacity: shouldRenderLabel ? 1 : 0,
-                              visibility: shouldRenderLabel ? 'visible' : 'hidden',
-                              pointerEvents: shouldRenderLabel ? 'auto' : 'none',
-                              transform: shouldRenderLabel ? 'scale(1)' : 'scale(0.95)',
-                            }}
-                          >
-                            <p className="text-white font-semibold text-xs sm:text-sm md:text-lg">
-                              {person.name}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            setTimeout(() => {
+                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            }, 2000);
+                          }
+                          
+                          // Only open modal on mouse events, not touch
+                          const isMouseEvent = e.nativeEvent instanceof PointerEvent && e.nativeEvent.pointerType === 'mouse';
+                          if (onPersonClick && isMouseEvent) {
+                            setTimeout(() => {
+                              onPersonClick(person);
+                            }, 1200);
+                          }
+                        } else {
+                          // Scroll to the person's card (mobile behavior)
+                          const personCardId = `person-card-mobile-${person.id}`;
+                          const cardElement = document.getElementById(personCardId);
+                          if (cardElement) {
+                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            setTimeout(() => {
+                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            }, 2000);
+                          }
+                          
+                          if (onPersonClick) {
+                            setTimeout(() => {
+                              onPersonClick(person);
+                            }, 1200);
+                          }
+                        }
+                      }}
+                    />
                   </div>
                 );
               })}
