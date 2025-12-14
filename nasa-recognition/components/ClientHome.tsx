@@ -95,22 +95,24 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
           groupPhotos={groupPhotos}
           people={people}
         />
-        <p className="text-center text-slate-500 text-sm mt-4">
-          Hover or tap faces to interact
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-slate-400 text-sm font-light tracking-wider">
+            Hover or tap faces to interact
+          </p>
+        </div>
       </section>
 
-      <div className="text-center mb-12">
-        <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto px-4">
+      <div className="text-center mb-16">
+        <p className="text-lg sm:text-xl font-light leading-relaxed text-slate-200 max-w-3xl mx-auto px-4">
           One of the most impactful parts of my NASA internship was all of the people I got to meet. This lets you learn more about the people who made it special! :)
         </p>
       </div>
 
       {/* Decorative divider */}
-      <div className="flex items-center gap-4 my-12 sm:my-16">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-slate-600" />
-        <div className="text-slate-500 text-xl sm:text-2xl animate-spin-slow">✦</div>
-        <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-600 to-slate-600" />
+      <div className="flex items-center gap-6 my-16 sm:my-20 opacity-50">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="text-white/40 text-xl sm:text-2xl animate-spin-slow">✦</div>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </div>
 
       {/* People Section */}
@@ -128,9 +130,9 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       </section>
 
       {/* Footer */}
-      <footer className="text-center py-6 sm:py-8 border-t border-slate-800/50 mt-4">
-        <p className="text-slate-500 text-sm">
-          Made by <a className="underline hover:text-slate-300 transition" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
+      <footer className="text-center py-8 sm:py-12 border-t border-white/5 mt-8">
+        <p className="text-slate-500 text-sm font-light">
+          Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
         </p>
       </footer>
     </main>

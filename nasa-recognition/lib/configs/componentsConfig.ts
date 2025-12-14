@@ -63,6 +63,9 @@ export const GENERAL_COMPONENT_CONFIG = {
   // Transition timings
   SMOOTH_TRANSITION_DURATION_MS: 300,
   FADE_DURATION_MS: 220,
+  
+  // Modal interaction
+  MODAL_AUTO_OPEN_DELAY_MS: 600,        // Delay before auto-opening modal after face click
 } as const;
 
 // ============================================================================
