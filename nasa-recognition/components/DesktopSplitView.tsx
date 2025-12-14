@@ -93,14 +93,18 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
         {/* Right side - Scrollable content */}
         <div 
           id="desktop-right-panel"
-          className="flex-1 overflow-y-auto bg-black/40 backdrop-blur-md border-l border-white/10"
+          className="flex-1 overflow-y-auto border-l border-white/10 relative animate-none"
           style={{
             touchAction: 'pan-y',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain'
           } as React.CSSProperties}
         >
-          <div className="p-12">
+          <div 
+            className="absolute inset-0 bg-black/30 backdrop-blur-md pointer-events-none"
+            aria-hidden="true"
+          />
+          <div className="p-12 relative z-10">
             {/* Header removed per request */}
             <header className="text-center mb-16 pt-8">
               <p className="text-xl font-light leading-relaxed text-slate-200 max-w-2xl mx-auto">

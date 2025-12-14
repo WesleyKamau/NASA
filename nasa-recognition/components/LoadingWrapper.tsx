@@ -19,7 +19,7 @@ export function useLoadingContext() {
 
 export default function LoadingWrapper({ children }: LoadingWrapperProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [showContent, setShowContent] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
@@ -37,27 +37,28 @@ export default function LoadingWrapper({ children }: LoadingWrapperProps) {
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
+    // Fade-out overlay; keep children always rendered so backdrop blur is unaffected
     setTimeout(() => {
-      setShowContent(true);
-    }, 100);
+      setShowOverlay(false);
+    }, 500);
   };
 
   return (
     <LoadingContext.Provider value={{ setAssetsLoaded }}>
-      {isLoading && (
-        <LoadingScreen 
-          onLoadingComplete={handleLoadingComplete}
-          assetsLoaded={assetsLoaded}
-          fontsLoaded={fontsLoaded}
-        />
+      {showOverlay && (
+        <div
+          className={`fixed inset-0 z-50 transition-opacity duration-500 ${
+            isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <LoadingScreen 
+            onLoadingComplete={handleLoadingComplete}
+            assetsLoaded={assetsLoaded}
+            fontsLoaded={fontsLoaded}
+          />
+        </div>
       )}
-      <div
-        className={`transition-opacity duration-500 ${
-          showContent ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        {children}
-      </div>
+      {children}
     </LoadingContext.Provider>
   );
 }
