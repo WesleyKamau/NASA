@@ -34,15 +34,15 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
         rightPanel.scrollTo({ top: cardTop - 50, behavior: 'smooth' });
       }
       
-      // Highlight the card briefly (yellow for click, white for hover is from isHighlighted)
-      cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+      // Highlight the card briefly (white glow for modern look)
+      cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
       
       // Open modal after a short delay (only on desktop, not on touch devices like iPad)
       setTimeout(() => {
         if (!isTabletLandscape) {
           setSelectedPerson(person);
         }
-        cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+        cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
       }, 1200);
     }
   };
@@ -65,7 +65,7 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
         {/* Right side - Scrollable content */}
         <div 
           id="desktop-right-panel"
-          className="w-1/2 flex-shrink-0 overflow-y-auto bg-slate-900/30 border-l border-slate-700/50"
+          className="w-1/2 flex-shrink-0 overflow-y-auto bg-black/40 backdrop-blur-md border-l border-white/10"
           style={{
             touchAction: 'pan-y',
             webkitOverflowScrolling: 'touch',
@@ -87,9 +87,9 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
             </section>
 
             {/* Footer */}
-            <footer className="text-center py-4 sm:py-6 border-t border-slate-800/50 mt-4">
-              <p className="text-slate-500 text-xs sm:text-sm">
-                Made by <a className="underline hover:text-slate-300 transition" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
+            <footer className="text-center py-4 sm:py-6 border-t border-white/5 mt-4">
+              <p className="text-slate-500 text-xs sm:text-sm font-light">
+                Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
               </p>
             </footer>
           </div>
