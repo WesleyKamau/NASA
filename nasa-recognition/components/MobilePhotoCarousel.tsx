@@ -15,6 +15,7 @@ interface MobilePhotoCarouselProps {
   hideInstructions?: boolean;
   highlightedPersonId?: string | null;
   onHighlightedPersonChange?: (personId: string | null) => void;
+  isTablet?: boolean;
 }
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
@@ -24,7 +25,7 @@ const FACE_FADE_DELAY_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DELAY_MS;
 const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS;
 const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
 
-export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange }: MobilePhotoCarouselProps) {
+export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
   const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
@@ -571,6 +572,17 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       }
 
       // Always apply drag, even during zoom animation for smooth concurrent interaction
+      setPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+      // Update refs for instant feedback
+      positionRef.current = {
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      };
+    }
+  };
 
   useEffect(() => {
     touchMoveHandlerRef.current = handleTouchMove;
@@ -592,17 +604,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       element.removeEventListener('touchmove', listener);
     };
   }, []);
-      setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y
-      });
-      // Update refs for instant feedback
-      positionRef.current = {
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y
-      };
-    }
-  };
 
   const handleTouchEnd = () => {
     // Re-enable body scroll
@@ -659,7 +660,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           @supports not (aspect-ratio: 1) {
             .aspect-3-4-fallback {
               height: 0 !important;
-              padding-bottom: 75% !important;
+              padding-bottom: ${100 / CONTAINER_ASPECT_RATIO}% !important;
               position: relative !important;
             }
           }
@@ -670,9 +671,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" 
         style={{ 
           width: '100%', 
-          height: (isIPad || (isLandscape && isTouchMode)) ? '88vh' : undefined,
-          maxWidth: (isIPad || (isLandscape && isTouchMode)) ? undefined : '500px', 
-          aspectRatio: '3 / 4' 
+          height: (isIPad || isTablet || (isLandscape && isTouchMode)) ? '75vh' : undefined,
+          maxWidth: (isIPad || isTablet || (isLandscape && isTouchMode)) ? undefined : '500px', 
+          maxHeight: (isIPad || isTablet || (isLandscape && isTouchMode)) ? undefined : '75vh',
+          aspectRatio: CONTAINER_ASPECT_RATIO
         }}
       >
         <div

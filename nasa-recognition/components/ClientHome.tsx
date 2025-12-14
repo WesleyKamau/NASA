@@ -8,6 +8,7 @@ import DualColumnView from '@/components/views/DualColumnView';
 import MobileLandscapeView from '@/components/views/MobileLandscapeView';
 import SingleColumnView from '@/components/views/SingleColumnView';
 import MobilePortraitView from '@/components/views/MobilePortraitView';
+import TabletPortraitView from '@/components/views/TabletPortraitView';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -35,6 +36,7 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [useSplitView, setUseSplitView] = useState(false);
   const [useCompactSplit, setUseCompactSplit] = useState(false);
   const [useMobilePortrait, setUseMobilePortrait] = useState(false);
+  const [useTabletPortrait, setUseTabletPortrait] = useState(false);
   const hasPreloaded = useRef(false);
   const loadingContext = useLoadingContext();
 
@@ -61,9 +63,11 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const isXL = window.innerWidth >= 1280;
       const isPortraitPhone = !isLandscape && window.innerWidth < 768 && isTouchDevice;
+      const isTabletPortrait = !isLandscape && window.innerWidth >= 768 && window.innerWidth < 1280 && isTouchDevice;
       
       // Use MobilePortraitView for portrait phones
       setUseMobilePortrait(isPortraitPhone);
+      setUseTabletPortrait(isTabletPortrait);
       
       // Use split view on:
       // 1. XL screens (desktop) - use full DualColumnView
@@ -88,6 +92,15 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   if (useMobilePortrait) {
     return (
       <MobilePortraitView
+        groupPhotos={groupPhotos}
+        people={people}
+      />
+    );
+  }
+
+  if (useTabletPortrait) {
+    return (
+      <TabletPortraitView
         groupPhotos={groupPhotos}
         people={people}
       />
