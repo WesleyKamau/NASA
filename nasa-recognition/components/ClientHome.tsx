@@ -6,26 +6,10 @@ import { preloadAll } from '@/lib/preload';
 import { useLoadingContext } from '@/components/LoadingWrapper';
 import DualColumnView from '@/components/views/DualColumnView';
 import MobileLandscapeView from '@/components/views/MobileLandscapeView';
-import SingleColumnView from '@/components/views/SingleColumnView';
+import DesktopPortraitView from '@/components/views/DesktopPortraitView';
 import MobilePortraitView from '@/components/views/MobilePortraitView';
 import TabletPortraitView from '@/components/views/TabletPortraitView';
-import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
-
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div className="text-center mb-8 sm:mb-12">
-      <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
-        {title}
-      </h2>
-      <div className="h-1 w-20 sm:w-24 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mx-auto rounded-full" />
-      {subtitle && (
-        <p className="text-slate-400 mt-4 text-sm sm:text-base">
-          {subtitle}
-        </p>
-      )}
-    </div>
-  );
-}
+import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface ClientHomeProps {
   groupPhotos: GroupPhoto[];
@@ -61,9 +45,11 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
     const checkLayout = () => {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isXL = window.innerWidth >= 1280;
+      const hasHover = window.matchMedia('(hover: hover)').matches;
+      const isXL = window.innerWidth >= GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH;
       const isPortraitPhone = !isLandscape && window.innerWidth < 768 && isTouchDevice;
-      const isTabletPortrait = !isLandscape && window.innerWidth >= 768 && window.innerWidth < 1280 && isTouchDevice;
+      // Tablet portrait requires touch AND no hover (to exclude desktops with touch)
+      const isTabletPortrait = !isLandscape && window.innerWidth >= 768 && window.innerWidth < GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH && isTouchDevice && !hasHover;
       
       // Use MobilePortraitView for portrait phones
       setUseMobilePortrait(isPortraitPhone);
@@ -76,7 +62,7 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       setUseSplitView(shouldUseSplitView);
       
       // Determine if we should use compact version
-      setUseCompactSplit(window.innerWidth < 1280 && shouldUseSplitView);
+      setUseCompactSplit(window.innerWidth < GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH && shouldUseSplitView);
     };
 
     checkLayout();
@@ -125,53 +111,9 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   }
 
   return (
-    <main className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      {/* Photo Carousel Section */}
-      <section className="mb-12">
-        <SingleColumnView
-          groupPhotos={groupPhotos}
-          people={people}
-        />
-        <div className="mt-8 text-center">
-          <p className="text-slate-400 text-sm font-light tracking-wider">
-            Hover or tap faces to interact
-          </p>
-        </div>
-      </section>
-
-      <div className="text-center mb-16">
-        <p className="text-lg sm:text-xl font-light leading-relaxed text-slate-200 max-w-3xl mx-auto px-4">
-          One of the most impactful parts of my NASA internship was all of the people I got to meet. This lets you learn more about the people who made it special! :)
-        </p>
-      </div>
-
-      {/* Decorative divider */}
-      <div className="flex items-center gap-6 my-16 sm:my-20 opacity-50">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        <div className="text-white/40 text-xl sm:text-2xl animate-spin-slow">✦</div>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-      </div>
-
-      {/* People Section */}
-      <section className="mb-16 sm:mb-24">
-        <SectionHeader 
-          title="The People"
-          subtitle="Click on anyone to learn more about them"
-        />
-        
-        <OrganizedPersonGrid
-          people={people}
-          groupPhotos={groupPhotos}
-          idPrefix="mobile-"
-        />
-      </section>
-
-      {/* Footer */}
-      <footer className="text-center py-8 sm:py-12 border-t border-white/5 mt-8">
-        <p className="text-slate-500 text-sm font-light">
-          Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
-        </p>
-      </footer>
-    </main>
+    <DesktopPortraitView
+      groupPhotos={groupPhotos}
+      people={people}
+    />
   );
 }

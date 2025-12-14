@@ -55,6 +55,9 @@ export const OG_GENERATOR_CONFIG = {
 // ============================================================================
 
 export const GENERAL_COMPONENT_CONFIG = {
+  // Layout Breakpoints
+  DUAL_COLUMN_THRESHOLD_WIDTH: 850, // Width in px to switch to dual column view
+
   // Background configuration
   BACKGROUND_TYPE: 'starfield' as 'starfield' | 'galaxy', // Toggle between 'starfield' and 'galaxy'
   

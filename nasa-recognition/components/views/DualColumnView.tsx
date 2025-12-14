@@ -51,7 +51,7 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden relative z-40">
         {/* Left side - Photo Carousel (fixed) */}
         <div className="flex-shrink-0 h-full flex flex-col justify-center items-center p-8">
           <div 
@@ -81,9 +81,6 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
             </div>
             <div className="mt-8 text-center flex-shrink-0">
               <p className="text-slate-400 text-sm font-light tracking-wider">
-                Hover over faces to pause
-              </p>
-              <p className="text-slate-500 text-xs mt-2 font-light">
                 Click to view profiles
               </p>
             </div>
@@ -93,17 +90,13 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
         {/* Right side - Scrollable content */}
         <div 
           id="desktop-right-panel"
-          className="flex-1 overflow-y-auto border-l border-white/10 relative animate-none"
+          className="flex-1 overflow-y-auto border-l border-white/10 relative animate-none bg-black/30 backdrop-blur-md"
           style={{
             touchAction: 'pan-y',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain'
           } as React.CSSProperties}
         >
-          <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-md pointer-events-none"
-            aria-hidden="true"
-          />
           <div className="p-12 relative z-10">
             {/* Header removed per request */}
             <header className="text-center mb-16 pt-8">

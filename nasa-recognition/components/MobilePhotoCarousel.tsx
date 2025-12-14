@@ -380,6 +380,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Handle external highlighting from grid hover (for bidirectional highlighting)
   useEffect(() => {
+    // If we are in manual interaction mode (indicated by the center indicator being visible),
+    // we should ignore external highlight changes to prevent auto-cycle from resuming prematurely
+    // when panning to empty space (which sets highlightedPersonId to null).
+    if (showCenterIndicator) return;
+
     if (!highlightedPersonId || shuffledPeople.length === 0) {
       // External highlight cleared: immediately reset highlight and resume auto-highlighting
       // Clear any pending highlight cooldown timer to prevent unexpected state changes
