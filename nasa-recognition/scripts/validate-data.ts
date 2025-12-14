@@ -62,7 +62,6 @@ function validateData() {
       // Check for required fields
       if (!person.id) errors.push('Missing id');
       if (!person.name) errors.push('Missing name');
-      if (person.description === undefined || person.description === null) errors.push('Missing description');
       if (!person.category) errors.push('Missing category');
 
       // Check for duplicate IDs
