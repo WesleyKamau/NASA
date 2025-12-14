@@ -69,9 +69,11 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
                         ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                         : person.category === 'sil-lab'
                           ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                          : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                          : person.category === 'astronaut'
+                            ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                 }`}>
-                  {person.category === 'sil-lab' ? 'SIL Lab' : person.category}
+                  {person.category === 'sil-lab' ? 'SIL Lab' : person.category === 'astronaut' ? 'Astronaut' : person.category}
                 </span>
               </div>
 

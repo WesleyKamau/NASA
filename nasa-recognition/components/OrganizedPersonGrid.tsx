@@ -15,14 +15,15 @@ interface OrganizedPersonGridProps {
   onPersonHover?: (personId: string | null) => void;
 }
 
-const categoryOrder: Category[] = ['family', 'staff', 'sil-lab', 'interns'];
+const categoryOrder: Category[] = ['family', 'staff', 'sil-lab', 'interns', 'astronaut'];
 
 const categoryLabels: Record<Category, string> = {
   'family': 'Family & Special Guest',
   'girlfriend': 'Special Guest',
   'staff': 'Staff & Mentors',
   'sil-lab': 'SIL Lab',
-  'interns': 'Fellow Interns'
+  'interns': 'Fellow Interns',
+  'astronaut': 'Astronauts'
 };
 
 export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false, highlightedPersonId = null, onPersonHover }: OrganizedPersonGridProps) {
