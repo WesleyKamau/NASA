@@ -143,3 +143,17 @@ export const STARFIELD_CONFIG = {
   // Fade in
   FADE_DURATION_MS: 1000,          // Duration of initial fade-in
 } as const;
+
+// ============================================================================
+// Loading Screen Configuration
+// ============================================================================
+
+export const LOADING_SCREEN_CONFIG = {
+  // Background style toggles
+  SHOW_STARS: true,               // Set to true for the starry background
+  SHOW_GRID: false,                 // Set to true for the technical grid background
+  
+  // Animation settings
+  MIN_LOADING_TIME_MS: 2000,
+  FADE_OUT_MS: 1000,
+} as const;
