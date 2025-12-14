@@ -363,7 +363,8 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
                       person={person}
                       isVisible={isHighlighted || isHovered || isExternalHighlight}
                       location={location}
-                      onClick={() => handlePersonClick(person)}
+                      onClick={(e) => handlePersonClick(person)}
+                      variant="gradient"
                     />
                   </button>
                 </div>
