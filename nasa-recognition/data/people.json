@@ -1556,6 +1556,22 @@
       "category": "sil-lab",
       "individualPhoto": "/photos/individual/lakiesha-hawkins.jpg",
       "photoLocations": []
+    },
+    {
+      "id": "amartya-kallingal",
+      "name": "Amartya Kallingal",
+      "description": "",
+      "category": "interns",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "will-marks",
+      "name": "Will Marks",
+      "description": "",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
     }
   ],
   "groupPhotos": [
