@@ -899,17 +899,21 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                         }
                       } else {
                         // Scroll to the person's card (mobile behavior)
-                        const personCardId = `person-card-mobile-${person.id}`;
-                        const cardElement = document.getElementById(personCardId);
-                        if (cardElement) {
-                          scrollToCardTimeoutRef.current = setTimeout(() => {
-                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            scrollToCardTimeoutRef.current = undefined;
-                          }, 50);
-                          cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                          setTimeout(() => {
-                            cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                          }, 2000);
+                        if (onPersonClick) {
+                          onPersonClick(person);
+                        } else {
+                          const personCardId = `person-card-mobile-${person.id}`;
+                          const cardElement = document.getElementById(personCardId);
+                          if (cardElement) {
+                            scrollToCardTimeoutRef.current = setTimeout(() => {
+                              cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              scrollToCardTimeoutRef.current = undefined;
+                            }, 50);
+                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            setTimeout(() => {
+                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            }, 2000);
+                          }
                         }
                       }
                     }}

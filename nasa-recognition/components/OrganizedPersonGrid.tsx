@@ -53,7 +53,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
     }, { girlfriendPeople: [] as Person[], wesleyPeople: [] as Person[] });
     
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
-      let categoryPeople = visiblePeople.filter(p => p.category === category);
+      let categoryPeople = visiblePeople.filter(p => 
+        p.category === category && p.id !== 'wesley-kamau' && p.category !== 'girlfriend'
+      );
       
       // Merge girlfriend and Wesley into family
       if (category === 'family') {

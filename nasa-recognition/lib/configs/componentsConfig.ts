@@ -55,6 +55,16 @@ export const OG_GENERATOR_CONFIG = {
 // ============================================================================
 
 export const GENERAL_COMPONENT_CONFIG = {
+  // Background configuration
+  BACKGROUND_TYPE: 'starfield' as 'starfield' | 'galaxy', // Toggle between 'starfield' and 'galaxy'
+  
+  // Interaction delays
+  SCROLL_TO_CARD_DELAY_MS: 10, // Delay before scrolling to card after click
+
+  // Mobile View Blur Settings
+  INITIAL_BLUR_OPACITY: 1.0,    // Opacity of the blur layer at the top of the page
+  SCROLLED_BLUR_OPACITY: 0.80,   // Minimum opacity of the blur layer after scrolling
+
   // Auto-highlight settings for carousels
   AUTO_HIGHLIGHT_DELAY_MS: 100,
   AUTO_HIGHLIGHT_RESUME_MS: 400,

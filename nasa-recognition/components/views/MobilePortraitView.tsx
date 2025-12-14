@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import StarfieldBackground from '@/components/StarfieldBackground';
+import GalaxyBackground from '@/components/GalaxyBackground';
+import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobilePortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -17,6 +19,12 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [dismissedCallouts, setDismissedCallouts] = useState<Set<string>>(new Set());
+  const blurLayerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top on mount/reload
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Load dismissed callouts from localStorage
   useEffect(() => {
@@ -26,12 +34,26 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     }
   }, []);
 
-  // Hide scroll hint after user scrolls with fade transition
+  // Handle scroll effects (Blur fade and Scroll hint)
   useEffect(() => {
     let fadeTimeout: NodeJS.Timeout;
     
     const handleScroll = () => {
-      if (window.scrollY > 100 && showScrollHint) {
+      const scrollY = window.scrollY;
+
+      // Update blur opacity
+      if (blurLayerRef.current) {
+        const windowHeight = window.innerHeight;
+        // Fade out over the first viewport height, but keep some blur
+        const opacity = Math.max(
+          GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY,
+          GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - (scrollY / windowHeight)
+        );
+        blurLayerRef.current.style.opacity = opacity.toString();
+      }
+
+      // Handle scroll hint
+      if (scrollY > 100 && showScrollHint) {
         fadeTimeout = setTimeout(() => {
           setShowScrollHint(false);
         }, 300);
@@ -39,6 +61,9 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     };
 
     window.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (fadeTimeout) clearTimeout(fadeTimeout);
@@ -66,7 +91,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
         setTimeout(() => {
           cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
         }, 2000);
-      }, 50);
+      }, GENERAL_COMPONENT_CONFIG.SCROLL_TO_CARD_DELAY_MS);
     }
   };
 
@@ -74,22 +99,24 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     <>
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black z-0">
-        <StarfieldBackground />
+        {GENERAL_COMPONENT_CONFIG.BACKGROUND_TYPE === 'galaxy' ? (
+          <GalaxyBackground />
+        ) : (
+          <StarfieldBackground />
+        )}
       </div>
+
+      {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
+      <div 
+        ref={blurLayerRef}
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-0 transition-opacity duration-0"
+        style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
+      />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-10 min-h-screen">
         {/* Photo Carousel Section - Full viewport height */}
         <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
-          {/* Background Blur Layer with Fade Out Mask */}
-          <div 
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm pointer-events-none -z-10"
-            style={{
-              maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
-            }}
-          />
-          
           <div className="w-full max-w-2xl">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
@@ -126,30 +153,27 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
           {/* Scroll Hint - Smooth fade animation */}
           <div 
-            className={`absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-700 ${
-              showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+            className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-1000 ${
+              showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
             }`}
           >
-            <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 shadow-xl">
-              <p className="text-white text-sm font-light">
-                Scroll to see more
-              </p>
-            </div>
-            <div className="animate-bounce-slow">
-              <svg 
-                className="w-6 h-6 text-white/60" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
+            <div className="flex flex-col items-center gap-2">
+              <div className="px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
+                <p className="text-white/80 text-[10px] font-medium tracking-[0.2em] uppercase">
+                  Scroll to Explore
+                </p>
+              </div>
+              <div className="animate-bounce text-white/50">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Decorative Transition with blur */}
-        <div className="relative z-10 py-12 bg-gradient-to-b from-black/20 to-transparent">
+        <div className="relative z-10 py-12">
           <div className="flex items-center gap-6 px-4 opacity-50">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <div className="text-white/40 text-2xl animate-spin-slow">✦</div>
@@ -175,7 +199,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
             </h2>
             <div className="h-1 w-24 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mx-auto rounded-full opacity-80" />
             <p className="text-slate-400 mt-6 font-light tracking-wide">
-              Tap on faces or names to jump to profiles
+              Tap a card for more
             </p>
           </div>
 
