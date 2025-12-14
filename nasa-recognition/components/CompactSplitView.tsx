@@ -66,6 +66,11 @@ export default function CompactSplitView({ groupPhotos, people }: CompactSplitVi
         <div 
           id="desktop-right-panel"
           className="w-1/2 flex-shrink-0 overflow-y-auto bg-slate-900/30 border-l border-slate-700/50"
+          style={{
+            touchAction: 'pan-y',
+            webkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          } as React.CSSProperties}
         >
           <div className="p-2 sm:p-3">
             {/* People Section */}

@@ -4,7 +4,7 @@ import Galaxy from './Galaxy';
 
 export default function GalaxyBackground() {
   return (
-    <div className="fixed inset-0 z-0" aria-hidden>
+    <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden>
       <Galaxy
         focal={[0.5, 0.5]}
         rotation={[1.0, 0.0]}
