@@ -36,7 +36,7 @@ export default function DesktopSplitView({ groupPhotos, people }: DesktopSplitVi
         rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
       }
       
-      // Highlight the card briefly (yellow for click, white for hover is from isHighlighted)
+      // Briefly highlight the card with a white accent to indicate click (white highlight is used for both click and hover)
       cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
       
       // Open modal after a short delay (only on desktop, not on touch devices like iPad)
