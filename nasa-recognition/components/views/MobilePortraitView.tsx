@@ -6,6 +6,7 @@ import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
+import StarfieldBackground from '@/components/StarfieldBackground';
 
 interface MobilePortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -71,10 +72,24 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
   return (
     <>
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black z-0">
+        <StarfieldBackground />
+      </div>
+
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-10 min-h-screen">
         {/* Photo Carousel Section - Full viewport height */}
-        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6 bg-black/20 backdrop-blur-sm">
+        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
+          {/* Background Blur Layer with Fade Out Mask */}
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm pointer-events-none -z-10"
+            style={{
+              maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
+            }}
+          />
+          
           <div className="w-full max-w-2xl">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
