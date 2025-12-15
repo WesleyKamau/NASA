@@ -17,8 +17,8 @@ export function getPeopleDataWithDimensions(): PeopleData {
         const dimensions = sizeOf(imageBuffer);
         return {
           ...photo,
-          width: dimensions.width || photo.width || 1600,
-          height: dimensions.height || photo.height || 1200,
+          width: dimensions.width ?? photo.width ?? 1600,
+          height: dimensions.height ?? photo.height ?? 1200,
         };
       }
     } catch (error) {

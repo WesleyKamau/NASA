@@ -21,7 +21,6 @@ export default function TMinusCounter() {
   const [now, setNow] = useState(Date.now());
   const [justLaunched, setJustLaunched] = useState(false);
   const rafRef = useRef<number | null>(null);
-  const prevTimeRef = useRef(nextLaunchTs - Date.now());
 
   useEffect(() => {
     const tick = () => {
