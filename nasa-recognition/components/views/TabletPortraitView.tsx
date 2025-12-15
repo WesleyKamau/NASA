@@ -19,7 +19,6 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [dismissedCallouts, setDismissedCallouts] = useState<Set<string>>(new Set());
-  const blurLayerRef = useRef<HTMLDivElement>(null);
   
   // Use custom viewport height hook for proper iOS Safari handling
   const { isReady: viewportReady } = useViewportHeight();
@@ -41,7 +40,7 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
     }
   }, []);
 
-  // Handle scroll effects (Blur fade and Scroll hint)
+  // Handle scroll effects (Scroll hint only - blur is now CSS-only)
   useEffect(() => {
     let fadeTimeout: NodeJS.Timeout;
     let ticking = false;
@@ -50,17 +49,6 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const scrollY = window.scrollY;
-
-          // Update blur opacity
-          if (blurLayerRef.current) {
-            const windowHeight = window.innerHeight;
-            // Fade out over the first viewport height, but keep some blur
-            const opacity = Math.max(
-              GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY,
-              GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - (scrollY / windowHeight)
-            );
-            blurLayerRef.current.style.opacity = opacity.toString();
-          }
 
           // Handle scroll hint
           if (scrollY > 100 && showScrollHint) {
@@ -116,12 +104,8 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
 
   return (
     <>
-      {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
-      <div 
-        ref={blurLayerRef}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20 transition-opacity duration-0"
-        style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
-      />
+      {/* Static Blur Layer - CSS-only for better mobile performance */}
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-none z-20" />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-40 min-h-viewport touch-native">
