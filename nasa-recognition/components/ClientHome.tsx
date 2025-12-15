@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import type { JSX } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import { preloadAll } from '@/lib/preload';
 import { useLoadingContext } from '@/components/LoadingWrapper';
@@ -10,6 +11,8 @@ import DesktopPortraitView from '@/components/views/DesktopPortraitView';
 import MobilePortraitView from '@/components/views/MobilePortraitView';
 import TabletPortraitView from '@/components/views/TabletPortraitView';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import GalaxyBackground from '@/components/GalaxyBackground';
+import StarfieldBackground from '@/components/StarfieldBackground';
 
 interface ClientHomeProps {
   groupPhotos: GroupPhoto[];
@@ -49,7 +52,8 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       const isXL = window.innerWidth >= GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH;
       const isPortraitPhone = !isLandscape && window.innerWidth < 768 && isTouchDevice;
       // Tablet portrait requires touch AND no hover (to exclude desktops with touch)
-      const isTabletPortrait = !isLandscape && window.innerWidth >= 768 && window.innerWidth < GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH && isTouchDevice && !hasHover;
+      // iPad Pro portrait is 1024px, so we need to include that range
+      const isTabletPortrait = !isLandscape && window.innerWidth >= 768 && window.innerWidth <= 1024 && isTouchDevice && !hasHover;
       
       // Use MobilePortraitView for portrait phones
       setUseMobilePortrait(isPortraitPhone);
@@ -57,8 +61,8 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       
       // Use split view on:
       // 1. XL screens (desktop) - use full DualColumnView
-      // 2. Touch devices in landscape orientation - use MobileLandscapeView
-      const shouldUseSplitView = isXL || (isTouchDevice && isLandscape && !isPortraitPhone);
+      // 2. Touch devices in landscape orientation (that are not desktops) - use MobileLandscapeView
+      const shouldUseSplitView = isXL || (isTouchDevice && isLandscape && !isPortraitPhone && !hasHover);
       setUseSplitView(shouldUseSplitView);
       
       // Determine if we should use compact version
@@ -75,45 +79,55 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
     };
   }, []);
 
-  if (useMobilePortrait) {
-    return (
-      <MobilePortraitView
-        groupPhotos={groupPhotos}
-        people={people}
-      />
-    );
-  }
-
-  if (useTabletPortrait) {
-    return (
-      <TabletPortraitView
-        groupPhotos={groupPhotos}
-        people={people}
-      />
-    );
-  }
-
-  if (useSplitView) {
-    if (useCompactSplit) {
-      return (
-        <MobileLandscapeView
-          groupPhotos={groupPhotos}
-          people={people}
-        />
-      );
+  // Determine which view and background to use
+  const getActiveViewAndBackground = (): { view: JSX.Element; background: 'starfield' | 'galaxy' } => {
+    if (useMobilePortrait) {
+      return {
+        view: <MobilePortraitView groupPhotos={groupPhotos} people={people} />,
+        background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.MOBILE_PORTRAIT,
+      };
     }
-    return (
-      <DualColumnView
-        groupPhotos={groupPhotos}
-        people={people}
-      />
-    );
-  }
+
+    if (useTabletPortrait) {
+      return {
+        view: <TabletPortraitView groupPhotos={groupPhotos} people={people} />,
+        background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.TABLET_PORTRAIT,
+      };
+    }
+
+    if (useSplitView) {
+      if (useCompactSplit) {
+        return {
+          view: <MobileLandscapeView groupPhotos={groupPhotos} people={people} />,
+          background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.MOBILE_LANDSCAPE,
+        };
+      }
+      return {
+        view: <DualColumnView groupPhotos={groupPhotos} people={people} />,
+        background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.DUAL_COLUMN,
+      };
+    }
+
+    return {
+      view: <DesktopPortraitView groupPhotos={groupPhotos} people={people} />,
+      background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.DESKTOP_PORTRAIT,
+    };
+  };
+
+  const { view, background } = getActiveViewAndBackground();
 
   return (
-    <DesktopPortraitView
-      groupPhotos={groupPhotos}
-      people={people}
-    />
+    <>
+      {/* Background */}
+      <div className={`fixed inset-0 z-0 ${GENERAL_COMPONENT_CONFIG.BACKGROUND_GRADIENT ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-black' : ''}`}>
+        {background === 'galaxy' ? (
+          <GalaxyBackground />
+        ) : (
+          <StarfieldBackground />
+        )}
+      </div>
+      
+      {view}
+    </>
   );
 }

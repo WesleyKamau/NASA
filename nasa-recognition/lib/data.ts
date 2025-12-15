@@ -1,8 +1,12 @@
-import { PeopleData, Category } from '@/types';
+import { PeopleData, Category, GroupPhoto } from '@/types';
 import peopleData from '@/data/people.json';
 
 export function getPeopleData(): PeopleData {
-  return peopleData as PeopleData;
+  const data = peopleData as PeopleData;
+  
+  // In a server-side context, we could dynamically load dimensions
+  // For now, rely on dimensions from JSON which should be accurate
+  return data;
 }
 
 export function getPersonById(id: string) {

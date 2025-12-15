@@ -30,7 +30,7 @@ function calculateRocketRotation(
 export default function RocketConfigPage() {
   const [rocketSize, setRocketSize] = useState<number>(ROCKET_CONFIG.ROCKET_SIZE);
   const [rocketSpeed, setRocketSpeed] = useState<number>(ROCKET_CONFIG.ROCKET_SPEED);
-  const [launchInterval, setLaunchInterval] = useState<number>(ROCKET_CONFIG.LAUNCH_INTERVAL / 1000); // Convert to seconds
+  const [launchInterval, setLaunchInterval] = useState<number>(ROCKET_CONFIG.BASE_LAUNCH_INTERVAL_MS / 1000); // Convert to seconds
   const [vibrationIntensity, setVibrationIntensity] = useState<number>(ROCKET_CONFIG.VIBRATION_INTENSITY);
   const [engineGlowOffsetX, setEngineGlowOffsetX] = useState<number>(ROCKET_CONFIG.ENGINE_GLOW_OFFSET_X);
   const [engineGlowOffsetY, setEngineGlowOffsetY] = useState<number>(ROCKET_CONFIG.ENGINE_GLOW_OFFSET_Y);

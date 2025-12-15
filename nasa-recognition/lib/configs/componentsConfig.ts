@@ -56,9 +56,21 @@ export const OG_GENERATOR_CONFIG = {
 
 export const GENERAL_COMPONENT_CONFIG = {
   // Layout Breakpoints
-  DUAL_COLUMN_THRESHOLD_WIDTH: 850, // Width in px to switch to dual column view
+  DUAL_COLUMN_THRESHOLD_WIDTH: 1200, // Width in px to switch to dual column view
 
-  // Background configuration
+  // Background configuration by view type
+  BACKGROUND_BY_VIEW: {
+    DUAL_COLUMN: 'galaxy' as 'starfield' | 'galaxy',
+    DESKTOP_PORTRAIT: 'starfield' as 'starfield' | 'galaxy',
+    MOBILE_LANDSCAPE: 'starfield' as 'starfield' | 'galaxy',
+    MOBILE_PORTRAIT: 'starfield' as 'starfield' | 'galaxy',
+    TABLET_PORTRAIT: 'starfield' as 'starfield' | 'galaxy',
+  },
+  
+  // Background gradient overlay
+  BACKGROUND_GRADIENT: false, // Show gradient overlay on background
+  
+  // Legacy: Global background toggle (deprecated - use BACKGROUND_BY_VIEW instead)
   BACKGROUND_TYPE: 'starfield' as 'starfield' | 'galaxy', // Toggle between 'starfield' and 'galaxy'
   
   // Rocket Layer Configuration

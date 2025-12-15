@@ -98,15 +98,6 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
   return (
     <>
-      {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black z-0">
-        {GENERAL_COMPONENT_CONFIG.BACKGROUND_TYPE === 'galaxy' ? (
-          <GalaxyBackground />
-        ) : (
-          <StarfieldBackground />
-        )}
-      </div>
-
       {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
       <div 
         ref={blurLayerRef}

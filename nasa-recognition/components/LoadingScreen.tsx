@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { LOADING_SCREEN_CONFIG } from '@/lib/configs/componentsConfig';
+import { SITE_CONFIG } from '@/lib/configs/siteConfig';
 
 interface LoadingScreenProps {
   onLoadingComplete?: () => void;
@@ -78,7 +79,7 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
           {/* Typography */}
           <div className="text-center space-y-3">
             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              MSFC Book of Faces
+              {SITE_CONFIG.title}
             </h1>
             <p className="text-slate-400 text-xs font-medium tracking-[0.3em] uppercase">
               by Wesley Kamau

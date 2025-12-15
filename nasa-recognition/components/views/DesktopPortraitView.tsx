@@ -82,15 +82,6 @@ export default function DesktopPortraitView({ groupPhotos, people }: DesktopPort
 
   return (
     <>
-      {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black z-0">
-        {GENERAL_COMPONENT_CONFIG.BACKGROUND_TYPE === 'galaxy' ? (
-          <GalaxyBackground />
-        ) : (
-          <StarfieldBackground />
-        )}
-      </div>
-
       {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
       <div 
         ref={blurLayerRef}
@@ -100,19 +91,23 @@ export default function DesktopPortraitView({ groupPhotos, people }: DesktopPort
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-40 min-h-screen">
-        {/* Photo Carousel Section - Full viewport height */}
-        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
-          <div className="w-full max-w-[92vw]">
-            <PhotoCarousel
-              groupPhotos={groupPhotos}
-              people={people}
-              onPersonClick={handlePersonClick}
-            />
+        {/* Photo Carousel Section - Constrained height */}
+        <section className="relative h-screen flex flex-col items-center justify-center px-3 py-20">
+          <div className="w-full max-w-[92vw] max-h-[75vh]">
+            <div className="h-full flex items-center justify-center">
+              <div className="w-full h-full max-h-full overflow-hidden flex items-center justify-center">
+                <PhotoCarousel
+                  groupPhotos={groupPhotos}
+                  people={people}
+                  onPersonClick={handlePersonClick}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Scroll Hint - Smooth fade animation */}
           <div 
-            className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-1000 ${
+            className={`absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-1000 ${
               showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
             }`}
           >
