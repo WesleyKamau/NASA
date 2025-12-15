@@ -44,30 +44,38 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
   // Handle scroll effects (Blur fade and Scroll hint)
   useEffect(() => {
     let fadeTimeout: NodeJS.Timeout;
+    let ticking = false;
     
     const handleScroll = () => {
-      const scrollY = window.scrollY;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
 
-      // Update blur opacity
-      if (blurLayerRef.current) {
-        const windowHeight = window.innerHeight;
-        // Fade out over the first viewport height, but keep some blur
-        const opacity = Math.max(
-          GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY,
-          GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - (scrollY / windowHeight)
-        );
-        blurLayerRef.current.style.opacity = opacity.toString();
-      }
+          // Update blur opacity
+          if (blurLayerRef.current) {
+            const windowHeight = window.innerHeight;
+            // Fade out over the first viewport height, but keep some blur
+            const opacity = Math.max(
+              GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY,
+              GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - (scrollY / windowHeight)
+            );
+            blurLayerRef.current.style.opacity = opacity.toString();
+          }
 
-      // Handle scroll hint
-      if (scrollY > 100 && showScrollHint) {
-        fadeTimeout = setTimeout(() => {
-          setShowScrollHint(false);
-        }, 300);
+          // Handle scroll hint
+          if (scrollY > 100 && showScrollHint) {
+            fadeTimeout = setTimeout(() => {
+              setShowScrollHint(false);
+            }, 300);
+          }
+          
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     // Initial check
     handleScroll();
     
@@ -169,7 +177,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
         </div>
 
         {/* People Section with modern styling */}
-        <section className="relative z-10 px-4 pb-20">
+        <section className="relative z-10 px-4 pb-2">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-6 tracking-tight">
               The People

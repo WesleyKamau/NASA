@@ -12,32 +12,38 @@ export default function BackToTop({ containerId }: BackToTopProps) {
   const handleClick = () => {
     setIsLaunching(true);
     
+    // Short delay for animation start
     setTimeout(() => {
+      const scrollOptions: ScrollToOptions = { top: 0, behavior: 'smooth' };
+      
       if (containerId) {
         const container = document.getElementById(containerId);
-        container?.scrollTo({ top: 0, behavior: 'smooth' });
+        container?.scrollTo(scrollOptions);
       } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Try multiple scrolling methods for maximum compatibility
+        window.scrollTo(scrollOptions);
+        document.documentElement.scrollTo(scrollOptions);
+        document.body.scrollTo(scrollOptions);
       }
       
       // Reset state after scroll is likely done
       setTimeout(() => {
         setIsLaunching(false);
       }, 1500);
-    }, 800);
+    }, 600); // Reduced delay slightly for better responsiveness
   };
 
   return (
-    <div className="flex justify-center w-full my-16">
+    <div className="flex justify-center w-full my-16 relative z-50">
       <button
         onClick={handleClick}
         disabled={isLaunching}
         className={`
-          group relative px-8 py-3 rounded-full 
+          group relative px-8 py-3 rounded-full cursor-pointer
           bg-white/10 backdrop-blur-xl border border-white/20
           hover:border-white/40 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:bg-white/15
           transition-all duration-500 ease-out
-          overflow-hidden
+          overflow-hidden touch-manipulation
           ${isLaunching ? 'scale-110 border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.2)]' : ''}
         `}
       >

@@ -34,39 +34,27 @@ export function useViewportHeight() {
     updateViewportHeight();
     setIsReady(true);
 
-    // Listen to multiple events that can change viewport height
+    // Listen to events that change viewport height (not scroll - avoid performance issues)
     window.addEventListener('resize', updateViewportHeight);
     window.addEventListener('orientationchange', updateViewportHeight);
     
     // visualViewport API provides more accurate updates on mobile
+    // Only listen to resize, not scroll (scroll events can cause performance issues)
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateViewportHeight);
-      window.visualViewport.addEventListener('scroll', updateViewportHeight);
     }
 
     // Handle page show (for iOS Safari when returning to the page)
     window.addEventListener('pageshow', updateViewportHeight);
 
-    // Debounced scroll handler for address bar show/hide
-    let scrollTimeout: NodeJS.Timeout;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(updateViewportHeight, 100);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => {
       window.removeEventListener('resize', updateViewportHeight);
       window.removeEventListener('orientationchange', updateViewportHeight);
       window.removeEventListener('pageshow', updateViewportHeight);
-      window.removeEventListener('scroll', handleScroll);
       
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateViewportHeight);
-        window.visualViewport.removeEventListener('scroll', updateViewportHeight);
       }
-      
-      clearTimeout(scrollTimeout);
     };
   }, [updateViewportHeight]);
 
