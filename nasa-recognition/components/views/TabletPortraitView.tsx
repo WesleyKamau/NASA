@@ -8,6 +8,7 @@ import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
 
 interface TabletPortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -19,6 +20,9 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [dismissedCallouts, setDismissedCallouts] = useState<Set<string>>(new Set());
   const blurLayerRef = useRef<HTMLDivElement>(null);
+  
+  // Use custom viewport height hook for proper iOS Safari handling
+  const { isReady: viewportReady } = useViewportHeight();
 
   // Scroll to top on mount/reload
   useEffect(() => {
@@ -112,9 +116,30 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
       />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
-      <main className="relative z-40 min-h-screen">
-        {/* Photo Carousel Section - Full viewport height */}
-        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
+      <main className="relative z-40 min-h-viewport touch-native">
+        {/* Photo Carousel Section - Full viewport height with proper iOS Safari handling */}
+        <section className="relative min-h-viewport flex flex-col items-center justify-center px-3 safe-area-inset-top safe-area-inset-bottom">
+          {/* Pinch to zoom callout - Positioned at top to avoid competing with scroll hint */}
+          {!dismissedCallouts.has('zoom') && (
+            <div className="absolute top-4 left-3 right-3 z-50 safe-area-inset-top">
+              <div className="bg-black/70 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 shadow-xl max-w-md mx-auto">
+                <button
+                  onClick={() => dismissCallout('zoom')}
+                  className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white text-[10px] transition-all"
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+                <div className="flex items-center gap-2 pr-6">
+                  <div className="text-base flex-shrink-0">🔍</div>
+                  <p className="text-white/90 text-xs font-medium">
+                    Pinch to zoom &amp; explore faces
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="w-full max-w-[92vw]">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
@@ -122,48 +147,22 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
               onPersonClick={handlePersonClick}
               isTablet={true}
             />
-            
-            {/* Intuitive callout for pinch to zoom */}
-            {!dismissedCallouts.has('zoom') && (
-              <div className="mt-6 relative">
-                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-xl p-4 shadow-2xl">
-                  <button
-                    onClick={() => dismissCallout('zoom')}
-                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white text-xs transition-all"
-                    aria-label="Dismiss"
-                  >
-                    ✕
-                  </button>
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl flex-shrink-0">🔍</div>
-                    <div className="flex-1 pr-4">
-                      <p className="text-white text-sm font-medium mb-1">
-                        Pinch to Zoom
-                      </p>
-                      <p className="text-slate-400 text-xs">
-                        Use two fingers to zoom in and explore faces
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Scroll Hint - Smooth fade animation */}
+          {/* Scroll Hint - Now has dedicated space at bottom without competing */}
           <div 
-            className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-1000 ${
+            className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-all duration-1000 safe-area-inset-bottom ${
               showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
             }`}
           >
-            <div className="flex flex-col items-center gap-2">
-              <div className="px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
-                <p className="text-white/80 text-[10px] font-medium tracking-[0.2em] uppercase">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
+                <p className="text-white/80 text-[9px] font-medium tracking-[0.2em] uppercase">
                   Scroll to Explore
                 </p>
               </div>
               <div className="animate-bounce text-white/50">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>

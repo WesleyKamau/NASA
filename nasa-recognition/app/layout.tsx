@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LoadingWrapper from "@/components/LoadingWrapper";
@@ -32,6 +32,16 @@ export const metadata: Metadata = {
   },
 };
 
+// Viewport configuration for proper mobile handling (especially iOS Safari)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover', // Important for notched devices and Safari
+  themeColor: '#000000',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,10 +50,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Apple/iOS specific meta tags for native-like experience */}
         <meta name="apple-mobile-web-app-title" content="MSFC Faces" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased touch-native scroll-native no-overscroll`}
       >
         <LoadingWrapper>
           {children}
