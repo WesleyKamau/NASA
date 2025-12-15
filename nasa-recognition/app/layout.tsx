@@ -30,11 +30,6 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: "MSFC Book of Faces",
-    description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
-  },
 };
 
 export default function RootLayout({
