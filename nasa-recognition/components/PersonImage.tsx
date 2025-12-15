@@ -20,7 +20,18 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const [shouldLoad, setShouldLoad] = useState(priority); // Only load immediately if priority
   const containerRef = useRef<HTMLDivElement>(null);
   const [isQueued, setIsQueued] = useState(false);
+  const onLoadDoneRef = useRef<(() => void) | null>(null);
   
+  // Cleanup on unmount to prevent queue stalling
+  useEffect(() => {
+    return () => {
+      if (onLoadDoneRef.current) {
+        onLoadDoneRef.current();
+        onLoadDoneRef.current = null;
+      }
+    };
+  }, []);
+
   // Intersection Observer for lazy loading with queue
   useEffect(() => {
     if (priority || shouldLoad || isQueued) return; // Skip if already loading or queued
@@ -34,7 +45,8 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
           if (entry.isIntersecting) {
             // Add to queue instead of loading immediately
             setIsQueued(true);
-            imageLoadQueue.enqueue(() => {
+            imageLoadQueue.enqueue((done) => {
+              onLoadDoneRef.current = done;
               setShouldLoad(true);
             });
             observer.disconnect();
@@ -86,7 +98,19 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className={`object-cover ${className}`}
-          onError={() => setImageError(true)}
+          onError={() => {
+            setImageError(true);
+            if (onLoadDoneRef.current) {
+              onLoadDoneRef.current();
+              onLoadDoneRef.current = null;
+            }
+          }}
+          onLoad={() => {
+            if (onLoadDoneRef.current) {
+              onLoadDoneRef.current();
+              onLoadDoneRef.current = null;
+            }
+          }}
           priority={priority}
           loading={priority ? "eager" : "lazy"}
         />
@@ -122,7 +146,19 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
             maxWidth: 'none',
             maxHeight: 'none',
           }}
-          onError={() => setImageError(true)}
+          onError={() => {
+            setImageError(true);
+            if (onLoadDoneRef.current) {
+              onLoadDoneRef.current();
+              onLoadDoneRef.current = null;
+            }
+          }}
+          onLoad={() => {
+            if (onLoadDoneRef.current) {
+              onLoadDoneRef.current();
+              onLoadDoneRef.current = null;
+            }
+          }}
         />
       </div>
     );

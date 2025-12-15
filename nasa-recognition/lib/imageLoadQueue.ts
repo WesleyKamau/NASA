@@ -4,11 +4,11 @@
  */
 
 class ImageLoadQueue {
-  private queue: Array<() => void> = [];
+  private queue: Array<(done: () => void) => void> = [];
   private loading = 0;
   private readonly maxConcurrent = 3; // Only load 3 images at a time
 
-  enqueue(loadFn: () => void) {
+  enqueue(loadFn: (done: () => void) => void) {
     this.queue.push(loadFn);
     this.processQueue();
   }
@@ -18,12 +18,28 @@ class ImageLoadQueue {
       const loadFn = this.queue.shift();
       if (loadFn) {
         this.loading++;
-        loadFn();
-        // Assume image load completes, decrement counter after a delay
-        setTimeout(() => {
+        
+        let completed = false;
+        const done = () => {
+          if (completed) return;
+          completed = true;
           this.loading--;
           this.processQueue();
-        }, 100); // Short delay between batches
+        };
+
+        // Safety timeout: if image takes too long (e.g. 5s), move on to prevent stalling
+        setTimeout(() => {
+          if (!completed) {
+            done();
+          }
+        }, 5000);
+
+        try {
+          loadFn(done);
+        } catch (e) {
+          console.error('Error in image load queue', e);
+          done();
+        }
       }
     }
   }
