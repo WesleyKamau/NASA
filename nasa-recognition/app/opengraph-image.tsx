@@ -10,7 +10,7 @@ export const size = {
 export const contentType = 'image/png';
 
 export default async function Image() {
-  const filePath = path.join(process.cwd(), 'app', 'opengraph-image.png');
+  const filePath = path.join(process.cwd(), 'public', 'og-background.png');
   const imageBuffer = await fs.promises.readFile(filePath);
   const base64 = imageBuffer.toString('base64');
 
