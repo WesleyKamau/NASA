@@ -120,27 +120,6 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
       <main className="relative z-40 min-h-viewport touch-native">
         {/* Photo Carousel Section - Full viewport height with proper iOS Safari handling */}
         <section className="relative min-h-viewport flex flex-col items-center justify-center px-3 safe-area-inset-top safe-area-inset-bottom">
-          {/* Pinch to zoom callout - Positioned at top to avoid competing with scroll hint */}
-          {!dismissedCallouts.has('zoom') && (
-            <div className="absolute top-4 left-3 right-3 z-50 safe-area-inset-top">
-              <div className="bg-black/70 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 shadow-xl">
-                <button
-                  onClick={() => dismissCallout('zoom')}
-                  className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white text-[10px] transition-all"
-                  aria-label="Dismiss"
-                >
-                  ✕
-                </button>
-                <div className="flex items-center gap-2 pr-6">
-                  <div className="text-base flex-shrink-0">🔍</div>
-                  <p className="text-white/90 text-xs font-medium">
-                    Pinch to zoom &amp; explore faces
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="w-full max-w-2xl">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
