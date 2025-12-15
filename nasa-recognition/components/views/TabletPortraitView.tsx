@@ -6,8 +6,6 @@ import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
-import StarfieldBackground from '@/components/StarfieldBackground';
-import GalaxyBackground from '@/components/GalaxyBackground';
 import TMinusCounter from '@/components/TMinusCounter';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
@@ -29,9 +27,13 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
 
   // Load dismissed callouts from localStorage
   useEffect(() => {
-    const dismissed = localStorage.getItem('dismissedCallouts');
-    if (dismissed) {
-      setDismissedCallouts(new Set(JSON.parse(dismissed)));
+    try {
+      const dismissed = localStorage.getItem('dismissedCallouts');
+      if (dismissed) {
+        setDismissedCallouts(new Set(JSON.parse(dismissed)));
+      }
+    } catch (_e) {
+      // localStorage unavailable or malformed JSON; ignore and use default
     }
   }, []);
 
@@ -75,7 +77,11 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
     const newDismissed = new Set(dismissedCallouts);
     newDismissed.add(id);
     setDismissedCallouts(newDismissed);
-    localStorage.setItem('dismissedCallouts', JSON.stringify(Array.from(newDismissed)));
+    try {
+      localStorage.setItem('dismissedCallouts', JSON.stringify(Array.from(newDismissed)));
+    } catch (e) {
+      console.error('Failed to save dismissed callouts to localStorage:', e);
+    }
   };
 
   const handlePersonClick = (person: Person) => {

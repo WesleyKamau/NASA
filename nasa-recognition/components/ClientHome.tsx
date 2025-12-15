@@ -49,24 +49,36 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const hasHover = window.matchMedia('(hover: hover)').matches;
-      const isXL = window.innerWidth >= GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH;
-      const isPortraitPhone = !isLandscape && window.innerWidth < 768 && isTouchDevice;
-      // Tablet portrait requires touch AND no hover (to exclude desktops with touch)
-      // iPad Pro portrait is 1024px, so we need to include that range
-      const isTabletPortrait = !isLandscape && window.innerWidth >= 768 && window.innerWidth <= 1024 && isTouchDevice && !hasHover;
+      const width = window.innerWidth;
+      const isXL = width >= GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH;
       
-      // Use MobilePortraitView for portrait phones
+      // Determine device type in a hierarchical manner
+      // Priority order: mobile portrait → tablet portrait → landscape split view → desktop portrait → dual column
+      
+      // 1. Mobile portrait: narrow portrait touch devices
+      const isPortraitPhone = !isLandscape && width < 768 && isTouchDevice;
+      
+      // 2. Tablet portrait: medium-width portrait touch devices without hover (excludes touch-capable desktops)
+      // iPad Pro portrait is 1024px, so we include the 768-1024px range
+      const isTabletPortrait = !isLandscape && width >= 768 && width <= 1024 && isTouchDevice && !hasHover;
+      
+      // 3. Mobile landscape: touch devices in landscape (tablets/phones rotated)
+      // Must not be a desktop (no hover) and must be touch-enabled
+      const isMobileLandscape = isLandscape && isTouchDevice && !hasHover;
+      
+      // 4. Desktop split view (dual column): XL screens regardless of orientation
+      const isDesktopSplitView = isXL;
+      
+      // Set view states
       setUseMobilePortrait(isPortraitPhone);
       setUseTabletPortrait(isTabletPortrait);
       
-      // Use split view on:
-      // 1. XL screens (desktop) - use full DualColumnView
-      // 2. Touch devices in landscape orientation (that are not desktops) - use MobileLandscapeView
-      const shouldUseSplitView = isXL || (isTouchDevice && isLandscape && !isPortraitPhone && !hasHover);
+      // Use split view for: XL desktop screens OR mobile landscape
+      const shouldUseSplitView = isDesktopSplitView || isMobileLandscape;
       setUseSplitView(shouldUseSplitView);
       
-      // Determine if we should use compact version
-      setUseCompactSplit(window.innerWidth < GENERAL_COMPONENT_CONFIG.DUAL_COLUMN_THRESHOLD_WIDTH && shouldUseSplitView);
+      // Compact split is for mobile landscape (below XL threshold)
+      setUseCompactSplit(!isXL && shouldUseSplitView);
     };
 
     checkLayout();

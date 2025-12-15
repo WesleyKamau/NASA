@@ -56,7 +56,7 @@ export const OG_GENERATOR_CONFIG = {
 
 export const GENERAL_COMPONENT_CONFIG = {
   // Layout Breakpoints
-  DUAL_COLUMN_THRESHOLD_WIDTH: 1200, // Width in px to switch to dual column view
+  DUAL_COLUMN_THRESHOLD_WIDTH: 850, // Width in px to switch to dual column view
 
   // Background configuration by view type
   BACKGROUND_BY_VIEW: {

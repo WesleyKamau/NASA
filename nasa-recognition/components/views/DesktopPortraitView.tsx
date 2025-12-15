@@ -6,8 +6,6 @@ import PhotoCarousel from '@/components/PhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
-import StarfieldBackground from '@/components/StarfieldBackground';
-import GalaxyBackground from '@/components/GalaxyBackground';
 import TMinusCounter from '@/components/TMinusCounter';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 

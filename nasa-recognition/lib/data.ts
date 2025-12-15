@@ -1,4 +1,4 @@
-import { PeopleData, Category, GroupPhoto } from '@/types';
+import { PeopleData, Category } from '@/types';
 import peopleData from '@/data/people.json';
 
 export function getPeopleData(): PeopleData {

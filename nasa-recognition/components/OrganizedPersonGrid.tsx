@@ -54,6 +54,8 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
     }, { girlfriendPeople: [] as Person[], wesleyPeople: [] as Person[] });
     
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
+      // Note: 'girlfriend' people are only shown in the 'family' category (see below).
+      // We exclude 'wesley-kamau' here, as he is merged into 'family' as well.
       let categoryPeople = visiblePeople.filter(p => 
         p.category === category && p.id !== 'wesley-kamau' && p.category !== 'girlfriend'
       );
