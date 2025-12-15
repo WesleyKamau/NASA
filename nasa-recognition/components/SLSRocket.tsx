@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
+import { setNextLaunchTimestamp } from '@/lib/rocketSchedule';
 
 // Destructure config for easier access
 const {
   ENABLE_ROCKET,
   ROCKET_SIZE,
   ROCKET_SPEED,
-  LAUNCH_INTERVAL,
+  LAUNCH_INITIAL_DELAY_MS,
+  BASE_LAUNCH_INTERVAL_MS,
+  RANDOMIZE_LAUNCH_INTERVALS,
+  LAUNCH_INTERVAL_JITTER_PERCENT,
   VIBRATION_INTENSITY,
   ENGINE_GLOW_OFFSET_X,
   ENGINE_GLOW_OFFSET_Y,
@@ -54,6 +58,7 @@ export default function SLSRocket() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [position, setPosition] = useState<RocketPosition | null>(null);
   const [pageHeight, setPageHeight] = useState(0);
+  const launchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get total page height on mount and window resize
   useEffect(() => {
@@ -78,6 +83,16 @@ export default function SLSRocket() {
   useEffect(() => {
     if (!ENABLE_ROCKET || pageHeight === 0) return;
     
+    // Set initial countdown target immediately
+    setNextLaunchTimestamp(Date.now() + LAUNCH_INITIAL_DELAY_MS);
+
+    const computeInterval = () => {
+      if (!RANDOMIZE_LAUNCH_INTERVALS) return BASE_LAUNCH_INTERVAL_MS;
+      const variance = BASE_LAUNCH_INTERVAL_MS * LAUNCH_INTERVAL_JITTER_PERCENT;
+      const delta = (Math.random() * 2 * variance) - variance; // range [-variance, +variance]
+      return BASE_LAUNCH_INTERVAL_MS + delta;
+    };
+
     const scheduleLaunch = () => {
       console.log('🚀 SLS Rocket Launch Initiated');
       
@@ -121,6 +136,8 @@ export default function SLSRocket() {
       });
       
       setIsLaunching(true);
+      const nextInterval = computeInterval();
+      setNextLaunchTimestamp(Date.now() + nextInterval);
       console.log('✅ Rocket Launch Scheduled');
 
       // Reset after animation completes
@@ -128,17 +145,20 @@ export default function SLSRocket() {
         setIsLaunching(false);
         console.log('🏁 Rocket Animation Complete');
       }, (ROCKET_SPEED * 1000) + 500); // Add 500ms buffer to ensure it's off screen
+
+      // Schedule next launch with potential jitter
+      if (launchTimeoutRef.current) clearTimeout(launchTimeoutRef.current);
+      launchTimeoutRef.current = setTimeout(scheduleLaunch, nextInterval);
     };
 
-    // Initial launch after 5 seconds
-    const initialTimeout = setTimeout(scheduleLaunch, 5000);
-
-    // Subsequent launches
-    const interval = setInterval(scheduleLaunch, LAUNCH_INTERVAL);
+    // Initial launch after configured delay
+    const initialTimeout = setTimeout(() => {
+      scheduleLaunch();
+    }, LAUNCH_INITIAL_DELAY_MS);
 
     return () => {
       clearTimeout(initialTimeout);
-      clearInterval(interval);
+      if (launchTimeoutRef.current) clearTimeout(launchTimeoutRef.current);
     };
   }, [pageHeight]);
 

@@ -267,12 +267,22 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex items-center justify-center">
       {/* Photo viewer */}
-      <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+      <div 
+        className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm"
+        style={{
+          aspectRatio: `${currentPhoto.width} / ${currentPhoto.height}`,
+          maxHeight: '100%',
+          maxWidth: '100%',
+          width: 'auto',
+          height: 'auto'
+        }}
+      >
         <div 
           ref={containerRef}
-          className="relative w-full bg-slate-800/50"
+          className="relative w-full h-full bg-slate-800/50"
+          onMouseEnter={() => setIsMouseInside(true)}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => { 
             setIsMouseInside(false);
@@ -284,11 +294,11 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
           <Image
             src={currentPhoto.imagePath}
             alt={currentPhoto.name}
-            width={1600}
-            height={1000}
-            className="w-full h-auto object-contain"
+            width={currentPhoto.width}
+            height={currentPhoto.height}
+            className="w-full h-full object-cover"
             priority
-            sizes="100vw"
+            sizes="(max-width: 768px) 100vw, (max-height: 80vh) 100vh, 100vw"
           />
 
           {/* Interactive regions overlay */}
@@ -354,7 +364,9 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
                           ? 'ring-2 ring-white/80 shadow-[0_0_20px_rgba(255,255,255,0.4)] scale-105' 
                           : (isHovered || isExternalHighlight)
                             ? 'ring-2 ring-white/60 shadow-[0_0_15px_rgba(255,255,255,0.2)] scale-105'
-                            : 'ring-2 ring-white/0'
+                            : isMouseInside
+                              ? 'ring-1 ring-white/20 bg-white/5'
+                              : 'ring-2 ring-white/0'
                       }`}
                     />
                     

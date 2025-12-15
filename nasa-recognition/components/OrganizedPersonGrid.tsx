@@ -11,6 +11,7 @@ interface OrganizedPersonGridProps {
   onPersonClick?: (person: Person) => void;
   idPrefix?: string;
   uniformLayout?: boolean;
+  useTabletSizing?: boolean;
   highlightedPersonId?: string | null;
   onPersonHover?: (personId: string | null) => void;
 }
@@ -25,7 +26,7 @@ const categoryLabels: Record<Category, string> = {
   'interns': 'Fellow Interns'
 };
 
-export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false, highlightedPersonId = null, onPersonHover }: OrganizedPersonGridProps) {
+export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false, useTabletSizing = false, highlightedPersonId = null, onPersonHover }: OrganizedPersonGridProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   const handlePersonClick = (person: Person) => {
@@ -53,7 +54,11 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
     }, { girlfriendPeople: [] as Person[], wesleyPeople: [] as Person[] });
     
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
-      let categoryPeople = visiblePeople.filter(p => p.category === category);
+      // Note: 'girlfriend' people are only shown in the 'family' category (see below).
+      // We exclude 'wesley-kamau' here, as he is merged into 'family' as well.
+      let categoryPeople = visiblePeople.filter(p => 
+        p.category === category && p.id !== 'wesley-kamau' && p.category !== 'girlfriend'
+      );
       
       // Merge girlfriend and Wesley into family
       if (category === 'family') {
@@ -69,6 +74,11 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
       return acc;
     }, {} as Record<Category, Person[]>);
 
+    const gapClass = useTabletSizing ? "gap-3 sm:gap-4" : "gap-2 sm:gap-3";
+    const itemClass = useTabletSizing 
+      ? "w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.75rem)] md:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(25%-0.75rem)]"
+      : "w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)]";
+
     return (
       <>
         <div className="w-full space-y-4 sm:space-y-5">
@@ -81,9 +91,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                 <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center gradient-text">
                   {categoryLabels[category]}
                 </h3>
-                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                <div className={`flex flex-wrap justify-center ${gapClass}`}>
                   {categoryPeople.map((person) => (
-                    <div key={person.id} className="w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)]">
+                    <div key={person.id} className={itemClass}>
                       <PersonCard
                         person={person}
                         groupPhotos={groupPhotos}

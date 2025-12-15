@@ -55,6 +55,34 @@ export const OG_GENERATOR_CONFIG = {
 // ============================================================================
 
 export const GENERAL_COMPONENT_CONFIG = {
+  // Layout Breakpoints
+  DUAL_COLUMN_THRESHOLD_WIDTH: 850, // Width in px to switch to dual column view
+
+  // Background configuration by view type
+  BACKGROUND_BY_VIEW: {
+    DUAL_COLUMN: 'galaxy' as 'starfield' | 'galaxy',
+    DESKTOP_PORTRAIT: 'starfield' as 'starfield' | 'galaxy',
+    MOBILE_LANDSCAPE: 'starfield' as 'starfield' | 'galaxy',
+    MOBILE_PORTRAIT: 'starfield' as 'starfield' | 'galaxy',
+    TABLET_PORTRAIT: 'starfield' as 'starfield' | 'galaxy',
+  },
+  
+  // Background gradient overlay
+  BACKGROUND_GRADIENT: false, // Show gradient overlay on background
+  
+  // Legacy: Global background toggle (deprecated - use BACKGROUND_BY_VIEW instead)
+  BACKGROUND_TYPE: 'starfield' as 'starfield' | 'galaxy', // Toggle between 'starfield' and 'galaxy'
+  
+  // Rocket Layer Configuration
+  ROCKET_POSITION: 'behind_blur' as 'behind_blur' | 'on_top_of_blur',
+
+  // Interaction delays
+  SCROLL_TO_CARD_DELAY_MS: 10, // Delay before scrolling to card after click
+
+  // Mobile View Blur Settings
+  INITIAL_BLUR_OPACITY: 1.0,    // Opacity of the blur layer at the top of the page
+  SCROLLED_BLUR_OPACITY: 0.80,   // Minimum opacity of the blur layer after scrolling
+
   // Auto-highlight settings for carousels
   AUTO_HIGHLIGHT_DELAY_MS: 100,
   AUTO_HIGHLIGHT_RESUME_MS: 400,

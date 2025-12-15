@@ -1,7 +1,7 @@
 'use client';
 
 import { Person, GroupPhoto } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PersonImage from './PersonImage';
 
 interface PersonModalProps {
@@ -11,6 +11,14 @@ interface PersonModalProps {
 }
 
 export default function PersonModal({ person, groupPhotos, onClose }: PersonModalProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [velocity, setVelocity] = useState(0);
+  const startY = useRef(0);
+  const lastY = useRef(0);
+  const lastTime = useRef(0);
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -26,14 +34,83 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     };
   }, [onClose]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    startY.current = touch.clientY;
+    lastY.current = touch.clientY;
+    lastTime.current = Date.now();
+    setIsDragging(true);
+    setVelocity(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    const currentY = touch.clientY;
+    const deltaY = currentY - startY.current;
+    const timeDelta = Date.now() - lastTime.current;
+    
+    // Calculate velocity for momentum
+    if (timeDelta > 0) {
+      const currentVelocity = (currentY - lastY.current) / timeDelta;
+      setVelocity(currentVelocity);
+    }
+    
+    // Only allow downward swipes, with resistance at the top
+    if (deltaY > 0) {
+      // Add resistance curve
+      const resistance = Math.min(1, deltaY / 500);
+      setDragY(deltaY * (1 - resistance * 0.3));
+    } else {
+      // Light resistance when swiping up
+      setDragY(deltaY * 0.2);
+    }
+    
+    lastY.current = currentY;
+    lastTime.current = Date.now();
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    // Close if dragged more than 120px or has significant downward velocity
+    const shouldClose = dragY > 120 || (dragY > 50 && velocity > 0.5);
+    
+    if (shouldClose) {
+      // Animate out with momentum
+      const finalDragY = Math.max(dragY, 200);
+      setDragY(finalDragY);
+      setTimeout(() => {
+        onClose();
+      }, 150);
+    } else {
+      // Snap back with spring animation
+      setDragY(0);
+    }
+    
+    setVelocity(0);
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/85 backdrop-blur-lg animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div
+        ref={modalRef}
         className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl"
+        style={{
+          transform: `translateY(${dragY}px)`,
+          opacity: dragY > 0 ? Math.max(0.3, 1 - dragY / 400) : 1,
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out'
+        }}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Close button */}
         <button
@@ -46,10 +123,10 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
           </svg>
         </button>
 
-        {/* Swipe indicator for mobile */}
-        <div className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-600 rounded-full" />
+        {/* Swipe indicator for mobile - now functional */}
+        <div className="sm:hidden swipe-handle absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-500/50 rounded-full" />
 
-        <div className="flex flex-col gap-6 pt-4 sm:pt-0">
+        <div className="flex flex-col gap-6 pt-4 sm:pt-0 modal-header">
           {/* Photo and basic info */}
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Photo */}

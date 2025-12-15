@@ -15,6 +15,7 @@ interface MobilePhotoCarouselProps {
   hideInstructions?: boolean;
   highlightedPersonId?: string | null;
   onHighlightedPersonChange?: (personId: string | null) => void;
+  isTablet?: boolean;
 }
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
@@ -24,7 +25,7 @@ const FACE_FADE_DELAY_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DELAY_MS;
 const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS;
 const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
 
-export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange }: MobilePhotoCarouselProps) {
+export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
   const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
@@ -65,6 +66,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const pinchStartDistance = useRef(0);
   const pinchStartScale = useRef(1);
   const pinchStartCenter = useRef({ x: 0, y: 0 });
+  const touchMoveHandlerRef = useRef<(event: TouchEvent) => void>(() => {});
   const interactionLockTimer = useRef<NodeJS.Timeout | null>(null);
   
   const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -378,6 +380,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Handle external highlighting from grid hover (for bidirectional highlighting)
   useEffect(() => {
+    // If we are in manual interaction mode (indicated by the center indicator being visible),
+    // we should ignore external highlight changes to prevent auto-cycle from resuming prematurely
+    // when panning to empty space (which sets highlightedPersonId to null).
+    if (showCenterIndicator) return;
+
     if (!highlightedPersonId || shuffledPeople.length === 0) {
       // External highlight cleared: immediately reset highlight and resume auto-highlighting
       // Clear any pending highlight cooldown timer to prevent unexpected state changes
@@ -437,8 +444,27 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   const handlePhotoNavigation = (index: number) => {
     isAutoCycleRef.current = false; // User-initiated change, enable face transitions
+    // Briefly clear highlight before resuming
+    setIsAutoHighlighting(false);
+    setHighlightedPersonIndex(-1);
     setCurrentPhotoIndex(index);
     pauseAllAuto();
+
+    if (highlightCooldownTimer.current) {
+      clearTimeout(highlightCooldownTimer.current);
+    }
+    setIsAutoHighlighting(true);
+    setHighlightedPersonIndex(0);
+
+    // Resume auto photo cycling shortly after manual navigation
+    if (cooldownTimer.current) {
+      clearTimeout(cooldownTimer.current);
+    }
+    cooldownTimer.current = setTimeout(() => {
+      if (groupPhotos.length > 1) {
+        setIsAutoScrolling(true);
+      }
+    }, 500);
   };
 
   // Mobile touch handlers
@@ -503,10 +529,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    // Always prevent default and propagation to stop scrolling
-    e.preventDefault();
-    e.stopPropagation();
-
     if (interactionLocked && !isZooming) return;
 
     if (e.touches.length === 2) {
@@ -567,6 +589,27 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
   };
 
+  useEffect(() => {
+    touchMoveHandlerRef.current = handleTouchMove;
+  }, [handleTouchMove]);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const listener: EventListener = (event) => {
+      const touchEvent = event as unknown as TouchEvent;
+      touchEvent.preventDefault();
+      touchEvent.stopPropagation();
+      touchMoveHandlerRef.current(touchEvent);
+    };
+
+    element.addEventListener('touchmove', listener, { passive: false });
+    return () => {
+      element.removeEventListener('touchmove', listener);
+    };
+  }, []);
+
   const handleTouchEnd = () => {
     // Re-enable body scroll
     document.body.style.overflow = '';
@@ -622,7 +665,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           @supports not (aspect-ratio: 1) {
             .aspect-3-4-fallback {
               height: 0 !important;
-              padding-bottom: 75% !important;
+              padding-bottom: ${100 / CONTAINER_ASPECT_RATIO}% !important;
               position: relative !important;
             }
           }
@@ -633,16 +676,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" 
         style={{ 
           width: '100%', 
-          height: (isIPad || (isLandscape && isTouchMode)) ? '88vh' : undefined,
-          maxWidth: (isIPad || (isLandscape && isTouchMode)) ? undefined : '500px', 
-          aspectRatio: '3 / 4' 
+          height: (isIPad || isTablet || (isLandscape && isTouchMode)) ? '75vh' : undefined,
+          maxWidth: (isIPad || isTablet || (isLandscape && isTouchMode)) ? undefined : '500px', 
+          maxHeight: (isIPad || isTablet || (isLandscape && isTouchMode)) ? undefined : '75vh',
+          aspectRatio: CONTAINER_ASPECT_RATIO
         }}
       >
         <div
           ref={containerRef}
           className="relative w-full h-full bg-slate-800/50 overflow-hidden touch-none flex items-center justify-center"
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
           onClick={(e) => {
@@ -679,7 +722,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               style={{ imageRendering: 'auto' }}
               priority
               draggable={false}
-              onLoadingComplete={(img) => {
+              onLoad={(e) => {
+                const img = e.currentTarget;
                 setPhotoDimensions((prev) => {
                   if (prev[currentPhoto.id]) {
                     return prev;
@@ -721,19 +765,21 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               {/* Person image transition removed for this branch */}
               
               {/* Center indicator component */}
-              <CenterIndicator
-                show={showCenterIndicator}
-                position={position}
-                scale={scale}
-                currentPhoto={currentPhoto}
-                shuffledPeople={shuffledPeople}
-                isAutoHighlighting={isAutoHighlighting}
-                centerIndicatorForce={centerIndicatorForce}
-                convertPhotoToContainerCoords={convertPhotoToContainerCoords}
-                containerRef={containerRef}
-                FACE_HITBOX_PADDING={FACE_HITBOX_PADDING}
-                onHighlightedPersonChange={onHighlightedPersonChange}
-              />
+              {showCenterIndicator && (
+                <CenterIndicator
+                  show={showCenterIndicator}
+                  position={position}
+                  scale={scale}
+                  currentPhoto={currentPhoto}
+                  shuffledPeople={shuffledPeople}
+                  isAutoHighlighting={isAutoHighlighting}
+                  centerIndicatorForce={centerIndicatorForce}
+                  convertPhotoToContainerCoords={convertPhotoToContainerCoords}
+                  containerRef={containerRef}
+                  FACE_HITBOX_PADDING={FACE_HITBOX_PADDING}
+                  onHighlightedPersonChange={onHighlightedPersonChange}
+                />
+              )}
 
               {shuffledPeople.map((person, idx) => {
                 // Two-stage guard: wait for initial render frame AND current photo to load
@@ -897,17 +943,21 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                         }
                       } else {
                         // Scroll to the person's card (mobile behavior)
-                        const personCardId = `person-card-mobile-${person.id}`;
-                        const cardElement = document.getElementById(personCardId);
-                        if (cardElement) {
-                          scrollToCardTimeoutRef.current = setTimeout(() => {
-                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            scrollToCardTimeoutRef.current = undefined;
-                          }, 50);
-                          cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                          setTimeout(() => {
-                            cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                          }, 2000);
+                        if (onPersonClick) {
+                          onPersonClick(person);
+                        } else {
+                          const personCardId = `person-card-mobile-${person.id}`;
+                          const cardElement = document.getElementById(personCardId);
+                          if (cardElement) {
+                            scrollToCardTimeoutRef.current = setTimeout(() => {
+                              cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              scrollToCardTimeoutRef.current = undefined;
+                            }, 50);
+                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            setTimeout(() => {
+                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            }, 2000);
+                          }
                         }
                       }
                     }}
