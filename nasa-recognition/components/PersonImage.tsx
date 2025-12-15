@@ -4,6 +4,7 @@ import { Person, GroupPhoto } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { getPersonImage } from '@/lib/imageUtils';
+import { imageLoadQueue } from '@/lib/imageLoadQueue';
 
 interface PersonImageProps {
   person: Person;
@@ -18,10 +19,11 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const [imageError, setImageError] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(priority); // Only load immediately if priority
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isQueued, setIsQueued] = useState(false);
   
-  // Intersection Observer for lazy loading
+  // Intersection Observer for lazy loading with queue
   useEffect(() => {
-    if (priority || shouldLoad) return; // Skip if already loading
+    if (priority || shouldLoad || isQueued) return; // Skip if already loading or queued
     
     const element = containerRef.current;
     if (!element) return;
@@ -30,13 +32,17 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
       (entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            setShouldLoad(true);
+            // Add to queue instead of loading immediately
+            setIsQueued(true);
+            imageLoadQueue.enqueue(() => {
+              setShouldLoad(true);
+            });
             observer.disconnect();
           }
         });
       },
       {
-        rootMargin: '50px', // Start loading 50px before element enters viewport
+        rootMargin: '100px', // Increased margin for smoother loading
         threshold: 0.01
       }
     );
@@ -46,7 +52,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
     return () => {
       observer.disconnect();
     };
-  }, [priority, shouldLoad]);
+  }, [priority, shouldLoad, isQueued]);
   
   // Don't render anything unless explicitly shown
   if (!show) return null;
