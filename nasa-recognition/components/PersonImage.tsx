@@ -2,7 +2,7 @@
 
 import { Person, GroupPhoto } from '@/types';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getPersonImage } from '@/lib/imageUtils';
 
 interface PersonImageProps {
@@ -16,6 +16,37 @@ interface PersonImageProps {
 
 export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId, show = true }: PersonImageProps) {
   const [imageError, setImageError] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(priority); // Only load immediately if priority
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (priority || shouldLoad) return; // Skip if already loading
+    
+    const element = containerRef.current;
+    if (!element) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setShouldLoad(true);
+            observer.disconnect();
+          }
+        });
+      },
+      {
+        rootMargin: '50px', // Start loading 50px before element enters viewport
+        threshold: 0.01
+      }
+    );
+    
+    observer.observe(element);
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, [priority, shouldLoad]);
   
   // Don't render anything unless explicitly shown
   if (!show) return null;
@@ -28,17 +59,32 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   
   const imageInfo = getPersonImage(personWithForcedPhoto, groupPhotos, !!forcePhotoId);
 
+  // Show placeholder until image should load
+  if (!shouldLoad) {
+    return (
+      <div 
+        ref={containerRef}
+        className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 bg-slate-800/30 ${className}`}
+      >
+        {imageInfo.placeholder || person.name.charAt(0)}
+      </div>
+    );
+  }
+
   if (imageInfo.type === 'individual' && imageInfo.src && !imageError) {
     return (
-      <Image
-        src={imageInfo.src}
-        alt={person.name}
-        fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        className={`object-cover ${className}`}
-        onError={() => setImageError(true)}
-        priority={priority}
-      />
+      <div ref={containerRef} className="w-full h-full">
+        <Image
+          src={imageInfo.src}
+          alt={person.name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className={`object-cover ${className}`}
+          onError={() => setImageError(true)}
+          priority={priority}
+          loading={priority ? "eager" : "lazy"}
+        />
+      </div>
     );
   }
 
@@ -52,12 +98,13 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
     const cy = y + height / 2;
 
     return (
-      <div className="relative w-full h-full overflow-hidden">
+      <div ref={containerRef} className="relative w-full h-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src={imageInfo.src}
           alt={person.name}
           loading={priority ? "eager" : "lazy"}
+          decoding="async"
           style={{
             position: 'absolute',
             left: '50%',
@@ -69,13 +116,14 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
             maxWidth: 'none',
             maxHeight: 'none',
           }}
+          onError={() => setImageError(true)}
         />
       </div>
     );
   }
 
   return (
-    <div className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 ${className}`}>
+    <div ref={containerRef} className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 ${className}`}>
       {imageInfo.placeholder || person.name.charAt(0)}
     </div>
   );
