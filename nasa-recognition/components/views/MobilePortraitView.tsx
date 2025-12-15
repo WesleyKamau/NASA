@@ -117,10 +117,10 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
   return (
     <>
-      {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
+      {/* Static overlay - No blur for iOS performance */}
       <div 
         ref={blurLayerRef}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20 transition-opacity duration-0"
+        className="fixed inset-0 bg-black/30 pointer-events-none z-20 transition-opacity duration-0"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
       />
 
@@ -143,7 +143,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
             }`}
           >
             <div className="flex flex-col items-center gap-1.5">
-              <div className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
+              <div className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
                 <p className="text-white/80 text-[9px] font-medium tracking-[0.2em] uppercase">
                   Scroll to Explore
                 </p>
@@ -168,7 +168,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
         {/* Intro Text with dark blur card */}
         <div className="relative z-10 px-4 pb-16">
-          <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
+          <div className="bg-black/60 border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
             <p className="text-lg font-light leading-relaxed text-slate-200 text-center">
               One of the most impactful parts of my NASA internship was all of the people I got to meet. 
               This lets you learn more about the people who made it special! :)
@@ -201,7 +201,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
         <BackToTop />
 
         {/* Footer with blur */}
-        <footer className="relative z-10 bg-black/30 backdrop-blur-md border-t border-white/5">
+        <footer className="relative z-10 bg-black/70 border-t border-white/5">
           <div className="text-center py-6 px-4 space-y-2.5">
             <div className="flex items-center justify-center">
               <TMinusCounter />
