@@ -21,6 +21,11 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const containerRef = useRef<HTMLDivElement>(null);
   const [isQueued, setIsQueued] = useState(false);
   const onLoadDoneRef = useRef<(() => void) | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Generate stable ID for this image for queue deduplication
+  const imageId = `${person.id}-${forcePhotoId || 'default'}`;
   
   // Cleanup on unmount to prevent queue stalling
   useEffect(() => {
@@ -29,42 +34,80 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
         onLoadDoneRef.current();
         onLoadDoneRef.current = null;
       }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
     };
   }, []);
 
   // Intersection Observer for lazy loading with queue
   useEffect(() => {
-    if (priority || shouldLoad || isQueued) return; // Skip if already loading or queued
+    if (priority || shouldLoad || isQueued) {
+      // Clean up observer if we're already loading/loaded
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      return;
+    }
     
     const element = containerRef.current;
     if (!element) return;
     
+    // Create observer with reduced sensitivity to prevent rapid firing on fast scroll
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            // Add to queue instead of loading immediately
-            setIsQueued(true);
-            imageLoadQueue.enqueue((done) => {
-              onLoadDoneRef.current = done;
-              setShouldLoad(true);
-            });
-            observer.disconnect();
+            // Debounce to prevent rapid-fire triggers during fast scrolling
+            // This prevents 100+ simultaneous queue operations
+            if (debounceTimerRef.current) {
+              clearTimeout(debounceTimerRef.current);
+            }
+            
+            debounceTimerRef.current = setTimeout(() => {
+              // Double-check we haven't already queued/loaded
+              if (!isQueued && !shouldLoad) {
+                setIsQueued(true);
+                imageLoadQueue.enqueue(imageId, (done) => {
+                  onLoadDoneRef.current = done;
+                  setShouldLoad(true);
+                });
+              }
+              // Immediately disconnect after queuing to prevent duplicate triggers
+              if (observerRef.current) {
+                observerRef.current.disconnect();
+                observerRef.current = null;
+              }
+            }, 50); // 50ms debounce - balances responsiveness vs crash prevention
           }
         });
       },
       {
-        rootMargin: '100px', // Increased margin for smoother loading
-        threshold: 0.01
+        rootMargin: '50px', // Reduced from 100px - less aggressive prefetching
+        threshold: 0.1 // Increased from 0.01 - require more visibility before triggering
       }
     );
     
+    observerRef.current = observer;
     observer.observe(element);
     
     return () => {
-      observer.disconnect();
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
     };
-  }, [priority, shouldLoad, isQueued]);
+  }, [priority, shouldLoad, isQueued, imageId]);
   
   // Don't render anything unless explicitly shown
   if (!show) return null;

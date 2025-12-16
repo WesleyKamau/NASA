@@ -6,21 +6,42 @@
  * Must track all timers and provide cleanup to prevent accumulation.
  */
 
+interface QueueItem {
+  id: string;
+  loadFn: (done: () => void) => void;
+}
+
 class ImageLoadQueue {
-  private queue: Array<(done: () => void) => void> = [];
+  private queue: QueueItem[] = [];
   private loading = 0;
   private readonly maxConcurrent = 3; // Only load 3 images at a time
+  private readonly maxQueueSize = 50; // Prevent queue explosion on fast scroll
   private timeoutRefs: Set<ReturnType<typeof setTimeout>> = new Set();
+  private activeIds: Set<string> = new Set(); // Track images currently loading/queued
+  private processedIds: Set<string> = new Set(); // Track completed images
 
-  enqueue(loadFn: (done: () => void) => void) {
-    this.queue.push(loadFn);
+  enqueue(id: string, loadFn: (done: () => void) => void) {
+    // Deduplicate: skip if already processed, loading, or queued
+    if (this.processedIds.has(id) || this.activeIds.has(id)) {
+      return;
+    }
+
+    // Prevent queue explosion: if queue is full, skip this image
+    // It will be retried when it comes back into viewport
+    if (this.queue.length >= this.maxQueueSize) {
+      console.warn(`ImageLoadQueue: Queue full (${this.maxQueueSize}), skipping ${id}`);
+      return;
+    }
+
+    this.activeIds.add(id);
+    this.queue.push({ id, loadFn });
     this.processQueue();
   }
 
   private processQueue() {
     while (this.loading < this.maxConcurrent && this.queue.length > 0) {
-      const loadFn = this.queue.shift();
-      if (loadFn) {
+      const item = this.queue.shift();
+      if (item) {
         this.loading++;
         
         let completed = false;
@@ -28,6 +49,8 @@ class ImageLoadQueue {
           if (completed) return;
           completed = true;
           this.loading--;
+          this.activeIds.delete(item.id);
+          this.processedIds.add(item.id);
           this.processQueue();
         };
 
@@ -42,7 +65,7 @@ class ImageLoadQueue {
         this.timeoutRefs.add(timeoutId);
 
         try {
-          loadFn(done);
+          item.loadFn(done);
         } catch (e) {
           console.error('Error in image load queue', e);
           done();
@@ -63,6 +86,8 @@ class ImageLoadQueue {
     // Reset queue state
     this.queue = [];
     this.loading = 0;
+    this.activeIds.clear();
+    this.processedIds.clear();
   }
 }
 
