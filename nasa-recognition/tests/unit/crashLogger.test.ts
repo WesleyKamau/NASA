@@ -7,6 +7,7 @@ jest.mock('@/lib/configs/componentsConfig', () => ({
 describe('crashLogger', () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.spyOn(console, 'log').mockImplementation();
     // simple localStorage mock
     const store: Record<string, string> = {};
     Object.defineProperty(window, 'localStorage', {
@@ -21,6 +22,10 @@ describe('crashLogger', () => {
     (global as any).performance = { memory: { usedJSHeapSize: 10, totalJSHeapSize: 20, jsHeapSizeLimit: 100 } };
     // navigator mock
     Object.defineProperty(window, 'navigator', { value: { userAgent: 'jest' }, writable: true });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('logs entries and prunes to max size, can export and clear', () => {
