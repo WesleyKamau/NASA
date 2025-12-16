@@ -105,9 +105,9 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
       />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
-      <main className="relative z-40 min-h-viewport touch-native">
+      <main className="relative z-40 min-h-viewport touch-native safe-area-inset-top">
         {/* Photo Carousel Section - Full viewport height with proper iOS Safari handling */}
-        <section className="relative min-h-viewport flex flex-col items-center justify-center px-3 safe-area-inset-top safe-area-inset-bottom">
+        <section className="relative min-h-viewport flex flex-col items-center justify-center px-3">
           <div className="w-full max-w-[92vw]">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
