@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import LoadingWrapper from "@/components/LoadingWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,9 +59,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-native scroll-native no-overscroll`}
       >
-        <LoadingWrapper>
-          {children}
-        </LoadingWrapper>
+        {children}
       </body>
     </html>
   );

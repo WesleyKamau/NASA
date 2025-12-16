@@ -14,7 +14,7 @@ export const enum DebugFeature {
 }
 
 export const DEBUG_CONFIG: Record<DebugFeature, boolean> = {
-  [DebugFeature.ENABLE_DEBUG_MODE]: false,
+  [DebugFeature.ENABLE_DEBUG_MODE]: true,
   [DebugFeature.ENABLE_CRASH_LOGGER]: true,
   [DebugFeature.SHOW_DEBUG_HITBOXES]: false,
 };
@@ -25,6 +25,18 @@ export const isDebugEnabled = (feature: DebugFeature = DebugFeature.ENABLE_DEBUG
   if (feature === DebugFeature.ENABLE_DEBUG_MODE) return true;
   return DEBUG_CONFIG[feature];
 };
+
+// ============================================================================
+// Photo Carousel Auto-Cycle Configuration (shared by both Desktop and Mobile)
+// ============================================================================
+
+export const PHOTO_CAROUSEL_AUTO_CYCLE_CONFIG = {
+  // Auto-cycle timing configuration
+  PHOTO_CYCLE_DURATION_MS: 25000,          // Total time before changing to next photo (milliseconds)
+  MAX_PEOPLE_PER_PHOTO_CYCLE: 10,          // Maximum number of people to cycle through (acts as cap)
+  FIRST_LAST_HIGHLIGHT_PADDING_MS: 500,    // Extra time on first and last person's highlight
+  // HIGHLIGHT_INTERVAL_MS is auto-calculated: PHOTO_CYCLE_DURATION_MS / MAX_PEOPLE_PER_PHOTO_CYCLE
+} as const;
 
 // ============================================================================
 // Mobile Photo Carousel Configuration
@@ -43,6 +55,15 @@ export const MOBILE_PHOTO_CAROUSEL_CONFIG = {
   // Face highlighting configuration
   MAX_VISIBLE_LABELS: 1,
   FACE_HITBOX_PADDING: 10,                 // Percentage padding to expand face hitboxes
+  
+  // Pan gesture hint settings
+  ENABLE_PAN_GESTURE_HINT: true,           // Show swipe/pan animation hint if user doesn't interact
+  SHOW_PAN_GESTURE_TEXT: false,            // Whether to show the helper text below the animation
+  PAN_GESTURE_TEXT_CONTENT: "Swipe to look around", // The text to display if enabled
+  PAN_GESTURE_HINT_DELAY_MS: 9000,         // Delay before showing hint (9 seconds)
+  PAN_GESTURE_HINT_DURATION_MS: 6000,      // How long the animation plays
+  PAN_GESTURE_FADE_OUT_MS: 500,            // Fade-out duration when user starts panning
+  PAN_GESTURE_FADE_BUFFER_MS: 50,          // Buffer time after fade-out before cleanup
 } as const;
 
 // ============================================================================
