@@ -4,6 +4,7 @@ import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { getPeopleInPhoto, shuffleArray, startAutoCycle } from '@/lib/carouselUtils';
 import CarouselNameTag from './CarouselNameTag';
 
 interface PhotoCarouselProps {
@@ -33,6 +34,8 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const autoCycleResetTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const transitionDelayTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastHoveredPersonIdRef = useRef<string | null>(null);
 
@@ -40,52 +43,34 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
 
   // Get people in current photo and shuffle them
   useEffect(() => {
-    if (currentPhoto) {
-      const peopleInPhoto = people.filter(person =>
-        person.photoLocations.some(loc => loc.photoId === currentPhoto.id)
-      );
-      
-      // Fisher-Yates shuffle
-      const shuffled = [...peopleInPhoto];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      
-      setShuffledPeople(shuffled);
-      setHighlightedPersonIndex(0);
-    }
+    if (!currentPhoto) return;
+    const peopleInPhoto = getPeopleInPhoto(people, currentPhoto.id);
+    setShuffledPeople(shuffleArray(peopleInPhoto));
+    setHighlightedPersonIndex(0);
   }, [currentPhoto, people]);
 
-  // Auto-scroll photos
+  // Unified auto-cycle: highlights people, then scrolls to next photo when cycle completes
   useEffect(() => {
-    if (!isAutoScrolling || groupPhotos.length <= 1) return;
+    if (!currentPhoto) return;
+    const enabled = isAutoScrolling && isAutoHighlighting && shuffledPeople.length > 0;
+    const peopleCount = shuffledPeople.length;
 
-    photoScrollTimer.current = setInterval(() => {
-      setCurrentPhotoIndex(prev => (prev + 1) % groupPhotos.length);
-    }, 15000); // Change photo every 15 seconds
+    const cleanup = startAutoCycle({
+      enabled,
+      peopleInPhotoCount: peopleCount,
+      groupPhotosLength: groupPhotos.length,
+      setHighlightedPersonIndex,
+      setCurrentPhotoIndex,
+      timers: {
+        highlightTimer,
+        autoCycleResetTimer,
+        transitionDelayTimer,
+      },
+      currentHighlightIndex: highlightedPersonIndex,
+    });
 
-    return () => {
-      if (photoScrollTimer.current) {
-        clearInterval(photoScrollTimer.current);
-      }
-    };
-  }, [isAutoScrolling, groupPhotos.length]);
-
-  // Auto-highlight people
-  useEffect(() => {
-    if (!isAutoHighlighting || shuffledPeople.length === 0) return;
-
-    highlightTimer.current = setInterval(() => {
-      setHighlightedPersonIndex(prev => (prev + 1) % shuffledPeople.length);
-    }, 2500); // Highlight each person for 2.5 seconds
-
-    return () => {
-      if (highlightTimer.current) {
-        clearInterval(highlightTimer.current);
-      }
-    };
-  }, [isAutoHighlighting, shuffledPeople.length]);
+    return cleanup;
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex]);
 
   const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);
