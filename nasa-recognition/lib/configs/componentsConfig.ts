@@ -43,6 +43,14 @@ export const MOBILE_PHOTO_CAROUSEL_CONFIG = {
   // Face highlighting configuration
   MAX_VISIBLE_LABELS: 1,
   FACE_HITBOX_PADDING: 10,                 // Percentage padding to expand face hitboxes
+  
+  // Pan gesture hint settings
+  ENABLE_PAN_GESTURE_HINT: true,           // Show swipe/pan animation hint if user doesn't interact
+  SHOW_PAN_GESTURE_TEXT: false,            // Whether to show the helper text below the animation
+  PAN_GESTURE_TEXT_CONTENT: "Swipe to look around", // The text to display if enabled
+  PAN_GESTURE_HINT_DELAY_MS: 15000,        // Delay before showing hint (30 seconds)
+  PAN_GESTURE_HINT_DURATION_MS: 6000,      // How long the animation plays
+  PAN_GESTURE_FADE_OUT_MS: 550,           // Fade-out duration when user starts panning
 } as const;
 
 // ============================================================================

@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect }
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
+import PanGestureHint from './PanGestureHint';
 import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG, isDebugEnabled, DebugFeature } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
@@ -24,6 +25,7 @@ const ENABLE_FACE_TRANSITION = MOBILE_PHOTO_CAROUSEL_CONFIG.ENABLE_FACE_TRANSITI
 const FACE_FADE_DELAY_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DELAY_MS;
 const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS;
 const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
+const PAN_GESTURE_FADE_OUT_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.PAN_GESTURE_FADE_OUT_MS;
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
@@ -63,6 +65,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [autoZoomedOnPan, setAutoZoomedOnPan] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
   const [interactionLocked, setInteractionLocked] = useState(false);
+  const [hasPanned, setHasPanned] = useState(false); // Track if user has panned to hide gesture hint
+  const panHintFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const schedulePanHintDismiss = useCallback(() => {
+    if (hasPanned) return;
+    if (panHintFadeTimerRef.current) return;
+
+    panHintFadeTimerRef.current = setTimeout(() => {
+      setHasPanned(true);
+      panHintFadeTimerRef.current = null;
+    }, PAN_GESTURE_FADE_OUT_MS + 50); // small buffer beyond configured fade
+  }, [hasPanned]);
   const pinchStartDistance = useRef(0);
   const pinchStartScale = useRef(1);
   const pinchStartCenter = useRef({ x: 0, y: 0 });
@@ -205,6 +219,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       if (fadeTimerRef.current) {
         clearTimeout(fadeTimerRef.current);
         fadeTimerRef.current = null;
+      }
+      if (panHintFadeTimerRef.current) {
+        clearTimeout(panHintFadeTimerRef.current);
+        panHintFadeTimerRef.current = null;
       }
       if (endTimerRef.current) {
         clearTimeout(endTimerRef.current);
@@ -630,6 +648,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
       });
+      // Pan hint dismissal is handled by PanGestureHint's own touch listeners
       // Update refs for instant feedback
       positionRef.current = {
         x: e.touches[0].clientX - dragStart.x,
@@ -1267,6 +1286,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               </svg>
             </button>
           </>
+        )}
+
+        {/* Pan gesture hint - shows if user hasn't panned within configured delay */}
+        {isTouchMode && !hasPanned && (
+          <PanGestureHint onInteraction={schedulePanHintDismiss} />
         )}
       </div>
 
