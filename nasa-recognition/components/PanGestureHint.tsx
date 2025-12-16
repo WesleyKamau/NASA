@@ -7,10 +7,9 @@ import swipeGestureAnimation from './animations/finger_swipe_animation.json';
 
 interface PanGestureHintProps {
   onInteraction?: () => void; // Called when user interacts, to reset timer
-  isVisible?: boolean; // Override visibility (for external control)
 }
 
-export default function PanGestureHint({ onInteraction, isVisible: externalVisible }: PanGestureHintProps) {
+export default function PanGestureHint({ onInteraction }: PanGestureHintProps) {
   const [showHint, setShowHint] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
@@ -24,7 +23,8 @@ export default function PanGestureHint({ onInteraction, isVisible: externalVisib
     PAN_GESTURE_TEXT_CONTENT,
     PAN_GESTURE_HINT_DELAY_MS, 
     PAN_GESTURE_HINT_DURATION_MS,
-    PAN_GESTURE_FADE_OUT_MS
+    PAN_GESTURE_FADE_OUT_MS,
+    PAN_GESTURE_FADE_BUFFER_MS
   } = MOBILE_PHOTO_CAROUSEL_CONFIG;
 
   // Hide hint and reset timer
@@ -76,8 +76,8 @@ export default function PanGestureHint({ onInteraction, isVisible: externalVisib
     hideHint();
     setTimeout(() => {
       onInteraction?.();
-    }, PAN_GESTURE_FADE_OUT_MS + 50);
-  }, [hideHint, onInteraction, PAN_GESTURE_FADE_OUT_MS]);
+    }, PAN_GESTURE_FADE_OUT_MS + PAN_GESTURE_FADE_BUFFER_MS);
+  }, [hideHint, onInteraction, PAN_GESTURE_FADE_OUT_MS, PAN_GESTURE_FADE_BUFFER_MS]);
 
   // Start timer on mount
   useEffect(() => {
@@ -121,7 +121,15 @@ export default function PanGestureHint({ onInteraction, isVisible: externalVisib
       style={{ 
         transition: `opacity ${PAN_GESTURE_FADE_OUT_MS}ms ease-out`,
       }}
+      role="status"
+      aria-live="polite"
+      aria-label={isVisible ? "Pan gesture hint: Swipe to look around the photo" : ""}
     >
+      {/* Hidden text for screen readers */}
+      <span className="sr-only">
+        {isVisible && "Tip: You can swipe or drag to pan around the photo and explore different areas"}
+      </span>
+      
       <div className="relative flex flex-col items-center justify-center">
         {/* Semi-transparent backdrop for better visibility */}
         <div className="absolute inset-0 -m-6 bg-black/20 rounded-full blur-xl" />
