@@ -19,7 +19,6 @@ interface MobilePhotoCarouselProps {
   isTablet?: boolean;
 }
 
-import { getEffectivePeopleCount, getHighlightDuration, isLastPersonInCycle } from '@/lib/autoCycleUtils';
 import { getPeopleInPhoto, shuffleArray, startAutoCycle } from '@/lib/carouselUtils';
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
