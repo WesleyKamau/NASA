@@ -16,10 +16,19 @@ export const DEBUG_CONFIG = {
   SHOW_DEBUG_HITBOXES: false,              // Show visual hitboxes for faces in carousel
 } as const;
 
+// Typed debug feature constants for type-safe checks
+export const DebugFeature = {
+  CRASH_LOGGER: 'ENABLE_CRASH_LOGGER',
+  DEBUG_HITBOXES: 'SHOW_DEBUG_HITBOXES',
+} as const;
+
+type DebugFeatureKey = typeof DEBUG_CONFIG[keyof typeof DEBUG_CONFIG];
+type DebugFeatureName = keyof typeof DEBUG_CONFIG;
+
 // Helper to check if a debug feature is enabled (respects master toggle)
-export const isDebugEnabled = (feature?: keyof typeof DEBUG_CONFIG): boolean => {
+export const isDebugEnabled = (feature: DebugFeatureName = 'ENABLE_DEBUG_MODE'): boolean => {
   if (!DEBUG_CONFIG.ENABLE_DEBUG_MODE) return false;
-  if (!feature || feature === 'ENABLE_DEBUG_MODE') return true;
+  if (feature === 'ENABLE_DEBUG_MODE') return true;
   return DEBUG_CONFIG[feature] as boolean;
 };
 
