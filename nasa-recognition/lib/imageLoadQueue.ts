@@ -106,7 +106,7 @@ class ImageLoadQueue {
 // Cleanup on page unload
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
-    scrollManager.reset();
+    imageLoadQueue.reset();
   });
 }
 

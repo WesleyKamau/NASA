@@ -213,8 +213,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       
       // Cancel animation frame
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+        const frameId = animationFrameRef.current;
         animationFrameRef.current = 0;
+        cancelAnimationFrame(frameId);
       }
     };
   }, []);
@@ -541,11 +542,16 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       });
       // Cancel any existing RAF loop before starting a new one
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+        const frameId = animationFrameRef.current;
         animationFrameRef.current = 0;
+        cancelAnimationFrame(frameId);
       }
-      // Force a single update for center indicator (no loop - it's handled by state changes)
-      setCenterIndicatorForce(prev => prev + 1);
+      // Start RAF loop to continuously update center indicator during drag
+      const updateCenterIndicator = () => {
+        setCenterIndicatorForce(prev => prev + 1);
+        animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
+      };
+      animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
       
       if (scale === 1) {
         setAutoZoomedOnPan(false);

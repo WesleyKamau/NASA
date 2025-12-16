@@ -6,15 +6,15 @@ import { crashLogger } from '@/lib/crashLogger';
 export default function DebugPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
-  const [tapCount, setTapCount] = useState(0);
+  const tapCountRef = useRef(0);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handleTap = () => {
-      console.log('Tap detected, current count:', tapCount);
-      
-      const newCount = tapCount + 1;
-      setTapCount(newCount);
+      // Use ref to avoid stale closure
+      const newCount = tapCountRef.current + 1;
+      tapCountRef.current = newCount;
+      console.log('Tap detected, current count:', newCount);
       
       // Clear existing timeout
       if (tapTimeoutRef.current) {
@@ -31,24 +31,41 @@ export default function DebugPanel() {
           }
           return newState;
         });
-        setTapCount(0);
+        tapCountRef.current = 0;
       } else {
         // Reset tap count after 500ms if we didn't hit 3
         tapTimeoutRef.current = setTimeout(() => {
           console.log('Resetting tap count');
-          setTapCount(0);
+          tapCountRef.current = 0;
         }, 500);
+      }
+    };
+    
+    // Add keyboard shortcut for accessibility
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Shift+D or Cmd+Shift+D to toggle debug panel
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setIsOpen(prev => {
+          const newState = !prev;
+          if (newState) {
+            setLogs(crashLogger.getLogs());
+          }
+          return newState;
+        });
       }
     };
 
     window.addEventListener('click', handleTap);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('click', handleTap);
+      window.removeEventListener('keydown', handleKeyDown);
       if (tapTimeoutRef.current) {
         clearTimeout(tapTimeoutRef.current);
       }
     };
-  }, [tapCount]);
+  }, []);
 
   if (!isOpen) return null;
 

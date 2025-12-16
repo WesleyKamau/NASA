@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+// Reference counter for multiple hook instances
+let instanceCount = 0;
+
 /**
  * Custom hook to handle viewport height correctly on mobile devices,
  * particularly iOS Safari where the address bar affects the visible area.
@@ -30,6 +33,9 @@ export function useViewportHeight() {
   }, []);
 
   useEffect(() => {
+    // Increment instance count
+    instanceCount++;
+    
     // Initial update
     updateViewportHeight();
     setIsReady(true);
@@ -52,6 +58,9 @@ export function useViewportHeight() {
     window.addEventListener('pageshow', handler);
 
     return () => {
+      // Decrement instance count
+      instanceCount--;
+      
       window.removeEventListener('resize', handler);
       window.removeEventListener('orientationchange', handler);
       window.removeEventListener('pageshow', handler);
@@ -60,11 +69,13 @@ export function useViewportHeight() {
         window.visualViewport.removeEventListener('resize', handler);
       }
       
-      // Clean up CSS custom properties on unmount
-      document.documentElement.style.removeProperty('--vh');
-      document.documentElement.style.removeProperty('--viewport-height');
+      // Only clean up CSS custom properties if this is the last instance
+      if (instanceCount === 0) {
+        document.documentElement.style.removeProperty('--vh');
+        document.documentElement.style.removeProperty('--viewport-height');
+      }
     };
-  }, [updateViewportHeight]);
+  }, []);
 
   return {
     viewportHeight,
