@@ -15,9 +15,10 @@ interface PersonImageProps {
   priority?: boolean;
   forcePhotoId?: string; // Force using a specific photo instead of preferred
   show?: boolean; // Only render when true (default: true)
+  onImageLoad?: () => void; // Callback when image finishes loading
 }
 
-export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId, show = true }: PersonImageProps) {
+export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId, show = true, onImageLoad }: PersonImageProps) {
   const [imageError, setImageError] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(priority); // Only load immediately if priority
   const [isLoaded, setIsLoaded] = useState(false); // Track when image finishes loading for animation
@@ -57,6 +58,13 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
       }
     };
   }, []);
+
+  // Trigger onImageLoad if already loaded (for cases where image loaded before callback was attached or updated)
+  useEffect(() => {
+    if (isLoaded && onImageLoad) {
+      onImageLoad();
+    }
+  }, [isLoaded, onImageLoad]);
 
   // Try to queue image - called when in viewport and scroll stops
   const tryQueue = useCallback(() => {
@@ -218,6 +226,9 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
               if (onLoadDoneRef.current) {
                 onLoadDoneRef.current();
                 onLoadDoneRef.current = null;
+              }
+              if (onImageLoad) {
+                onImageLoad();
               }
             }}
             priority={priority}

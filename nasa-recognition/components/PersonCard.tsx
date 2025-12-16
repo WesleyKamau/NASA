@@ -12,9 +12,10 @@ interface PersonCardProps {
   isHighlighted?: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onImageLoad?: () => void;
 }
 
-export default function PersonCard({ person, groupPhotos, onClick, idPrefix = '', priority = false, isHighlighted = false, onMouseEnter, onMouseLeave }: PersonCardProps) {
+export default function PersonCard({ person, groupPhotos, onClick, idPrefix = '', priority = false, isHighlighted = false, onMouseEnter, onMouseLeave, onImageLoad }: PersonCardProps) {
   const isWesley = person.id === 'wesley-kamau';
   
   return (
@@ -39,6 +40,7 @@ export default function PersonCard({ person, groupPhotos, onClick, idPrefix = ''
           groupPhotos={groupPhotos} 
           className="text-3xl sm:text-4xl" 
           priority={priority}
+          onImageLoad={onImageLoad}
         />
         
         {/* Overlay for desktop hover - hidden on touch devices */}

@@ -19,6 +19,7 @@ interface TabletPortraitViewProps {
 export default function TabletPortraitView({ groupPhotos, people }: TabletPortraitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const [clickedPersonId, setClickedPersonId] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const lastScrollY = useRef(0);
@@ -85,13 +86,37 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
   }, [showScrollHint, updateOverlayOpacity]);
 
   const handlePersonClick = (person: Person) => {
-    // Scroll to the person's card without heavy DOM manipulation
+    // Track which person was clicked from carousel
+    setClickedPersonId(person.id);
+    
+    // Scroll to the person's card
     const personCardId = `person-card-tablet-portrait-${person.id}`;
     const cardElement = document.getElementById(personCardId);
     
     if (cardElement) {
-      // Use simpler scrollIntoView without additional effects
       cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Wait for the person's image to load before highlighting
+      // The onImageLoad callback from OrganizedPersonGrid will trigger the highlight
+    }
+  };
+
+  const handleImageLoad = (personId: string) => {
+    // Only highlight if this is the person that was clicked from the carousel
+    if (personId !== clickedPersonId) return;
+    
+    const personCardId = `person-card-tablet-portrait-${personId}`;
+    const cardElement = document.getElementById(personCardId);
+    
+    if (cardElement) {
+      // Highlight the card briefly (white glow for modern look)
+      cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+      
+      setTimeout(() => {
+        cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        // Clear the clicked person ID after highlighting
+        setClickedPersonId(null);
+      }, 2000);
     }
   };
 
@@ -174,8 +199,7 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
             groupPhotos={groupPhotos}
             onPersonClick={setSelectedPerson}
             idPrefix="tablet-portrait-"
-            uniformLayout={false}
-          />
+            uniformLayout={false}            onImageLoad={handleImageLoad}          />
         </section>
 
         {/* Back to Top Button */}

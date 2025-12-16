@@ -14,6 +14,7 @@ interface OrganizedPersonGridProps {
   useTabletSizing?: boolean;
   highlightedPersonId?: string | null;
   onPersonHover?: (personId: string | null) => void;
+  onImageLoad?: (personId: string) => void;
 }
 
 const categoryOrder: Category[] = ['family', 'staff', 'sil-lab', 'interns'];
@@ -26,7 +27,7 @@ const categoryLabels: Record<Category, string> = {
   'interns': 'Fellow Interns'
 };
 
-export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false, useTabletSizing = false, highlightedPersonId = null, onPersonHover }: OrganizedPersonGridProps) {
+export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick, idPrefix = '', uniformLayout = false, useTabletSizing = false, highlightedPersonId = null, onPersonHover, onImageLoad }: OrganizedPersonGridProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   const handlePersonClick = (person: Person) => {
@@ -103,6 +104,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                         isHighlighted={highlightedPersonId === person.id}
                         onMouseEnter={() => onPersonHover?.(person.id)}
                         onMouseLeave={() => onPersonHover?.(null)}
+                        onImageLoad={() => onImageLoad?.(person.id)}
                       />
                     </div>
                   ))}
@@ -169,6 +171,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                   isHighlighted={highlightedPersonId === wesley.id}
                   onMouseEnter={() => onPersonHover?.(wesley.id)}
                   onMouseLeave={() => onPersonHover?.(null)}
+                  onImageLoad={() => onImageLoad?.(wesley.id)}
                 />
               </div>
             </div>
@@ -208,6 +211,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                       isHighlighted={highlightedPersonId === person.id}
                       onMouseEnter={() => onPersonHover?.(person.id)}
                       onMouseLeave={() => onPersonHover?.(null)}
+                      onImageLoad={() => onImageLoad?.(person.id)}
                     />
                   </div>
                 ))}

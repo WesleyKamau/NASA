@@ -750,8 +750,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         >
           <div
             style={{
-              width: `${scale * 100}%`,
-              height: `${scale * 100}%`,
+              width: `${scale * 100.5}%`,
+              height: `${scale * 100.5}%`,
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
               transition: isPinching 
                 ? 'none' 
