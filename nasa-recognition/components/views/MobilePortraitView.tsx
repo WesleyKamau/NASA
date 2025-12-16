@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
@@ -8,6 +8,9 @@ import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
 import { useViewportHeight } from '@/hooks/useViewportHeight';
+import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { crashLogger } from '@/lib/crashLogger';
+import { isDebugEnabled } from '@/lib/configs/componentsConfig';
 
 interface MobilePortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -17,6 +20,9 @@ interface MobilePortraitViewProps {
 export default function MobilePortraitView({ groupPhotos, people }: MobilePortraitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastScrollY = useRef(0);
   
   // Use custom viewport height hook for proper iOS Safari handling
   useViewportHeight();
@@ -26,21 +32,58 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     window.scrollTo(0, 0);
   }, []);
 
-  // Handle scroll effects - Minimal processing for iOS stability
+  // Smooth overlay opacity transition on scroll - RAF throttled for performance
+  const updateOverlayOpacity = useCallback(() => {
+    if (!overlayRef.current) return;
+    
+    const scrollY = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    
+    // Calculate opacity based on scroll position (transition over 1 viewport height)
+    const scrollProgress = Math.min(scrollY / viewportHeight, 1);
+    const opacity = GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - 
+      (scrollProgress * (GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY));
+    
+    overlayRef.current.style.opacity = opacity.toString();
+    
+    // Debug logging for first transition and milestones
+    if (isDebugEnabled('ENABLE_CRASH_LOGGER')) {
+      if (scrollY === 0 || (scrollY > 0 && lastScrollY.current === 0)) {
+        crashLogger.log('scroll', `Overlay opacity transition started: ${opacity.toFixed(2)}`);
+      } else if (scrollProgress >= 1 && lastScrollY.current < viewportHeight) {
+        crashLogger.log('scroll', `Overlay opacity transition complete: ${opacity.toFixed(2)}`);
+      }
+    }
+    
+    lastScrollY.current = scrollY;
+    rafRef.current = null;
+  }, []);
+
   useEffect(() => {
-    // Only hide scroll hint, no other processing
     const handleScroll = () => {
+      // Hide scroll hint
       if (window.scrollY > 100 && showScrollHint) {
         setShowScrollHint(false);
+      }
+      
+      // Throttle overlay updates with RAF for smooth 60fps performance
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(updateOverlayOpacity);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     
+    // Initial opacity set
+    updateOverlayOpacity();
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [showScrollHint]);
+  }, [showScrollHint, updateOverlayOpacity]);
 
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card without heavy DOM manipulation
@@ -55,8 +98,12 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
   return (
     <>
-      {/* Static overlay - No dynamic updates for iOS stability */}
-      <div className="fixed inset-0 bg-black/30 pointer-events-none z-20" />
+      {/* Dynamic overlay - Smooth opacity transition on scroll (no backdrop-blur for performance) */}
+      <div 
+        ref={overlayRef}
+        className="fixed inset-0 bg-black/30 pointer-events-none z-20 transition-opacity duration-0"
+        style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
+      />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-40 min-h-viewport touch-native">
