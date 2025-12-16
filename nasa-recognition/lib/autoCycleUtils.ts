@@ -2,13 +2,13 @@
  * Auto-cycle utility functions for photo carousel highlighting
  */
 
-import { MOBILE_PHOTO_CAROUSEL_CONFIG } from './configs/componentsConfig';
+import { PHOTO_CAROUSEL_AUTO_CYCLE_CONFIG } from './configs/componentsConfig';
 
 const { 
   PHOTO_CYCLE_DURATION_MS, 
   MAX_PEOPLE_PER_PHOTO_CYCLE, 
   FIRST_LAST_HIGHLIGHT_PADDING_MS 
-} = MOBILE_PHOTO_CAROUSEL_CONFIG;
+} = PHOTO_CAROUSEL_AUTO_CYCLE_CONFIG;
 
 /**
  * Calculate the effective number of people to cycle through for a photo

@@ -8,6 +8,7 @@ import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
 import PanGestureHint from './PanGestureHint';
 import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG, isDebugEnabled, DebugFeature } from '@/lib/configs/componentsConfig';
+import { getPeopleInPhoto, shuffleArray, startAutoCycle } from '@/lib/carouselUtils';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -18,8 +19,6 @@ interface MobilePhotoCarouselProps {
   onHighlightedPersonChange?: (personId: string | null) => void;
   isTablet?: boolean;
 }
-
-import { getPeopleInPhoto, shuffleArray, startAutoCycle } from '@/lib/carouselUtils';
 
 // Container aspect ratio (width / height) - used for letterboxing calculations
 const CONTAINER_ASPECT_RATIO = MOBILE_PHOTO_CAROUSEL_CONFIG.CONTAINER_ASPECT_RATIO;
@@ -358,10 +357,11 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         autoCycleResetTimer,
         transitionDelayTimer,
       },
+      currentHighlightIndex: highlightedPersonIndex,
     });
 
     return cleanup;
-  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex, people]);
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length]);
 
   // Reset zoom/pan when auto-highlighting resumes
   useEffect(() => {
