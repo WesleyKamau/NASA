@@ -53,7 +53,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   useEffect(() => {
     if (!currentPhoto) return;
     const enabled = isAutoScrolling && isAutoHighlighting && shuffledPeople.length > 0;
-    const peopleCount = getPeopleInPhoto(people, currentPhoto.id).length;
+    const peopleCount = shuffledPeople.length;
 
     const cleanup = startAutoCycle({
       enabled,
