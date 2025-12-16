@@ -66,10 +66,11 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
         autoCycleResetTimer,
         transitionDelayTimer,
       },
+      currentHighlightIndex: highlightedPersonIndex,
     });
 
     return cleanup;
-  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhoto, people]);
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex]);
 
   const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);

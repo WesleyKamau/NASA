@@ -28,6 +28,7 @@ export interface StartAutoCycleParams {
   setHighlightedPersonIndex: (index: number) => void;
   setCurrentPhotoIndex: (updater: (prev: number) => number) => void;
   timers: AutoCycleTimers;
+  currentHighlightIndex?: number; // Optional: current highlight index to avoid resetting mid-cycle
 }
 
 // Starts the unified auto-highlight cycle and optional photo advance.
@@ -39,6 +40,7 @@ export const startAutoCycle = ({
   setHighlightedPersonIndex,
   setCurrentPhotoIndex,
   timers,
+  currentHighlightIndex = 0,
 }: StartAutoCycleParams): (() => void) => {
   // Early exit and no-op cleanup when disabled or nothing to cycle
   if (!enabled || peopleInPhotoCount === 0) {
@@ -50,8 +52,13 @@ export const startAutoCycle = ({
   }
 
   const effectivePeopleCount = getEffectivePeopleCount(peopleInPhotoCount);
-  let currentIndex = 0;
-  setHighlightedPersonIndex(0);
+  // Start from current index or 0 if starting fresh
+  let currentIndex = Math.min(currentHighlightIndex, effectivePeopleCount - 1);
+  
+  // Only reset to 0 if we're actually starting from the beginning
+  if (currentHighlightIndex === 0) {
+    setHighlightedPersonIndex(0);
+  }
 
   const scheduleNext = () => {
     const duration = getHighlightDuration(currentIndex, effectivePeopleCount);
