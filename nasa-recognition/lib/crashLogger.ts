@@ -21,6 +21,10 @@ interface CrashLog {
 class CrashLogger {
   private logs: CrashLog[] = [];
   private maxLogs = 50;
+  private memoryMonitoringInterval?: ReturnType<typeof setInterval>;
+  private errorHandler?: (event: ErrorEvent) => void;
+  private rejectionHandler?: (event: PromiseRejectionEvent) => void;
+  private unloadHandler?: () => void;
 
   constructor() {
     if (typeof window === 'undefined' || !isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER)) return;
@@ -29,22 +33,25 @@ class CrashLogger {
     this.loadLogs();
 
     // Capture unhandled errors
-    window.addEventListener('error', (event) => {
+    this.errorHandler = (event) => {
       this.log('error', `Error: ${event.message}`, event.error?.stack);
-    });
+    };
+    window.addEventListener('error', this.errorHandler);
 
     // Capture unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
+    this.rejectionHandler = (event) => {
       this.log('error', `Unhandled Promise: ${event.reason}`, event.reason?.stack);
-    });
+    };
+    window.addEventListener('unhandledrejection', this.rejectionHandler);
 
     // Log memory usage periodically
     this.startMemoryMonitoring();
 
     // Log before page unload (might catch crash info)
-    window.addEventListener('beforeunload', () => {
+    this.unloadHandler = () => {
       this.log('scroll', 'Page unload/refresh');
-    });
+    };
+    window.addEventListener('beforeunload', this.unloadHandler);
   }
 
   log(type: CrashLog['type'], message: string, stack?: string) {
@@ -94,16 +101,36 @@ class CrashLogger {
   }
 
   private saveLogs() {
-    try {
-      localStorage.setItem('crash-logs', JSON.stringify(this.logs));
-    } catch (e) {
-      console.error('Failed to save crash logs', e);
+    let retries = 0;
+    const maxRetries = this.logs.length; // Don't try more times than there are logs
+    while (retries <= maxRetries) {
+      try {
+        localStorage.setItem('crash-logs', JSON.stringify(this.logs));
+        break; // Success
+      } catch (e: any) {
+        // If quota exceeded, remove oldest log and retry
+        if (
+          e &&
+          (e.name === 'QuotaExceededError' ||
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+            (typeof e.code === 'number' && e.code === 22))
+        ) {
+          if (this.logs.length > 0) {
+            this.logs.shift(); // Remove oldest log
+            retries++;
+            continue;
+          }
+        }
+        // Other errors or no logs left: just log and exit
+        console.error('Failed to save crash logs', e);
+        break;
+      }
     }
   }
 
   private startMemoryMonitoring() {
     // Log memory every 5 seconds
-    setInterval(() => {
+    this.memoryMonitoringInterval = setInterval(() => {
       if ('memory' in performance) {
         const mem = (performance as any).memory;
         const usedMB = Math.round(mem.usedJSHeapSize / 1024 / 1024);
@@ -131,6 +158,27 @@ class CrashLogger {
     }
   }
 
+  cleanup() {
+    // Clear memory monitoring interval
+    if (this.memoryMonitoringInterval) {
+      clearInterval(this.memoryMonitoringInterval);
+      this.memoryMonitoringInterval = undefined;
+    }
+    
+    // Remove event listeners
+    if (typeof window !== 'undefined') {
+      if (this.errorHandler) {
+        window.removeEventListener('error', this.errorHandler);
+      }
+      if (this.rejectionHandler) {
+        window.removeEventListener('unhandledrejection', this.rejectionHandler);
+      }
+      if (this.unloadHandler) {
+        window.removeEventListener('beforeunload', this.unloadHandler);
+      }
+    }
+  }
+
   exportLogs(): string {
     return JSON.stringify(this.logs, null, 2);
   }
@@ -139,7 +187,11 @@ class CrashLogger {
 // Singleton instance
 export const crashLogger = new CrashLogger();
 
-// Expose to window for debugging
-if (typeof window !== 'undefined') {
+// Only expose in development and when debug is enabled
+if (
+  typeof window !== 'undefined' &&
+  isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER) &&
+  (typeof process === 'undefined' || !process.env || process.env.NODE_ENV !== 'production')
+) {
   (window as any).crashLogger = crashLogger;
 }

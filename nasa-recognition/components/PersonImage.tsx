@@ -28,13 +28,17 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInViewportRef = useRef(false); // Track if currently in viewport
   const scrollUnsubRef = useRef<(() => void) | null>(null);
+  const isMountedRef = useRef(true);
   
   // Generate stable ID for this image for queue deduplication
   const imageId = `${person.id}-${forcePhotoId || 'default'}`;
   
   // Cleanup on unmount to prevent queue stalling
   useEffect(() => {
+    isMountedRef.current = true;
+    
     return () => {
+      isMountedRef.current = false;
       if (onLoadDoneRef.current) {
         onLoadDoneRef.current();
         onLoadDoneRef.current = null;
@@ -127,7 +131,10 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
             }
             
             debounceTimerRef.current = setTimeout(() => {
-              tryQueue();
+              // Check if element is still in viewport when timeout fires
+              if (isInViewportRef.current) {
+                tryQueue();
+              }
             }, 150); // 150ms debounce
           }
         });
@@ -165,7 +172,9 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const imageInfo = getPersonImage(personWithForcedPhoto, groupPhotos, !!forcePhotoId);
 
   const renderContent = () => {
-    // Show placeholder until image should load
+    // Show placeholder until image should load and is loaded
+    const showPlaceholder = !shouldLoad || !isLoaded;
+    
     if (!shouldLoad) {
       return (
         <div 
@@ -178,31 +187,43 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
 
     if (imageInfo.type === 'individual' && imageInfo.src && !imageError) {
       return (
-        <Image
-          src={imageInfo.src}
-          alt={person.name}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
-          onError={() => {
-            crashLogger.log('error', `Image load error: ${person.name} (${imageInfo.src})`);
-            setImageError(true);
-            if (onLoadDoneRef.current) {
-              onLoadDoneRef.current();
-              onLoadDoneRef.current = null;
-            }
-          }}
-          onLoad={() => {
-            crashLogger.log('image', `Image loaded: ${person.name}`);
-            setIsLoaded(true);
-            if (onLoadDoneRef.current) {
-              onLoadDoneRef.current();
-              onLoadDoneRef.current = null;
-            }
-          }}
-          priority={priority}
-          loading={priority ? "eager" : "lazy"}
-        />
+        <>
+          {/* Keep placeholder visible until image loads for smooth transition */}
+          {showPlaceholder && (
+            <div 
+              className={`absolute inset-0 w-full h-full flex items-center justify-center font-bold text-blue-400/30 bg-slate-800/30 ${className}`}
+            >
+              {imageInfo.placeholder || person.name.charAt(0)}
+            </div>
+          )}
+          <Image
+            src={imageInfo.src}
+            alt={person.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
+            onError={() => {
+              if (!isMountedRef.current) return;
+              crashLogger.log('error', `Image load error: ${person.name} (${imageInfo.src})`);
+              setImageError(true);
+              if (onLoadDoneRef.current) {
+                onLoadDoneRef.current();
+                onLoadDoneRef.current = null;
+              }
+            }}
+            onLoad={() => {
+              if (!isMountedRef.current) return;
+              crashLogger.log('image', `Image loaded: ${person.name}`);
+              setIsLoaded(true);
+              if (onLoadDoneRef.current) {
+                onLoadDoneRef.current();
+                onLoadDoneRef.current = null;
+              }
+            }}
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
+          />
+        </>
       );
     }
 
@@ -237,6 +258,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
               maxHeight: 'none',
             }}
             onError={() => {
+              if (!isMountedRef.current) return;
               setImageError(true);
               if (onLoadDoneRef.current) {
                 onLoadDoneRef.current();
@@ -244,6 +266,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
               }
             }}
             onLoad={() => {
+              if (!isMountedRef.current) return;
               setIsLoaded(true);
               if (onLoadDoneRef.current) {
                 onLoadDoneRef.current();

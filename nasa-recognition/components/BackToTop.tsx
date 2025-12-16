@@ -20,10 +20,14 @@ export default function BackToTop({ containerId }: BackToTopProps) {
         const container = document.getElementById(containerId);
         container?.scrollTo(scrollOptions);
       } else {
-        // Try multiple scrolling methods for maximum compatibility
-        window.scrollTo(scrollOptions);
-        document.documentElement.scrollTo(scrollOptions);
-        document.body.scrollTo(scrollOptions);
+        // Only scroll if not already at the top
+        if (window.scrollY !== 0) {
+          window.scrollTo(scrollOptions);
+          // Fallback for rare cases where window.scrollTo doesn't work
+          if (window.scrollY !== 0 && document.documentElement) {
+            document.documentElement.scrollTo(scrollOptions);
+          }
+        }
       }
       
       // Reset state after scroll is likely done
