@@ -77,21 +77,20 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   
   const imageInfo = getPersonImage(personWithForcedPhoto, groupPhotos, !!forcePhotoId);
 
-  // Show placeholder until image should load
-  if (!shouldLoad) {
-    return (
-      <div 
-        ref={containerRef}
-        className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 bg-slate-800/30 ${className}`}
-      >
-        {imageInfo.placeholder || person.name.charAt(0)}
-      </div>
-    );
-  }
+  const renderContent = () => {
+    // Show placeholder until image should load
+    if (!shouldLoad) {
+      return (
+        <div 
+          className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 bg-slate-800/30 ${className}`}
+        >
+          {imageInfo.placeholder || person.name.charAt(0)}
+        </div>
+      );
+    }
 
-  if (imageInfo.type === 'individual' && imageInfo.src && !imageError) {
-    return (
-      <div ref={containerRef} className="w-full h-full">
+    if (imageInfo.type === 'individual' && imageInfo.src && !imageError) {
+      return (
         <Image
           src={imageInfo.src}
           alt={person.name}
@@ -114,59 +113,65 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
           priority={priority}
           loading={priority ? "eager" : "lazy"}
         />
-      </div>
-    );
-  }
+      );
+    }
 
-  if (imageInfo.type === 'cropped-group' && imageInfo.src && !imageError) {
-    const { x, y, width, height } = imageInfo.crop || { x: 0, y: 0, width: 100, height: 100 };
-    const rotation = imageInfo.rotation || 0;
-    
-    // Calculate center of crop relative to the image
-    // x, y, width, height are percentages of the image
-    const cx = x + width / 2;
-    const cy = y + height / 2;
+    if (imageInfo.type === 'cropped-group' && imageInfo.src && !imageError) {
+      const { x, y, width, height } = imageInfo.crop || { x: 0, y: 0, width: 100, height: 100 };
+      const rotation = imageInfo.rotation || 0;
+      
+      // Calculate center of crop relative to the image
+      // x, y, width, height are percentages of the image
+      const cx = x + width / 2;
+      const cy = y + height / 2;
+
+      return (
+        <div className="relative w-full h-full overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src={imageInfo.src}
+            alt={person.name}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: `${10000 / width}%`,
+              height: `${10000 / height}%`,
+              transformOrigin: `${cx}% ${cy}%`,
+              transform: `translate(-${cx}%, -${cy}%) rotate(${rotation}deg)`,
+              maxWidth: 'none',
+              maxHeight: 'none',
+            }}
+            onError={() => {
+              setImageError(true);
+              if (onLoadDoneRef.current) {
+                onLoadDoneRef.current();
+                onLoadDoneRef.current = null;
+              }
+            }}
+            onLoad={() => {
+              if (onLoadDoneRef.current) {
+                onLoadDoneRef.current();
+                onLoadDoneRef.current = null;
+              }
+            }}
+          />
+        </div>
+      );
+    }
 
     return (
-      <div ref={containerRef} className="relative w-full h-full overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-          src={imageInfo.src}
-          alt={person.name}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            width: `${10000 / width}%`,
-            height: `${10000 / height}%`,
-            transformOrigin: `${cx}% ${cy}%`,
-            transform: `translate(-${cx}%, -${cy}%) rotate(${rotation}deg)`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-          }}
-          onError={() => {
-            setImageError(true);
-            if (onLoadDoneRef.current) {
-              onLoadDoneRef.current();
-              onLoadDoneRef.current = null;
-            }
-          }}
-          onLoad={() => {
-            if (onLoadDoneRef.current) {
-              onLoadDoneRef.current();
-              onLoadDoneRef.current = null;
-            }
-          }}
-        />
+      <div className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 ${className}`}>
+        {imageInfo.placeholder || person.name.charAt(0)}
       </div>
     );
-  }
+  };
 
   return (
-    <div ref={containerRef} className={`w-full h-full flex items-center justify-center font-bold text-blue-400/30 ${className}`}>
-      {imageInfo.placeholder || person.name.charAt(0)}
+    <div ref={containerRef} className="w-full h-full relative">
+      {renderContent()}
     </div>
   );
 }
