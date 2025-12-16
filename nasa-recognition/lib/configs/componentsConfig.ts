@@ -27,6 +27,18 @@ export const isDebugEnabled = (feature: DebugFeature = DebugFeature.ENABLE_DEBUG
 };
 
 // ============================================================================
+// Photo Carousel Auto-Cycle Configuration (shared by both Desktop and Mobile)
+// ============================================================================
+
+export const PHOTO_CAROUSEL_AUTO_CYCLE_CONFIG = {
+  // Auto-cycle timing configuration
+  PHOTO_CYCLE_DURATION_MS: 25000,          // Total time before changing to next photo (milliseconds)
+  MAX_PEOPLE_PER_PHOTO_CYCLE: 10,          // Maximum number of people to cycle through (acts as cap)
+  FIRST_LAST_HIGHLIGHT_PADDING_MS: 500,    // Extra time on first and last person's highlight
+  // HIGHLIGHT_INTERVAL_MS is auto-calculated: PHOTO_CYCLE_DURATION_MS / MAX_PEOPLE_PER_PHOTO_CYCLE
+} as const;
+
+// ============================================================================
 // Mobile Photo Carousel Configuration
 // ============================================================================
 

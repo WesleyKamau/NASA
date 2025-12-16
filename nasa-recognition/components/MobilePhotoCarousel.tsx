@@ -8,6 +8,7 @@ import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
 import PanGestureHint from './PanGestureHint';
 import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG, isDebugEnabled, DebugFeature } from '@/lib/configs/componentsConfig';
+import { getPeopleInPhoto, shuffleArray, startAutoCycle } from '@/lib/carouselUtils';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -262,21 +263,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // Get people in current photo and shuffle them
   useEffect(() => {
-    if (currentPhoto) {
-      const peopleInPhoto = people.filter(person =>
-        person.photoLocations.some(loc => loc.photoId === currentPhoto.id)
-      );
-      
-      // Fisher-Yates shuffle
-      const shuffled = [...peopleInPhoto];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      
-      setShuffledPeople(shuffled);
-      setHighlightedPersonIndex(0);
-    }
+    if (!currentPhoto) return;
+    const peopleInPhoto = getPeopleInPhoto(people, currentPhoto.id);
+    setShuffledPeople(shuffleArray(peopleInPhoto));
+    setHighlightedPersonIndex(0);
   }, [currentPhoto, people]);
 
   // Reset zoom and overlay state when photo changes
@@ -343,67 +333,35 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     };
   }, [currentPhotoIndex]);
 
-  // Auto-scroll photos every 15 seconds
+  // Unified auto-cycle: highlights people, then scrolls to next photo when cycle completes
   useEffect(() => {
-    if (!isAutoScrolling || groupPhotos.length <= 1) return;
+    const current = groupPhotos[currentPhotoIndex];
+    if (!current) return;
 
-    photoScrollTimer.current = setInterval(() => {
-      // Smoothly fade out current highlight before transitioning
-      // Keep isAutoHighlighting true so non-highlighted faces stay hidden (no border flash)
-      setShowCenterIndicator(false);
-      setHighlightedPersonIndex(-1);
+    const enabled = isAutoScrolling && isAutoHighlighting && shuffledPeople.length > 0;
+    const peopleCount = shuffledPeople.length;
 
-      if (autoCycleResetTimer.current) {
-        clearTimeout(autoCycleResetTimer.current);
-      }
-      if (transitionDelayTimer.current) {
-        clearTimeout(transitionDelayTimer.current);
-      }
+    const cleanup = startAutoCycle({
+      enabled,
+      peopleInPhotoCount: peopleCount,
+      groupPhotosLength: groupPhotos.length,
+      setHighlightedPersonIndex,
+      setCurrentPhotoIndex: (updater) => {
+        // Preserve component-specific side effects on photo change
+        setShowCenterIndicator(false);
+        isAutoCycleRef.current = true;
+        setCurrentPhotoIndex(updater);
+      },
+      timers: {
+        highlightTimer,
+        autoCycleResetTimer,
+        transitionDelayTimer,
+      },
+      currentHighlightIndex: highlightedPersonIndex,
+    });
 
-      // Small delay for smoother visual transition between photos
-      transitionDelayTimer.current = setTimeout(() => {
-        isAutoCycleRef.current = true; // Flag this as auto-cycle (no face transition)
-        setCurrentPhotoIndex(prev => {
-          const next = (prev + 1) % groupPhotos.length;
-          // Resume auto-highlighting after image loads and transition completes
-          autoCycleResetTimer.current = setTimeout(() => {
-            setHighlightedPersonIndex(0);
-          }, 400); // Slightly longer to ensure image is loaded
-          return next;
-        });
-      }, 100); // Brief pause for smoother transition
-    }, 15000);
-
-    return () => {
-      if (photoScrollTimer.current) {
-        clearInterval(photoScrollTimer.current);
-      }
-      if (autoCycleResetTimer.current) {
-        clearTimeout(autoCycleResetTimer.current);
-      }
-      if (transitionDelayTimer.current) {
-        clearTimeout(transitionDelayTimer.current);
-      }
-    };
-  }, [isAutoScrolling, groupPhotos.length]);
-
-  // Auto-highlight people
-  useEffect(() => {
-    if (!isAutoHighlighting || shuffledPeople.length === 0) return;
-
-    highlightTimer.current = setInterval(() => {
-      setHighlightedPersonIndex(prev => {
-        const next = (prev + 1) % shuffledPeople.length;
-        return next;
-      });
-    }, 2500);
-
-    return () => {
-      if (highlightTimer.current) {
-        clearInterval(highlightTimer.current);
-      }
-    };
-  }, [isAutoHighlighting, shuffledPeople.length]);
+    return cleanup;
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex]);
 
   // Reset zoom/pan when auto-highlighting resumes
   useEffect(() => {
