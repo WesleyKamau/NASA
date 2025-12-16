@@ -4,15 +4,15 @@
 - [x] Center or remove "Me" section text
 - [ ] Add intern fun photos and feature flow
 - [x] Fix mobile name labels again
-- [ ] General UI improvements
-- [ ] Stop page jumping after rocket animation
-- [ ] Fix the carousel changing sizes, it should be one size and just have blankspace for the missing content so the content on the page doesnt shift
-- [ ] Fixing the transitions between faces
+- [x] General UI improvements
+- [x] Stop page jumping after rocket animation
+- [x] Fix the carousel changing sizes, it should be one size and just have blankspace for the missing content so the content on the page doesnt shift
+- [x] Fixing the transitions between faces
 - [ ] Add tests
-- [ ] Smaller center circle on iPad
+- [x] Smaller center circle on iPad
 - [x] Migrate the mobile labels to the desktop carousel
-- [ ] Improve loading animation and experience
-- [ ] Add some sort of scrolling callout, or some sort of guided tour after loading that shows the user how to use the app
+- [x] Improve loading animation and experience
+- [x] Add some sort of scrolling callout, or some sort of guided tour after loading that shows the user how to use the app
 - [x] Highlighting someone's face (either by mouse hover on desktop or by selecting on the mobile carousel) will cause the corresponding tile to highlight as well, without scrolling or anything
 - [x] Improve setup page: Add LinkedIn profile input field and description editor with face previews during person setup.
 
