@@ -3,7 +3,7 @@
  * Captures errors and logs to localStorage for debugging
  */
 
-import { isDebugEnabled } from './configs/componentsConfig';
+import { isDebugEnabled, DebugFeature } from './configs/componentsConfig';
 
 interface CrashLog {
   timestamp: string;
@@ -23,7 +23,7 @@ class CrashLogger {
   private maxLogs = 50;
 
   constructor() {
-    if (typeof window === 'undefined' || !isDebugEnabled('ENABLE_CRASH_LOGGER')) return;
+    if (typeof window === 'undefined' || !isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER)) return;
 
     // Load existing logs
     this.loadLogs();
@@ -48,7 +48,7 @@ class CrashLogger {
   }
 
   log(type: CrashLog['type'], message: string, stack?: string) {
-    if (!isDebugEnabled('ENABLE_CRASH_LOGGER')) return; // No-op when disabled
+    if (!isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER)) return; // No-op when disabled
     
     const logEntry: CrashLog = {
       timestamp: new Date().toISOString(),

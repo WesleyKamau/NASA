@@ -4,7 +4,7 @@
  */
 
 import { crashLogger } from './crashLogger';
-import { isDebugEnabled } from './configs/componentsConfig';
+import { isDebugEnabled, DebugFeature } from './configs/componentsConfig';
 
 class ScrollManager {
   private isScrolling = false;
@@ -19,7 +19,7 @@ class ScrollManager {
         this.scrollCount++;
         
         // Log rapid scrolling for debugging
-        if (isDebugEnabled('ENABLE_CRASH_LOGGER') && this.scrollCount % 10 === 0) {
+        if (isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER) && this.scrollCount % 10 === 0) {
           crashLogger.log('scroll', `Rapid scroll detected (${this.scrollCount} events)`);
         }
         
@@ -33,7 +33,7 @@ class ScrollManager {
         // Wait 300ms after last scroll event before allowing queueing
         // This is aggressive but necessary for iOS Safari stability
         this.scrollTimeout = setTimeout(() => {
-          if (isDebugEnabled('ENABLE_CRASH_LOGGER')) {
+          if (isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER)) {
             crashLogger.log('scroll', `Scroll stopped after ${this.scrollCount} events`);
           }
           this.scrollCount = 0;

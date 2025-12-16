@@ -7,29 +7,23 @@
 // Debug Configuration
 // ============================================================================
 
-export const DEBUG_CONFIG = {
-  // Master debug toggle - set to false for production to disable ALL debug features
-  ENABLE_DEBUG_MODE: true,
-  
-  // Individual debug features (only active if ENABLE_DEBUG_MODE is true)
-  ENABLE_CRASH_LOGGER: true,               // Enable crash logging and debug panel
-  SHOW_DEBUG_HITBOXES: false,              // Show visual hitboxes for faces in carousel
-} as const;
+export enum DebugFeature {
+  ENABLE_DEBUG_MODE = 'ENABLE_DEBUG_MODE',
+  ENABLE_CRASH_LOGGER = 'ENABLE_CRASH_LOGGER',
+  SHOW_DEBUG_HITBOXES = 'SHOW_DEBUG_HITBOXES',
+}
 
-// Typed debug feature constants for type-safe checks
-export const DebugFeature = {
-  CRASH_LOGGER: 'ENABLE_CRASH_LOGGER',
-  DEBUG_HITBOXES: 'SHOW_DEBUG_HITBOXES',
+export const DEBUG_CONFIG: Record<DebugFeature, boolean> = {
+  [DebugFeature.ENABLE_DEBUG_MODE]: true,
+  [DebugFeature.ENABLE_CRASH_LOGGER]: true,
+  [DebugFeature.SHOW_DEBUG_HITBOXES]: false,
 } as const;
-
-type DebugFeatureKey = typeof DEBUG_CONFIG[keyof typeof DEBUG_CONFIG];
-type DebugFeatureName = keyof typeof DEBUG_CONFIG;
 
 // Helper to check if a debug feature is enabled (respects master toggle)
-export const isDebugEnabled = (feature: DebugFeatureName = 'ENABLE_DEBUG_MODE'): boolean => {
-  if (!DEBUG_CONFIG.ENABLE_DEBUG_MODE) return false;
-  if (feature === 'ENABLE_DEBUG_MODE') return true;
-  return DEBUG_CONFIG[feature] as boolean;
+export const isDebugEnabled = (feature: DebugFeature = DebugFeature.ENABLE_DEBUG_MODE): boolean => {
+  if (!DEBUG_CONFIG[DebugFeature.ENABLE_DEBUG_MODE]) return false;
+  if (feature === DebugFeature.ENABLE_DEBUG_MODE) return true;
+  return DEBUG_CONFIG[feature];
 };
 
 // ============================================================================

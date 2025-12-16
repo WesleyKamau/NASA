@@ -8,9 +8,8 @@ import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
 import { useViewportHeight } from '@/hooks/useViewportHeight';
-import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { GENERAL_COMPONENT_CONFIG, DebugFeature, isDebugEnabled } from '@/lib/configs/componentsConfig';
 import { crashLogger } from '@/lib/crashLogger';
-import { isDebugEnabled } from '@/lib/configs/componentsConfig';
 
 interface MobilePortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -47,7 +46,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     overlayRef.current.style.opacity = opacity.toString();
     
     // Debug logging for first transition and milestones
-    if (isDebugEnabled('ENABLE_CRASH_LOGGER')) {
+    if (isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER)) {
       if (scrollY === 0 || (scrollY > 0 && lastScrollY.current === 0)) {
         crashLogger.log('scroll', `Overlay opacity transition started: ${opacity.toFixed(2)}`);
       } else if (scrollProgress >= 1 && lastScrollY.current < viewportHeight) {
