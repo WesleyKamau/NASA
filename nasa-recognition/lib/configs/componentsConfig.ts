@@ -4,6 +4,26 @@
  */
 
 // ============================================================================
+// Debug Configuration
+// ============================================================================
+
+export const DEBUG_CONFIG = {
+  // Master debug toggle - set to false for production to disable ALL debug features
+  ENABLE_DEBUG_MODE: true,
+  
+  // Individual debug features (only active if ENABLE_DEBUG_MODE is true)
+  ENABLE_CRASH_LOGGER: true,               // Enable crash logging and debug panel
+  SHOW_DEBUG_HITBOXES: false,              // Show visual hitboxes for faces in carousel
+} as const;
+
+// Helper to check if a debug feature is enabled (respects master toggle)
+export const isDebugEnabled = (feature?: keyof typeof DEBUG_CONFIG): boolean => {
+  if (!DEBUG_CONFIG.ENABLE_DEBUG_MODE) return false;
+  if (!feature || feature === 'ENABLE_DEBUG_MODE') return true;
+  return DEBUG_CONFIG[feature] as boolean;
+};
+
+// ============================================================================
 // Mobile Photo Carousel Configuration
 // ============================================================================
 
@@ -20,9 +40,6 @@ export const MOBILE_PHOTO_CAROUSEL_CONFIG = {
   // Face highlighting configuration
   MAX_VISIBLE_LABELS: 1,
   FACE_HITBOX_PADDING: 10,                 // Percentage padding to expand face hitboxes
-  
-  // Debug settings
-  SHOW_DEBUG_HITBOXES: false,              // Can be toggled for development
 } as const;
 
 // ============================================================================

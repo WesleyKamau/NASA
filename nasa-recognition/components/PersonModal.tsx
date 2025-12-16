@@ -25,11 +25,13 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     };
     
     // Prevent body scroll when modal is open
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleEscape);
     
     return () => {
-      document.body.style.overflow = 'unset';
+      // Restore original overflow (empty string properly resets to CSS default)
+      document.body.style.overflow = originalOverflow || '';
       window.removeEventListener('keydown', handleEscape);
     };
   }, [onClose]);
@@ -131,7 +133,7 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Photo */}
             <div className="w-full sm:w-48 aspect-square rounded-xl overflow-hidden bg-slate-800/50 relative flex-shrink-0 mx-auto sm:mx-0 max-w-xs">
-              <PersonImage person={person} groupPhotos={groupPhotos} className="text-5xl sm:text-6xl" />
+              <PersonImage person={person} groupPhotos={groupPhotos} className="text-5xl sm:text-6xl" priority />
             </div>
 
             {/* Info */}

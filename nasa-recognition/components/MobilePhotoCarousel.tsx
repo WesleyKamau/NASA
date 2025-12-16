@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect }
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
-import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG, isDebugEnabled } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -27,7 +27,7 @@ const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TO
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
-  const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
+  const SHOW_DEBUG_HITBOXES = isDebugEnabled('SHOW_DEBUG_HITBOXES'); // Respects master debug toggle
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
   const AUTO_RESUME_MS = GENERAL_COMPONENT_CONFIG.AUTO_RESUME_SECONDS * 1000;
   
@@ -49,8 +49,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [showDestinationFace, setShowDestinationFace] = useState(false);
   const previousPhotoRef = useRef(0);
   const isAutoCycleRef = useRef(false); // Track if photo change is from auto-cycle (no face transition)
-  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const endTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -67,14 +67,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const pinchStartScale = useRef(1);
   const pinchStartCenter = useRef({ x: 0, y: 0 });
   const touchMoveHandlerRef = useRef<(event: TouchEvent) => void>(() => {});
-  const interactionLockTimer = useRef<NodeJS.Timeout | null>(null);
+  const interactionLockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const autoCycleResetTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const scrollToCardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const photoScrollTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const highlightTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const cooldownTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const highlightCooldownTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const autoCycleResetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const scrollToCardTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const transitionDelayTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(0);
   const positionRef = useRef({ x: 0, y: 0 });
@@ -162,17 +163,58 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     return () => window.removeEventListener('resize', detectTouchMode);
   }, []);
 
-  // Cleanup timers and animation frames on unmount
+  // Comprehensive cleanup of ALL timers and animation frames on unmount
+  // This prevents memory leaks and "repeated error" crashes on iOS
   useEffect(() => {
     return () => {
+      // Clear all interval timers
+      if (photoScrollTimer.current) {
+        clearInterval(photoScrollTimer.current);
+        photoScrollTimer.current = undefined;
+      }
+      if (highlightTimer.current) {
+        clearInterval(highlightTimer.current);
+        highlightTimer.current = undefined;
+      }
+      
+      // Clear all timeout timers
       if (interactionLockTimer.current) {
         clearTimeout(interactionLockTimer.current);
+        interactionLockTimer.current = null;
       }
       if (scrollToCardTimeoutRef.current) {
         clearTimeout(scrollToCardTimeoutRef.current);
+        scrollToCardTimeoutRef.current = undefined;
       }
+      if (cooldownTimer.current) {
+        clearTimeout(cooldownTimer.current);
+        cooldownTimer.current = undefined;
+      }
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
+      if (autoCycleResetTimer.current) {
+        clearTimeout(autoCycleResetTimer.current);
+        autoCycleResetTimer.current = undefined;
+      }
+      if (transitionDelayTimer.current) {
+        clearTimeout(transitionDelayTimer.current);
+        transitionDelayTimer.current = undefined;
+      }
+      if (fadeTimerRef.current) {
+        clearTimeout(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+      }
+      if (endTimerRef.current) {
+        clearTimeout(endTimerRef.current);
+        endTimerRef.current = null;
+      }
+      
+      // Cancel animation frame
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = 0;
       }
     };
   }, []);
@@ -294,9 +336,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       if (autoCycleResetTimer.current) {
         clearTimeout(autoCycleResetTimer.current);
       }
+      if (transitionDelayTimer.current) {
+        clearTimeout(transitionDelayTimer.current);
+      }
 
       // Small delay for smoother visual transition between photos
-      setTimeout(() => {
+      transitionDelayTimer.current = setTimeout(() => {
         isAutoCycleRef.current = true; // Flag this as auto-cycle (no face transition)
         setCurrentPhotoIndex(prev => {
           const next = (prev + 1) % groupPhotos.length;
@@ -304,10 +349,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           autoCycleResetTimer.current = setTimeout(() => {
             setIsAutoHighlighting(true);
             setHighlightedPersonIndex(0);
-            // Sync initial highlight after auto-cycle
-            // Note: shuffledPeople might not be updated yet if it depends on currentPhoto effect
-            // But we can't access the new shuffled list here easily.
-            // The effect on [currentPhoto] will handle the shuffle and initial sync.
           }, 400); // Slightly longer to ensure image is loaded
           return next;
         });
@@ -320,6 +361,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       }
       if (autoCycleResetTimer.current) {
         clearTimeout(autoCycleResetTimer.current);
+      }
+      if (transitionDelayTimer.current) {
+        clearTimeout(transitionDelayTimer.current);
       }
     };
   }, [isAutoScrolling, groupPhotos.length]);
@@ -495,14 +539,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - position.x,
         y: e.touches[0].clientY - position.y
       });
-      // Start RAF loop to update center indicator during drag
-      const updateCenterLoop = () => {
-        setCenterIndicatorForce(prev => prev + 1);
-        if (isDragging) {
-          animationFrameRef.current = requestAnimationFrame(updateCenterLoop);
-        }
-      };
-      animationFrameRef.current = requestAnimationFrame(updateCenterLoop);
+      // Cancel any existing RAF loop before starting a new one
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = 0;
+      }
+      // Force a single update for center indicator (no loop - it's handled by state changes)
+      setCenterIndicatorForce(prev => prev + 1);
       
       if (scale === 1) {
         setAutoZoomedOnPan(false);
@@ -586,6 +629,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
       };
+      // Update center indicator during drag
+      setCenterIndicatorForce(prev => prev + 1);
     }
   };
 

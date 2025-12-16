@@ -23,7 +23,7 @@ export default function PersonCard({ person, groupPhotos, onClick, idPrefix = ''
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className={`group relative w-full bg-gradient-to-br from-slate-800/40 to-slate-900/40 backdrop-blur-xl rounded-xl p-3 sm:p-4 transition-all duration-300 cursor-pointer border border-white/10 hover:border-blue-400/60 hover:shadow-[0_0_30px_rgba(96,165,250,0.3)] hover:scale-105 active:scale-95 touch-manipulation ${
+      className={`group relative w-full bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-3 sm:p-4 transition-all duration-300 cursor-pointer border border-white/10 hover:border-blue-400/60 hover:shadow-[0_0_30px_rgba(96,165,250,0.3)] hover:scale-105 active:scale-95 touch-manipulation ${
         isHighlighted 
           ? 'border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.2)] scale-105' 
           : ''
