@@ -84,7 +84,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
                 observerRef.current.disconnect();
                 observerRef.current = null;
               }
-            }, 50); // 50ms debounce - balances responsiveness vs crash prevention
+            }, 150); // 150ms debounce - aggressive to prevent rapid-fire during repeated scrolls
           }
         });
       },

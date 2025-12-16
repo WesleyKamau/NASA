@@ -6,6 +6,8 @@
  * Must track all timers and provide cleanup to prevent accumulation.
  */
 
+import { scrollManager } from './scrollManager';
+
 interface QueueItem {
   id: string;
   loadFn: (done: () => void) => void;
@@ -15,12 +17,18 @@ class ImageLoadQueue {
   private queue: QueueItem[] = [];
   private loading = 0;
   private readonly maxConcurrent = 3; // Only load 3 images at a time
-  private readonly maxQueueSize = 50; // Prevent queue explosion on fast scroll
+  private readonly maxQueueSize = 20; // Aggressive limit - prevents queue explosion during rapid scroll
   private timeoutRefs: Set<ReturnType<typeof setTimeout>> = new Set();
   private activeIds: Set<string> = new Set(); // Track images currently loading/queued
   private processedIds: Set<string> = new Set(); // Track completed images
 
   enqueue(id: string, loadFn: (done: () => void) => void) {
+    // CRITICAL: Block ALL queueing during active scrolling
+    // This prevents memory spikes from rapid scroll events
+    if (scrollManager.getIsScrolling()) {
+      return; // Silently skip - observer will re-trigger when scroll stops
+    }
+
     // Deduplicate: skip if already processed, loading, or queued
     if (this.processedIds.has(id) || this.activeIds.has(id)) {
       return;
@@ -29,8 +37,7 @@ class ImageLoadQueue {
     // Prevent queue explosion: if queue is full, skip this image
     // It will be retried when it comes back into viewport
     if (this.queue.length >= this.maxQueueSize) {
-      console.warn(`ImageLoadQueue: Queue full (${this.maxQueueSize}), skipping ${id}`);
-      return;
+      return; // Silently skip - no need to warn during normal operation
     }
 
     this.activeIds.add(id);
@@ -89,6 +96,13 @@ class ImageLoadQueue {
     this.activeIds.clear();
     this.processedIds.clear();
   }
+}
+
+// Cleanup on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    scrollManager.reset();
+  });
 }
 
 export const imageLoadQueue = new ImageLoadQueue();
