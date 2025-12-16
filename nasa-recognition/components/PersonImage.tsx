@@ -2,9 +2,10 @@
 
 import { Person, GroupPhoto } from '@/types';
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPersonImage } from '@/lib/imageUtils';
 import { imageLoadQueue } from '@/lib/imageLoadQueue';
+import { scrollManager } from '@/lib/scrollManager';
 
 interface PersonImageProps {
   person: Person;
@@ -23,6 +24,8 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const onLoadDoneRef = useRef<(() => void) | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInViewportRef = useRef(false); // Track if currently in viewport
+  const scrollUnsubRef = useRef<(() => void) | null>(null);
   
   // Generate stable ID for this image for queue deduplication
   const imageId = `${person.id}-${forcePhotoId || 'default'}`;
@@ -42,8 +45,58 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
       }
+      if (scrollUnsubRef.current) {
+        scrollUnsubRef.current();
+        scrollUnsubRef.current = null;
+      }
     };
   }, []);
+
+  // Try to queue image - called when in viewport and scroll stops
+  const tryQueue = useCallback(() => {
+    if (isQueued || shouldLoad || priority) return;
+    if (!isInViewportRef.current) return;
+    
+    const success = imageLoadQueue.enqueue(imageId, (done) => {
+      onLoadDoneRef.current = done;
+      setShouldLoad(true);
+    });
+    
+    if (success) {
+      setIsQueued(true);
+      // Successfully queued - disconnect observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      // Unsubscribe from scroll events
+      if (scrollUnsubRef.current) {
+        scrollUnsubRef.current();
+        scrollUnsubRef.current = null;
+      }
+    }
+    // If not successful (scroll blocking or queue full), keep observer active for retry
+  }, [imageId, isQueued, shouldLoad, priority]);
+
+  // Subscribe to scroll stop events for retry
+  useEffect(() => {
+    if (priority || shouldLoad || isQueued) return;
+    
+    // Subscribe to scroll state changes to retry when scrolling stops
+    scrollUnsubRef.current = scrollManager.subscribe(() => {
+      // Scroll just stopped - try to queue if we're in viewport
+      if (isInViewportRef.current) {
+        tryQueue();
+      }
+    });
+    
+    return () => {
+      if (scrollUnsubRef.current) {
+        scrollUnsubRef.current();
+        scrollUnsubRef.current = null;
+      }
+    };
+  }, [priority, shouldLoad, isQueued, tryQueue]);
 
   // Intersection Observer for lazy loading with queue
   useEffect(() => {
@@ -63,28 +116,17 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
+          isInViewportRef.current = entry.isIntersecting;
+          
           if (entry.isIntersecting) {
             // Debounce to prevent rapid-fire triggers during fast scrolling
-            // This prevents 100+ simultaneous queue operations
             if (debounceTimerRef.current) {
               clearTimeout(debounceTimerRef.current);
             }
             
             debounceTimerRef.current = setTimeout(() => {
-              // Double-check we haven't already queued/loaded
-              if (!isQueued && !shouldLoad) {
-                setIsQueued(true);
-                imageLoadQueue.enqueue(imageId, (done) => {
-                  onLoadDoneRef.current = done;
-                  setShouldLoad(true);
-                });
-              }
-              // Immediately disconnect after queuing to prevent duplicate triggers
-              if (observerRef.current) {
-                observerRef.current.disconnect();
-                observerRef.current = null;
-              }
-            }, 150); // 150ms debounce - aggressive to prevent rapid-fire during repeated scrolls
+              tryQueue();
+            }, 150); // 150ms debounce
           }
         });
       },
@@ -107,7 +149,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
         debounceTimerRef.current = null;
       }
     };
-  }, [priority, shouldLoad, isQueued, imageId]);
+  }, [priority, shouldLoad, isQueued, tryQueue]);
   
   // Don't render anything unless explicitly shown
   if (!show) return null;

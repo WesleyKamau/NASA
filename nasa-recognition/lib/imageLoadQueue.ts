@@ -22,27 +22,28 @@ class ImageLoadQueue {
   private activeIds: Set<string> = new Set(); // Track images currently loading/queued
   private processedIds: Set<string> = new Set(); // Track completed images
 
-  enqueue(id: string, loadFn: (done: () => void) => void) {
+  enqueue(id: string, loadFn: (done: () => void) => void): boolean {
     // CRITICAL: Block ALL queueing during active scrolling
     // This prevents memory spikes from rapid scroll events
     if (scrollManager.getIsScrolling()) {
-      return; // Silently skip - observer will re-trigger when scroll stops
+      return false; // Return false so caller knows to retry later
     }
 
     // Deduplicate: skip if already processed, loading, or queued
     if (this.processedIds.has(id) || this.activeIds.has(id)) {
-      return;
+      return true; // Return true - already handled, no retry needed
     }
 
     // Prevent queue explosion: if queue is full, skip this image
     // It will be retried when it comes back into viewport
     if (this.queue.length >= this.maxQueueSize) {
-      return; // Silently skip - no need to warn during normal operation
+      return false; // Return false so caller knows to retry later
     }
 
     this.activeIds.add(id);
     this.queue.push({ id, loadFn });
     this.processQueue();
+    return true; // Successfully queued
   }
 
   private processQueue() {
