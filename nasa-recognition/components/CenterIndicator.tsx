@@ -108,6 +108,7 @@ export default function CenterIndicator({
     return (
       <div
         className="absolute z-50 pointer-events-none"
+        data-testid="center-indicator"
         style={{
           left: `${adjustedLocation.x}%`,
           top: `${adjustedLocation.y}%`,
@@ -128,6 +129,7 @@ export default function CenterIndicator({
   return (
     <div
       className="absolute z-50 pointer-events-none"
+      data-testid="center-indicator"
       style={{
         left: `${visibleCenterX}%`,
         top: `${visibleCenterY}%`,
