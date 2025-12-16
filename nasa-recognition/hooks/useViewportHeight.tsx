@@ -34,27 +34,35 @@ export function useViewportHeight() {
     updateViewportHeight();
     setIsReady(true);
 
+    // Create a stable reference to the callback for event listeners
+    // This prevents accumulation of stale closures across HMR/refreshes
+    const handler = () => updateViewportHeight();
+
     // Listen to events that change viewport height (not scroll - avoid performance issues)
-    window.addEventListener('resize', updateViewportHeight);
-    window.addEventListener('orientationchange', updateViewportHeight);
+    window.addEventListener('resize', handler);
+    window.addEventListener('orientationchange', handler);
     
     // visualViewport API provides more accurate updates on mobile
     // Only listen to resize, not scroll (scroll events can cause performance issues)
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateViewportHeight);
+      window.visualViewport.addEventListener('resize', handler);
     }
 
     // Handle page show (for iOS Safari when returning to the page)
-    window.addEventListener('pageshow', updateViewportHeight);
+    window.addEventListener('pageshow', handler);
 
     return () => {
-      window.removeEventListener('resize', updateViewportHeight);
-      window.removeEventListener('orientationchange', updateViewportHeight);
-      window.removeEventListener('pageshow', updateViewportHeight);
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('orientationchange', handler);
+      window.removeEventListener('pageshow', handler);
       
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateViewportHeight);
+        window.visualViewport.removeEventListener('resize', handler);
       }
+      
+      // Clean up CSS custom properties on unmount
+      document.documentElement.style.removeProperty('--vh');
+      document.documentElement.style.removeProperty('--viewport-height');
     };
   }, [updateViewportHeight]);
 

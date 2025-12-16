@@ -25,23 +25,28 @@ export default function LoadingWrapper({ children }: LoadingWrapperProps) {
 
   // Disable scrolling while loading
   useEffect(() => {
+    // Store original values to restore them later (important for HMR)
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyHeight = document.body.style.height;
+    const originalDocOverflow = document.documentElement.style.overflow;
+
     if (showOverlay) {
       // Prevent scrolling on body
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100vh';
       document.documentElement.style.overflow = 'hidden';
     } else {
-      // Re-enable scrolling
-      document.body.style.overflow = '';
-      document.body.style.height = '';
-      document.documentElement.style.overflow = '';
+      // Re-enable scrolling by restoring originals
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.height = originalBodyHeight;
+      document.documentElement.style.overflow = originalDocOverflow;
     }
 
     return () => {
-      // Cleanup on unmount
-      document.body.style.overflow = '';
-      document.body.style.height = '';
-      document.documentElement.style.overflow = '';
+      // Cleanup on unmount - restore original values
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.height = originalBodyHeight;
+      document.documentElement.style.overflow = originalDocOverflow;
     };
   }, [showOverlay]);
 
