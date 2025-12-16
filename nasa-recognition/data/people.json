@@ -1566,6 +1566,22 @@
       "photoLocations": []
     },
     {
+      "id": "amartya-kallingal",
+      "name": "Amartya Kallingal",
+      "description": "",
+      "category": "interns",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
+      "id": "will-marks",
+      "name": "Will Marks",
+      "description": "",
+      "category": "staff",
+      "individualPhoto": null,
+      "photoLocations": []
+    },
+    {
       "id": "crew-71-astronaut-1",
       "name": "Crew 71 Astronaut 1",
       "description": "Member of Crew 71 that visited MSFC",
