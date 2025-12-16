@@ -763,7 +763,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               top: '50%',
               left: '50%',
             }}
-            className="relative"
+            className="relative leading-none"
           >
             <Image
               src={currentPhoto.imagePath}
@@ -771,7 +771,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width={photoWidth}
               height={photoHeight}
               unoptimized
-              className="w-full h-full object-contain pointer-events-none"
+              className="w-full h-full object-contain object-center block pointer-events-none"
               style={{ imageRendering: 'auto' }}
               priority
               draggable={false}
