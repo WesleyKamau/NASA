@@ -52,7 +52,7 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
     <>
       {/* Blur overlay for background */}
       <div 
-        className="fixed inset-0 bg-black/30 pointer-events-none z-20"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md pointer-events-none z-20"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY }}
       />
       

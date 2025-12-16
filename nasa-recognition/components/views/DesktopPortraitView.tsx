@@ -83,7 +83,7 @@ export default function DesktopPortraitView({ groupPhotos, people }: DesktopPort
       {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
       <div 
         ref={blurLayerRef}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20 transition-opacity duration-0"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md pointer-events-none z-20 transition-opacity duration-0"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
       />
 
