@@ -44,6 +44,12 @@ export const MOBILE_PHOTO_CAROUSEL_CONFIG = {
   MAX_VISIBLE_LABELS: 1,
   FACE_HITBOX_PADDING: 10,                 // Percentage padding to expand face hitboxes
   
+  // Auto-cycle configuration
+  PHOTO_CYCLE_DURATION_MS: 25000,          // Total time before changing to next photo (milliseconds)
+  MAX_PEOPLE_PER_PHOTO_CYCLE: 10,          // Maximum number of people to cycle through (acts as cap)
+  FIRST_LAST_HIGHLIGHT_PADDING_MS: 500,    // Extra time on first and last person's highlight
+  // HIGHLIGHT_INTERVAL_MS is auto-calculated: PHOTO_CYCLE_DURATION_MS / MAX_PEOPLE_PER_PHOTO_CYCLE
+  
   // Pan gesture hint settings
   ENABLE_PAN_GESTURE_HINT: true,           // Show swipe/pan animation hint if user doesn't interact
   SHOW_PAN_GESTURE_TEXT: false,            // Whether to show the helper text below the animation
