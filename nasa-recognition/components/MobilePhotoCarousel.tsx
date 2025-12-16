@@ -675,7 +675,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     pinchStartDistance.current = 0;
     // Cancel RAF loop
     if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
+      const frameId = animationFrameRef.current;
+      animationFrameRef.current = 0;
+      cancelAnimationFrame(frameId);
     }
   };
 
