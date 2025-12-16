@@ -81,13 +81,8 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
   return (
     <>
-<<<<<<< HEAD
-      {/* Static Blur Layer - CSS-only for better mobile performance */}
-      <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-none z-20" />
-=======
       {/* Static overlay - No dynamic updates for iOS stability */}
       <div className="fixed inset-0 bg-black/30 pointer-events-none z-20" />
->>>>>>> fix/mobile-scroll-crash
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-40 min-h-viewport touch-native">
