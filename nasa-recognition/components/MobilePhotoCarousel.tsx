@@ -216,6 +216,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         const frameId = animationFrameRef.current;
         animationFrameRef.current = 0;
         cancelAnimationFrame(frameId);
+        cancelAnimationFrame(frameId);
       }
     };
   }, []);
