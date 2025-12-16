@@ -4,6 +4,29 @@
  */
 
 // ============================================================================
+// Debug Configuration
+// ============================================================================
+
+export const enum DebugFeature {
+  ENABLE_DEBUG_MODE,
+  ENABLE_CRASH_LOGGER,
+  SHOW_DEBUG_HITBOXES,
+}
+
+export const DEBUG_CONFIG: Record<DebugFeature, boolean> = {
+  [DebugFeature.ENABLE_DEBUG_MODE]: false,
+  [DebugFeature.ENABLE_CRASH_LOGGER]: true,
+  [DebugFeature.SHOW_DEBUG_HITBOXES]: false,
+};
+
+// Helper to check if a debug feature is enabled (respects master toggle)
+export const isDebugEnabled = (feature: DebugFeature = DebugFeature.ENABLE_DEBUG_MODE): boolean => {
+  if (!DEBUG_CONFIG[DebugFeature.ENABLE_DEBUG_MODE]) return false;
+  if (feature === DebugFeature.ENABLE_DEBUG_MODE) return true;
+  return DEBUG_CONFIG[feature];
+};
+
+// ============================================================================
 // Mobile Photo Carousel Configuration
 // ============================================================================
 
@@ -20,9 +43,6 @@ export const MOBILE_PHOTO_CAROUSEL_CONFIG = {
   // Face highlighting configuration
   MAX_VISIBLE_LABELS: 1,
   FACE_HITBOX_PADDING: 10,                 // Percentage padding to expand face hitboxes
-  
-  // Debug settings
-  SHOW_DEBUG_HITBOXES: false,              // Can be toggled for development
 } as const;
 
 // ============================================================================
@@ -56,7 +76,7 @@ export const OG_GENERATOR_CONFIG = {
 
 export const GENERAL_COMPONENT_CONFIG = {
   // Layout Breakpoints
-  DUAL_COLUMN_THRESHOLD_WIDTH: 850, // Width in px to switch to dual column view
+  DUAL_COLUMN_THRESHOLD_WIDTH: 1000, // Width in px to switch to dual column view
 
   // Background configuration by view type
   BACKGROUND_BY_VIEW: {

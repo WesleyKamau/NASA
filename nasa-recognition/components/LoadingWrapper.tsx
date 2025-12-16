@@ -23,6 +23,33 @@ export default function LoadingWrapper({ children }: LoadingWrapperProps) {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
+  // Disable scrolling while loading
+  useEffect(() => {
+    // Store original values at the start of the effect, before any modifications
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyHeight = document.body.style.height;
+    const originalDocOverflow = document.documentElement.style.overflow;
+    
+    if (showOverlay) {
+      // Prevent scrolling on body
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      // When showOverlay is false, just make sure scrolling is enabled
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+    }
+    
+    return () => {
+      // Cleanup on unmount - restore original values
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.height = originalBodyHeight;
+      document.documentElement.style.overflow = originalDocOverflow;
+    };
+  }, [showOverlay]);
+
   useEffect(() => {
     // Wait for fonts to load
     const loadFonts = async () => {

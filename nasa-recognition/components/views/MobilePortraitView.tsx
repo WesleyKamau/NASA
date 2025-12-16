@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
-import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
+import { GENERAL_COMPONENT_CONFIG, isDebugEnabled, DebugFeature } from '@/lib/configs/componentsConfig';
+import { crashLogger } from '@/lib/crashLogger';
 
 interface MobilePortraitViewProps {
   groupPhotos: GroupPhoto[];
@@ -17,153 +19,142 @@ interface MobilePortraitViewProps {
 export default function MobilePortraitView({ groupPhotos, people }: MobilePortraitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
-  const [dismissedCallouts, setDismissedCallouts] = useState<Set<string>>(new Set());
-  const blurLayerRef = useRef<HTMLDivElement>(null);
+  const [clickedPersonId, setClickedPersonId] = useState<string | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastScrollY = useRef(0);
+  
+  // Use custom viewport height hook for proper iOS Safari handling
+  useViewportHeight();
 
   // Scroll to top on mount/reload
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Load dismissed callouts from localStorage
-  useEffect(() => {
-    try {
-      const dismissed = localStorage.getItem('dismissedCallouts');
-      if (dismissed) {
-        setDismissedCallouts(new Set(JSON.parse(dismissed)));
+  // Smooth overlay opacity transition on scroll - RAF throttled for performance
+  const updateOverlayOpacity = useCallback(() => {
+    if (!overlayRef.current) return;
+    
+    const scrollY = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    
+    // Calculate opacity based on scroll position (transition over 1 viewport height)
+    const scrollProgress = Math.min(scrollY / viewportHeight, 1);
+    const opacity = GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - 
+      (scrollProgress * (GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY));
+    
+    overlayRef.current.style.opacity = opacity.toString();
+    
+    // Debug logging for first transition and milestones
+    if (isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER)) {
+      if (scrollY === 0 || (scrollY > 0 && lastScrollY.current === 0)) {
+        crashLogger.log('scroll', `Overlay opacity transition started: ${opacity.toFixed(2)}`);
+      } else if (scrollProgress >= 1 && lastScrollY.current < viewportHeight) {
+        crashLogger.log('scroll', `Overlay opacity transition complete: ${opacity.toFixed(2)}`);
       }
-    } catch (_e) {
-      // localStorage unavailable or JSON parse error; ignore and use default
     }
+    
+    lastScrollY.current = scrollY;
+    rafRef.current = null;
   }, []);
 
-  // Handle scroll effects (Blur fade and Scroll hint)
   useEffect(() => {
-    let fadeTimeout: NodeJS.Timeout;
-    
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-
-      // Update blur opacity
-      if (blurLayerRef.current) {
-        const windowHeight = window.innerHeight;
-        // Fade out over the first viewport height, but keep some blur
-        const opacity = Math.max(
-          GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY,
-          GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - (scrollY / windowHeight)
-        );
-        blurLayerRef.current.style.opacity = opacity.toString();
+      // Hide scroll hint
+      if (window.scrollY > 100 && showScrollHint) {
+        setShowScrollHint(false);
       }
-
-      // Handle scroll hint
-      if (scrollY > 100 && showScrollHint) {
-        fadeTimeout = setTimeout(() => {
-          setShowScrollHint(false);
-        }, 300);
+      
+      // Throttle overlay updates with RAF for smooth 60fps performance
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(updateOverlayOpacity);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    // Initial check
-    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial opacity set
+    updateOverlayOpacity();
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (fadeTimeout) clearTimeout(fadeTimeout);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [showScrollHint]);
-
-  const dismissCallout = (id: string) => {
-    const newDismissed = new Set(dismissedCallouts);
-    newDismissed.add(id);
-    setDismissedCallouts(newDismissed);
-    try {
-      localStorage.setItem('dismissedCallouts', JSON.stringify(Array.from(newDismissed)));
-    } catch (e) {
-      // Handle localStorage errors gracefully (e.g., quota exceeded, unavailable)
-      console.error('Failed to save dismissed callouts to localStorage:', e);
-    }
-  };
+  }, [showScrollHint, updateOverlayOpacity]);
 
   const handlePersonClick = (person: Person) => {
+    // Track which person was clicked from carousel
+    setClickedPersonId(person.id);
+    
     // Scroll to the person's card
     const personCardId = `person-card-mobile-portrait-${person.id}`;
     const cardElement = document.getElementById(personCardId);
     
     if (cardElement) {
+      cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Wait for the person's image to load before highlighting
+      // The onImageLoad callback from OrganizedPersonGrid will trigger the highlight
+    }
+  };
+
+  const handleImageLoad = (personId: string) => {
+    // Only highlight if this is the person that was clicked from the carousel
+    if (personId !== clickedPersonId) return;
+    
+    const personCardId = `person-card-mobile-portrait-${personId}`;
+    const cardElement = document.getElementById(personCardId);
+    
+    if (cardElement) {
+      // Highlight the card briefly (white glow for modern look)
+      cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+      
       setTimeout(() => {
-        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Add highlight effect
-        cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-        setTimeout(() => {
-          cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-        }, 2000);
-      }, GENERAL_COMPONENT_CONFIG.SCROLL_TO_CARD_DELAY_MS);
+        cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        // Clear the clicked person ID after highlighting
+        setClickedPersonId(null);
+      }, 2000);
     }
   };
 
   return (
     <>
-      {/* Dynamic Blur Layer - Fixed position, fades on scroll */}
+      {/* Dynamic overlay - Smooth opacity transition on scroll */}
       <div 
-        ref={blurLayerRef}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20 transition-opacity duration-0"
+        ref={overlayRef}
+        className="fixed inset-0 bg-black/30 backdrop-blur-md pointer-events-none z-20 transition-opacity duration-0"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
       />
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
-      <main className="relative z-40 min-h-screen">
-        {/* Photo Carousel Section - Full viewport height */}
-        <section className="relative min-h-screen flex flex-col items-center justify-center px-3 py-6">
+      <main className="relative z-40 min-h-viewport touch-native safe-area-inset-top">
+        {/* Photo Carousel Section - Full viewport height with proper iOS Safari handling */}
+        <section className="relative min-h-viewport flex flex-col items-center justify-center px-3">
           <div className="w-full max-w-2xl">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}
               people={people}
               onPersonClick={handlePersonClick}
             />
-            
-            {/* Intuitive callout for pinch to zoom */}
-            {!dismissedCallouts.has('zoom') && (
-              <div className="mt-6 relative">
-                <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-xl p-4 shadow-2xl">
-                  <button
-                    onClick={() => dismissCallout('zoom')}
-                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white text-xs transition-all"
-                    aria-label="Dismiss"
-                  >
-                    ✕
-                  </button>
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl flex-shrink-0">🔍</div>
-                    <div className="flex-1 pr-4">
-                      <p className="text-white text-sm font-medium mb-1">
-                        Pinch to Zoom
-                      </p>
-                      <p className="text-slate-400 text-xs">
-                        Use two fingers to zoom in and explore faces
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Scroll Hint - Smooth fade animation */}
+          {/* Scroll Hint - Now has dedicated space at bottom without competing */}
           <div 
-            className={`absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all duration-1000 ${
+            className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-all duration-1000 safe-area-inset-bottom ${
               showScrollHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
             }`}
           >
-            <div className="flex flex-col items-center gap-2">
-              <div className="px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
-                <p className="text-white/80 text-[10px] font-medium tracking-[0.2em] uppercase">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
+                <p className="text-white/80 text-[9px] font-medium tracking-[0.2em] uppercase">
                   Scroll to Explore
                 </p>
               </div>
               <div className="animate-bounce text-white/50">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -182,7 +173,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
         {/* Intro Text with dark blur card */}
         <div className="relative z-10 px-4 pb-16">
-          <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
+          <div className="bg-black/60 border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
             <p className="text-lg font-light leading-relaxed text-slate-200 text-center">
               One of the most impactful parts of my NASA internship was all of the people I got to meet. 
               This lets you learn more about the people who made it special! :)
@@ -191,7 +182,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
         </div>
 
         {/* People Section with modern styling */}
-        <section className="relative z-10 px-4 pb-20">
+        <section className="relative z-10 px-4 pb-2">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-6 tracking-tight">
               The People
@@ -208,6 +199,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
             onPersonClick={setSelectedPerson}
             idPrefix="mobile-portrait-"
             uniformLayout={true}
+            onImageLoad={handleImageLoad}
           />
         </section>
 
@@ -215,7 +207,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
         <BackToTop />
 
         {/* Footer with blur */}
-        <footer className="relative z-10 bg-black/30 backdrop-blur-md border-t border-white/5">
+        <footer className="relative z-10 bg-black/70 border-t border-white/5">
           <div className="text-center py-6 px-4 space-y-2.5">
             <div className="flex items-center justify-center">
               <TMinusCounter />

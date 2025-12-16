@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect }
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
-import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG, isDebugEnabled, DebugFeature } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -27,7 +27,7 @@ const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TO
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
-  const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
+  const SHOW_DEBUG_HITBOXES = isDebugEnabled(DebugFeature.SHOW_DEBUG_HITBOXES); // Respects master debug toggle
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
   const AUTO_RESUME_MS = GENERAL_COMPONENT_CONFIG.AUTO_RESUME_SECONDS * 1000;
   
@@ -49,8 +49,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [showDestinationFace, setShowDestinationFace] = useState(false);
   const previousPhotoRef = useRef(0);
   const isAutoCycleRef = useRef(false); // Track if photo change is from auto-cycle (no face transition)
-  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const endTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Touch/pan state
   const [scale, setScale] = useState(1);
@@ -67,14 +67,15 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const pinchStartScale = useRef(1);
   const pinchStartCenter = useRef({ x: 0, y: 0 });
   const touchMoveHandlerRef = useRef<(event: TouchEvent) => void>(() => {});
-  const interactionLockTimer = useRef<NodeJS.Timeout | null>(null);
+  const interactionLockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const autoCycleResetTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const scrollToCardTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const photoScrollTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const highlightTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const cooldownTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const highlightCooldownTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const autoCycleResetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const scrollToCardTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const transitionDelayTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(0);
   const positionRef = useRef({ x: 0, y: 0 });
@@ -162,17 +163,60 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     return () => window.removeEventListener('resize', detectTouchMode);
   }, []);
 
-  // Cleanup timers and animation frames on unmount
+  // Comprehensive cleanup of ALL timers and animation frames on unmount
+  // This prevents memory leaks and "repeated error" crashes on iOS
   useEffect(() => {
     return () => {
+      // Clear all interval timers
+      if (photoScrollTimer.current) {
+        clearInterval(photoScrollTimer.current);
+        photoScrollTimer.current = undefined;
+      }
+      if (highlightTimer.current) {
+        clearInterval(highlightTimer.current);
+        highlightTimer.current = undefined;
+      }
+      
+      // Clear all timeout timers
       if (interactionLockTimer.current) {
         clearTimeout(interactionLockTimer.current);
+        interactionLockTimer.current = null;
       }
       if (scrollToCardTimeoutRef.current) {
         clearTimeout(scrollToCardTimeoutRef.current);
+        scrollToCardTimeoutRef.current = undefined;
       }
+      if (cooldownTimer.current) {
+        clearTimeout(cooldownTimer.current);
+        cooldownTimer.current = undefined;
+      }
+      if (highlightCooldownTimer.current) {
+        clearTimeout(highlightCooldownTimer.current);
+        highlightCooldownTimer.current = undefined;
+      }
+      if (autoCycleResetTimer.current) {
+        clearTimeout(autoCycleResetTimer.current);
+        autoCycleResetTimer.current = undefined;
+      }
+      if (transitionDelayTimer.current) {
+        clearTimeout(transitionDelayTimer.current);
+        transitionDelayTimer.current = undefined;
+      }
+      if (fadeTimerRef.current) {
+        clearTimeout(fadeTimerRef.current);
+        fadeTimerRef.current = null;
+      }
+      if (endTimerRef.current) {
+        clearTimeout(endTimerRef.current);
+        endTimerRef.current = null;
+      }
+      
+      // Cancel animation frame
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+        const frameId = animationFrameRef.current;
+        animationFrameRef.current = 0;
+        cancelAnimationFrame(frameId);
+        cancelAnimationFrame(frameId);
       }
     };
   }, []);
@@ -287,27 +331,25 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
     photoScrollTimer.current = setInterval(() => {
       // Smoothly fade out current highlight before transitioning
+      // Keep isAutoHighlighting true so non-highlighted faces stay hidden (no border flash)
       setShowCenterIndicator(false);
       setHighlightedPersonIndex(-1);
-      setIsAutoHighlighting(false);
 
       if (autoCycleResetTimer.current) {
         clearTimeout(autoCycleResetTimer.current);
       }
+      if (transitionDelayTimer.current) {
+        clearTimeout(transitionDelayTimer.current);
+      }
 
       // Small delay for smoother visual transition between photos
-      setTimeout(() => {
+      transitionDelayTimer.current = setTimeout(() => {
         isAutoCycleRef.current = true; // Flag this as auto-cycle (no face transition)
         setCurrentPhotoIndex(prev => {
           const next = (prev + 1) % groupPhotos.length;
           // Resume auto-highlighting after image loads and transition completes
           autoCycleResetTimer.current = setTimeout(() => {
-            setIsAutoHighlighting(true);
             setHighlightedPersonIndex(0);
-            // Sync initial highlight after auto-cycle
-            // Note: shuffledPeople might not be updated yet if it depends on currentPhoto effect
-            // But we can't access the new shuffled list here easily.
-            // The effect on [currentPhoto] will handle the shuffle and initial sync.
           }, 400); // Slightly longer to ensure image is loaded
           return next;
         });
@@ -320,6 +362,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       }
       if (autoCycleResetTimer.current) {
         clearTimeout(autoCycleResetTimer.current);
+      }
+      if (transitionDelayTimer.current) {
+        clearTimeout(transitionDelayTimer.current);
       }
     };
   }, [isAutoScrolling, groupPhotos.length]);
@@ -495,14 +540,18 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - position.x,
         y: e.touches[0].clientY - position.y
       });
-      // Start RAF loop to update center indicator during drag
-      const updateCenterLoop = () => {
+      // Cancel any existing RAF loop before starting a new one
+      if (animationFrameRef.current) {
+        const frameId = animationFrameRef.current;
+        animationFrameRef.current = 0;
+        cancelAnimationFrame(frameId);
+      }
+      // Start RAF loop to continuously update center indicator during drag
+      const updateCenterIndicator = () => {
         setCenterIndicatorForce(prev => prev + 1);
-        if (isDragging) {
-          animationFrameRef.current = requestAnimationFrame(updateCenterLoop);
-        }
+        animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
       };
-      animationFrameRef.current = requestAnimationFrame(updateCenterLoop);
+      animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
       
       if (scale === 1) {
         setAutoZoomedOnPan(false);
@@ -586,6 +635,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
       };
+      // Update center indicator during drag
+      setCenterIndicatorForce(prev => prev + 1);
     }
   };
 
@@ -624,7 +675,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     pinchStartDistance.current = 0;
     // Cancel RAF loop
     if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
+      const frameId = animationFrameRef.current;
+      animationFrameRef.current = 0;
+      cancelAnimationFrame(frameId);
     }
   };
 
@@ -673,7 +726,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       </style>
       {/* Photo viewer - fixed vertical rectangle container */}
       <div 
-        className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" 
+        className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/70 aspect-3-4-fallback" 
         style={{ 
           width: '100%', 
           height: (isIPad || isTablet || (isLandscape && isTouchMode)) ? '75vh' : undefined,
@@ -697,8 +750,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         >
           <div
             style={{
-              width: `${scale * 100}%`,
-              height: `${scale * 100}%`,
+              width: `${scale * 100.5}%`,
+              height: `${scale * 100.5}%`,
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
               transition: isPinching 
                 ? 'none' 
@@ -710,7 +763,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               top: '50%',
               left: '50%',
             }}
-            className="relative"
+            className="relative leading-none"
           >
             <Image
               src={currentPhoto.imagePath}
@@ -718,7 +771,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               width={photoWidth}
               height={photoHeight}
               unoptimized
-              className="w-full h-full object-contain pointer-events-none"
+              className="w-full h-full object-contain object-center block pointer-events-none"
               style={{ imageRendering: 'auto' }}
               priority
               draggable={false}
@@ -1080,7 +1133,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
         {/* Photo name overlay */}
         <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20">
-          <div className="bg-black/60 backdrop-blur-sm px-2 py-1 sm:px-4 sm:py-2 rounded-lg">
+          <div className="bg-black/70 px-2 py-1 sm:px-4 sm:py-2 rounded-lg">
             <h3
               className="text-white font-semibold text-sm sm:text-lg leading-snug"
               style={{
@@ -1096,7 +1149,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
         {/* Zoom controls - compact in top right */}
         {isTouchMode && (
-          <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg p-1">
+          <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/70 rounded-lg p-1">
             {(scale > 1 || position.x !== 0 || position.y !== 0) && (
               <>
                 <button
@@ -1197,7 +1250,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           <>
             <button
               onClick={() => handlePhotoNavigation((currentPhotoIndex - 1 + groupPhotos.length) % groupPhotos.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/60 backdrop-blur-sm text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:left-4 md:p-3"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/70 text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:left-4 md:p-3"
               aria-label="Previous photo"
             >
               <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1206,7 +1259,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
             </button>
             <button
               onClick={() => handlePhotoNavigation((currentPhotoIndex + 1) % groupPhotos.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/60 backdrop-blur-sm text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:right-4 md:p-3"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/70 text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:right-4 md:p-3"
               aria-label="Next photo"
             >
               <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
