@@ -27,6 +27,15 @@ jest.mock('@/components/ClientHome', () => ({
 import ClientHome from '@/components/ClientHome';
 
 describe('Layout Integration', () => {
+  beforeEach(() => {
+    // Suppress crashLogger console output
+    jest.spyOn(console, 'log').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   const mockGroupPhotos: GroupPhoto[] = [
     {
       id: 'group-1',

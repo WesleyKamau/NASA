@@ -8,7 +8,7 @@
 - [x] Stop page jumping after rocket animation
 - [x] Fix the carousel changing sizes, it should be one size and just have blankspace for the missing content so the content on the page doesnt shift
 - [x] Fixing the transitions between faces
-- [ ] Add tests
+- [x] Add tests (161 tests: 133 unit + 28 integration, all passing)
 - [x] Smaller center circle on iPad
 - [x] Migrate the mobile labels to the desktop carousel
 - [x] Improve loading animation and experience

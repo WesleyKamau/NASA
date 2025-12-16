@@ -10,7 +10,7 @@ describe('PersonPreview', () => {
     name: 'Test Person',
     description: 'Test description',
     category: 'interns',
-    individualPhoto: { imagePath: '/test.jpg', width: 100, height: 100 },
+    individualPhoto: '/test.jpg',
     photoLocations: [],
   };
 

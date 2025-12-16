@@ -1,6 +1,12 @@
 describe('scrollManager', () => {
   beforeEach(() => {
     jest.resetModules();
+    // Suppress crashLogger console output
+    jest.spyOn(console, 'log').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('sets isScrolling true on scroll and resets after debounce', () => {

@@ -19,7 +19,8 @@ This document tracks the complete testing strategy across all phases.
 ## ✅ Phase 2 – Unit Tests: Utilities & Configs (COMPLETE)
 **Goal:** Test all lib utilities and configuration modules
 
-- [x] `lib/carouselUtils.ts` - getPeopleInPhoto, shuffleArray, startAutoCycle
+- [x] `lib/autoCycleUtils.ts` - Carousel auto-cycle timing calculations (14 tests)
+- [x] `lib/carouselUtils.ts` - getPeopleInPhoto, shuffleArray, startAutoCycle (14 tests)
 - [x] `lib/configs/*.ts` - All config modules (componentsConfig, siteConfig, rocketConfig, ogConfig)
 - [x] `lib/crashLogger.ts` - Logging, pruning, export/clear
 - [x] `lib/data.ts` & `lib/data-server.ts` - Data loading and filtering
@@ -27,9 +28,9 @@ This document tracks the complete testing strategy across all phases.
 - [x] `lib/imageUtils.ts` - Image cropping and dimension calculations
 - [x] `lib/preload.ts` - Preload functionality
 - [x] `lib/rocketSchedule.ts` - Launch scheduling and subscription
-- [x] `lib/scrollManager.ts` - Scroll state tracking
+- [x] `lib/scrollManager.ts` - Scroll state tracking (console output suppressed)
 
-**Stats:** 9 test suites, 37 unit tests
+**Stats:** 11 test suites, 65 unit tests
 
 ---
 
@@ -53,9 +54,14 @@ This document tracks the complete testing strategy across all phases.
 ### Batch 4 – Supporting pieces
 - [x] `Galaxy` / `GalaxyBackground` (props, positioning, accessibility)
 - [x] `FloatingRocket` (SVG rendering, animations, positioning)
+- [x] `PanGestureHint` (Lottie animation, delay timing, touch/wheel interactions, cleanup)
 
-**Stats:** 11 test suites, 46 component tests
-**Total Phase 1-3:** 20 test suites, 83 tests passing ✅
+### Mocks & Test Infrastructure
+- [x] `__mocks__/lottie-react.tsx` - Manual mock for Lottie animations
+- [x] Jest setup enhancements (window.scrollTo, SVG attribute warnings suppressed)
+
+**Stats:** 12 test suites, 55 component tests
+**Total Phase 1-3:** 23 test suites, 120 tests passing ✅
 
 ---
 
@@ -68,11 +74,12 @@ This document tracks the complete testing strategy across all phases.
 - [x] Category organization in grid layout
 - [x] Modal data integration with grid
 - [x] Hidden people filtering (Grid filters, Carousel does not - documented)
+- [x] Type corrections for individualPhoto (string | null)
 
 ### Layout Integration Tests
-- [x] Desktop portrait view (carousel + scrollable grid)
+- [x] Desktop portrait view (carousel + scrollable grid, window.scrollTo mocked)
 - [x] Dual column view (carousel + grid sync)
-- [x] Mobile portrait view (mobile carousel)
+- [x] Mobile portrait view (mobile carousel, scroll console suppressed)
 - [x] Mobile landscape view (grid + modal)
 - [x] ClientHome wrapper component
 
@@ -89,33 +96,10 @@ This document tracks the complete testing strategy across all phases.
 - [x] Keyboard accessibility
 
 **Stats:** 4 test suites, 41 integration tests
-**Total Phase 1-4:** 24 test suites, 124 tests passing ✅
+**Total Phase 1-4:** 27 test suites, 161 tests passing ✅
 
 ---
-
-## Phase 5 – E2E Tests (Playwright)
-**Goal:** Test complete user journeys in real browser
-
-### Setup
-- [ ] Install Playwright
-- [ ] Configure test browsers (Chrome, Firefox, Safari)
-- [ ] Setup test data fixtures
-- [ ] Configure base URL and test environment
-
-### User Journey Tests
-- [ ] Image load queue coordination
-- [ ] Scroll state affecting image loading
-
-### Navigation Flow Tests
-- [ ] Person selection flow (grid → modal)
-- [ ] Carousel navigation (prev/next/dots)
-- [ ] Keyboard navigation (escape, arrows)
-- [ ] Hash-based navigation (if implemented)
-
-**Target:** 4 test suites, ~25-30 integration tests
-
----
-
+🔄
 ## Phase 5 – End-to-End Tests (Playwright)
 **Goal:** Test complete user journeys in a real browser
 
@@ -198,3 +182,12 @@ This document tracks the complete testing strategy across all phases.
 **Upcoming:**
 - ⏳ Phase 5: E2E tests
 - ⏳ Phase 6: Performance & QA
+11 suites, 65 tests) - libs/configs/autoCycle
+- ✅ Phase 3: Component tests (12 suites, 55 tests) - all components + PanGestureHint
+- ✅ Phase 4: Integration tests (4 suites, 41 tests) - data flow, layouts, navigation
+- **Total: 27 test suites, 161 tests passing ✅**
+
+**In Progress:**
+- 🔄 Phase 5: E2E tests with Playwright
+
+**Upcoming:**

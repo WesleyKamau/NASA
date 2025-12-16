@@ -1,5 +1,24 @@
 import '@testing-library/jest-dom';
 
+// Suppress React warnings about boolean attributes on SVG elements in tests
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('Received `true` for a non-boolean attribute') ||
+       args[0].includes('for a non-boolean attribute'))
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});
+
 // Basic mock for next/image to behave like an img in tests
 jest.mock('next/image', () => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -11,6 +30,7 @@ jest.mock('next/image', () => {
   });
   return Mock;
 });
+
 
 // IntersectionObserver mock
 class MockIntersectionObserver {
@@ -47,3 +67,6 @@ if (!(window as any).matchMedia) {
     dispatchEvent: () => false,
   });
 }
+
+// window.scrollTo mock to suppress 'Not implemented' warnings in jsdom
+window.scrollTo = jest.fn();

@@ -30,7 +30,7 @@ describe('Data Flow Integration', () => {
       name: 'Alice Johnson',
       description: 'Software Engineer',
       category: 'interns',
-      individualPhoto: { imagePath: '/alice.jpg', width: 200, height: 200 },
+      individualPhoto: '/alice.jpg',
       photoLocations: [
         { photoId: 'group-1', x: 10, y: 20, width: 15, height: 15 },
       ],
@@ -40,7 +40,7 @@ describe('Data Flow Integration', () => {
       name: 'Bob Smith',
       description: 'Designer',
       category: 'staff',
-      individualPhoto: { imagePath: '/bob.jpg', width: 200, height: 200 },
+      individualPhoto: '/bob.jpg',
       photoLocations: [
         { photoId: 'group-1', x: 40, y: 30, width: 12, height: 12 },
         { photoId: 'group-2', x: 50, y: 50, width: 10, height: 10 },
