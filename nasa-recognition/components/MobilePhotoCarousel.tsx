@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect }
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
-import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { MOBILE_PHOTO_CAROUSEL_CONFIG, GENERAL_COMPONENT_CONFIG, isDebugEnabled } from '@/lib/configs/componentsConfig';
 
 interface MobilePhotoCarouselProps {
   groupPhotos: GroupPhoto[];
@@ -27,7 +27,7 @@ const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TO
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
-  const SHOW_DEBUG_HITBOXES = MOBILE_PHOTO_CAROUSEL_CONFIG.SHOW_DEBUG_HITBOXES;
+  const SHOW_DEBUG_HITBOXES = isDebugEnabled('SHOW_DEBUG_HITBOXES'); // Respects master debug toggle
   const getBorderWidth = (scale: number) => Math.max(1, 4 / scale); // Gets smaller when zoomed in
   const AUTO_RESUME_MS = GENERAL_COMPONENT_CONFIG.AUTO_RESUME_SECONDS * 1000;
   

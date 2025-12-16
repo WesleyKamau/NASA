@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPersonImage } from '@/lib/imageUtils';
 import { imageLoadQueue } from '@/lib/imageLoadQueue';
 import { scrollManager } from '@/lib/scrollManager';
+import { crashLogger } from '@/lib/crashLogger';
 
 interface PersonImageProps {
   person: Person;
@@ -184,6 +185,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
           onError={() => {
+            crashLogger.log('error', `Image load error: ${person.name} (${imageInfo.src})`);
             setImageError(true);
             if (onLoadDoneRef.current) {
               onLoadDoneRef.current();
@@ -191,6 +193,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
             }
           }}
           onLoad={() => {
+            crashLogger.log('image', `Image loaded: ${person.name}`);
             setIsLoaded(true);
             if (onLoadDoneRef.current) {
               onLoadDoneRef.current();

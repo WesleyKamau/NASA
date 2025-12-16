@@ -1,7 +1,8 @@
 import { getPeopleDataWithDimensions } from '@/lib/data-server';
 import SLSRocket from '@/components/SLSRocket';
 import ClientHome from '@/components/ClientHome';
-import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
+import { GENERAL_COMPONENT_CONFIG, isDebugEnabled } from '@/lib/configs/componentsConfig';
+import DebugPanel from '@/components/DebugPanel';
 
 export default function Home() {
   const data = getPeopleDataWithDimensions();
@@ -10,6 +11,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
+      
+      {/* Debug panel - triple-tap anywhere to open (only when crash logger enabled) */}
+      {isDebugEnabled('ENABLE_CRASH_LOGGER') && <DebugPanel />}
       
       {/* Flying SLS rocket decoration - positioned absolutely within page */}
       <div className={`absolute inset-0 pointer-events-none overflow-x-hidden ${rocketZIndex}`}>

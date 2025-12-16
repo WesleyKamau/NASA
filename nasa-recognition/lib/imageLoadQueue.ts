@@ -7,6 +7,7 @@
  */
 
 import { scrollManager } from './scrollManager';
+import { crashLogger } from './crashLogger';
 
 interface QueueItem {
   id: string;
@@ -26,6 +27,7 @@ class ImageLoadQueue {
     // CRITICAL: Block ALL queueing during active scrolling
     // This prevents memory spikes from rapid scroll events
     if (scrollManager.getIsScrolling()) {
+      crashLogger.log('scroll', `Queue blocked during scroll: ${id}`);
       return false; // Return false so caller knows to retry later
     }
 
@@ -37,9 +39,11 @@ class ImageLoadQueue {
     // Prevent queue explosion: if queue is full, skip this image
     // It will be retried when it comes back into viewport
     if (this.queue.length >= this.maxQueueSize) {
+      crashLogger.log('image', `Queue full (${this.queue.length}/${this.maxQueueSize}), skipping ${id}`);
       return false; // Return false so caller knows to retry later
     }
 
+    crashLogger.log('image', `Enqueuing image: ${id} (queue: ${this.queue.length}, loading: ${this.loading})`);
     this.activeIds.add(id);
     this.queue.push({ id, loadFn });
     this.processQueue();
