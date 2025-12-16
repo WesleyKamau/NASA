@@ -14,7 +14,7 @@ export const enum DebugFeature {
 }
 
 export const DEBUG_CONFIG: Record<DebugFeature, boolean> = {
-  [DebugFeature.ENABLE_DEBUG_MODE]: true,
+  [DebugFeature.ENABLE_DEBUG_MODE]: false,
   [DebugFeature.ENABLE_CRASH_LOGGER]: true,
   [DebugFeature.SHOW_DEBUG_HITBOXES]: false,
 };

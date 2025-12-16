@@ -331,9 +331,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
     photoScrollTimer.current = setInterval(() => {
       // Smoothly fade out current highlight before transitioning
+      // Keep isAutoHighlighting true so non-highlighted faces stay hidden (no border flash)
       setShowCenterIndicator(false);
       setHighlightedPersonIndex(-1);
-      setIsAutoHighlighting(false);
 
       if (autoCycleResetTimer.current) {
         clearTimeout(autoCycleResetTimer.current);
@@ -349,7 +349,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           const next = (prev + 1) % groupPhotos.length;
           // Resume auto-highlighting after image loads and transition completes
           autoCycleResetTimer.current = setTimeout(() => {
-            setIsAutoHighlighting(true);
             setHighlightedPersonIndex(0);
           }, 400); // Slightly longer to ensure image is loaded
           return next;
