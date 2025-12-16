@@ -23,6 +23,28 @@ export default function LoadingWrapper({ children }: LoadingWrapperProps) {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
+  // Disable scrolling while loading
+  useEffect(() => {
+    if (showOverlay) {
+      // Prevent scrolling on body
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      // Re-enable scrolling
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+    }
+
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [showOverlay]);
+
   useEffect(() => {
     // Wait for fonts to load
     const loadFonts = async () => {

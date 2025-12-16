@@ -40,36 +40,19 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     }
   }, []);
 
-  // Handle scroll effects (Scroll hint only - blur is now CSS-only)
+  // Handle scroll effects - Minimal processing for iOS stability
   useEffect(() => {
-    let fadeTimeout: NodeJS.Timeout;
-    let ticking = false;
-    
+    // Only hide scroll hint, no other processing
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-
-          // Handle scroll hint
-          if (scrollY > 100 && showScrollHint) {
-            fadeTimeout = setTimeout(() => {
-              setShowScrollHint(false);
-            }, 300);
-          }
-          
-          ticking = false;
-        });
-        ticking = true;
+      if (window.scrollY > 100 && showScrollHint) {
+        setShowScrollHint(false);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Initial check
-    handleScroll();
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (fadeTimeout) clearTimeout(fadeTimeout);
     };
   }, [showScrollHint]);
 
@@ -86,27 +69,25 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
   };
 
   const handlePersonClick = (person: Person) => {
-    // Scroll to the person's card
+    // Scroll to the person's card without heavy DOM manipulation
     const personCardId = `person-card-mobile-portrait-${person.id}`;
     const cardElement = document.getElementById(personCardId);
     
     if (cardElement) {
-      setTimeout(() => {
-        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Add highlight effect
-        cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-        setTimeout(() => {
-          cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-        }, 2000);
-      }, GENERAL_COMPONENT_CONFIG.SCROLL_TO_CARD_DELAY_MS);
+      // Use simpler scrollIntoView without additional effects
+      cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
   return (
     <>
+<<<<<<< HEAD
       {/* Static Blur Layer - CSS-only for better mobile performance */}
       <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-none z-20" />
+=======
+      {/* Static overlay - No dynamic updates for iOS stability */}
+      <div className="fixed inset-0 bg-black/30 pointer-events-none z-20" />
+>>>>>>> fix/mobile-scroll-crash
 
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-40 min-h-viewport touch-native">
@@ -127,7 +108,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
             }`}
           >
             <div className="flex flex-col items-center gap-1.5">
-              <div className="px-3 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
+              <div className="px-3 py-1.5 bg-black/40 border border-white/10 rounded-full shadow-lg ring-1 ring-white/5">
                 <p className="text-white/80 text-[9px] font-medium tracking-[0.2em] uppercase">
                   Scroll to Explore
                 </p>
@@ -152,7 +133,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
 
         {/* Intro Text with dark blur card */}
         <div className="relative z-10 px-4 pb-16">
-          <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
+          <div className="bg-black/60 border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
             <p className="text-lg font-light leading-relaxed text-slate-200 text-center">
               One of the most impactful parts of my NASA internship was all of the people I got to meet. 
               This lets you learn more about the people who made it special! :)
@@ -185,7 +166,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
         <BackToTop />
 
         {/* Footer with blur */}
-        <footer className="relative z-10 bg-black/30 backdrop-blur-md border-t border-white/5">
+        <footer className="relative z-10 bg-black/70 border-t border-white/5">
           <div className="text-center py-6 px-4 space-y-2.5">
             <div className="flex items-center justify-center">
               <TMinusCounter />

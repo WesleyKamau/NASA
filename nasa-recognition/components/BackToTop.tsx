@@ -40,7 +40,7 @@ export default function BackToTop({ containerId }: BackToTopProps) {
         disabled={isLaunching}
         className={`
           group relative px-8 py-3 rounded-full cursor-pointer
-          bg-white/10 backdrop-blur-xl border border-white/20
+          bg-slate-800/90 border border-white/20
           hover:border-white/40 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:bg-white/15
           transition-all duration-500 ease-out
           overflow-hidden touch-manipulation
