@@ -130,10 +130,9 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
               clearTimeout(debounceTimerRef.current);
             }
             
-            const isIntersectingAtSchedule = entry.isIntersecting;
             debounceTimerRef.current = setTimeout(() => {
-              // Only call tryQueue if the element was still intersecting at the time of scheduling
-              if (isIntersectingAtSchedule) {
+              // Check if element is still in viewport when timeout fires
+              if (isInViewportRef.current) {
                 tryQueue();
               }
             }, 150); // 150ms debounce
