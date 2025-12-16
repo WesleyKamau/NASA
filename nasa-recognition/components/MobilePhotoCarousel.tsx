@@ -27,6 +27,7 @@ const FACE_FADE_DELAY_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DELAY_MS;
 const FACE_FADE_DURATION_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_FADE_DURATION_MS;
 const FACE_TRANSITION_TOTAL_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_TRANSITION_TOTAL_MS;
 const PAN_GESTURE_FADE_OUT_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.PAN_GESTURE_FADE_OUT_MS;
+const PAN_GESTURE_FADE_BUFFER_MS = MOBILE_PHOTO_CAROUSEL_CONFIG.PAN_GESTURE_FADE_BUFFER_MS;
 
 export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick, hideInstructions, highlightedPersonId, onHighlightedPersonChange, isTablet = false }: MobilePhotoCarouselProps) {
   const FACE_HITBOX_PADDING = MOBILE_PHOTO_CAROUSEL_CONFIG.FACE_HITBOX_PADDING;
@@ -76,7 +77,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     panHintFadeTimerRef.current = setTimeout(() => {
       setHasPanned(true);
       panHintFadeTimerRef.current = null;
-    }, PAN_GESTURE_FADE_OUT_MS + 50); // small buffer beyond configured fade
+    }, PAN_GESTURE_FADE_OUT_MS + PAN_GESTURE_FADE_BUFFER_MS);
   }, [hasPanned]);
   const pinchStartDistance = useRef(0);
   const pinchStartScale = useRef(1);
@@ -555,6 +556,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   const handleTouchMove = (e: TouchEvent) => {
     if (interactionLocked && !isZooming) return;
+    
+    // Note: Pan hint dismissal is handled by PanGestureHint's own touch listeners,
+    // not within this touch handler
 
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -606,7 +610,6 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
       });
-      // Pan hint dismissal is handled by PanGestureHint's own touch listeners
       // Update refs for instant feedback
       positionRef.current = {
         x: e.touches[0].clientX - dragStart.x,

@@ -1,5 +1,9 @@
 'use client';
 
+// Note: This page intentionally does NOT use LoadingWrapper.
+// It's a testing/preview page for developers to view Lottie animations
+// directly without the loading screen that appears on the home page.
+
 import { useRef } from 'react';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import swipeGestureAnimation from '@/components/animations/finger_swipe_animation.json';

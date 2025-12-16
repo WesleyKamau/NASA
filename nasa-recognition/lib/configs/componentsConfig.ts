@@ -60,9 +60,10 @@ export const MOBILE_PHOTO_CAROUSEL_CONFIG = {
   ENABLE_PAN_GESTURE_HINT: true,           // Show swipe/pan animation hint if user doesn't interact
   SHOW_PAN_GESTURE_TEXT: false,            // Whether to show the helper text below the animation
   PAN_GESTURE_TEXT_CONTENT: "Swipe to look around", // The text to display if enabled
-  PAN_GESTURE_HINT_DELAY_MS: 9000,        // Delay before showing hint (30 seconds)
+  PAN_GESTURE_HINT_DELAY_MS: 9000,         // Delay before showing hint (9 seconds)
   PAN_GESTURE_HINT_DURATION_MS: 6000,      // How long the animation plays
-  PAN_GESTURE_FADE_OUT_MS: 550,           // Fade-out duration when user starts panning
+  PAN_GESTURE_FADE_OUT_MS: 500,            // Fade-out duration when user starts panning
+  PAN_GESTURE_FADE_BUFFER_MS: 50,          // Buffer time after fade-out before cleanup
 } as const;
 
 // ============================================================================
