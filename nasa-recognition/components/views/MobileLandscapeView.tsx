@@ -52,7 +52,7 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
     <>
       {/* Blur overlay for background */}
       <div 
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm pointer-events-none z-20"
+        className="fixed inset-0 bg-black/30 pointer-events-none z-20"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY }}
       />
       
@@ -72,7 +72,7 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
         {/* Right side - Scrollable content */}
         <div 
           id="desktop-right-panel"
-          className="w-1/2 flex-shrink-0 overflow-y-auto bg-black/30 backdrop-blur-md border-l border-white/10"
+          className="w-1/2 flex-shrink-0 overflow-y-auto bg-black/50 border-l border-white/10"
           style={{
             touchAction: 'pan-y',
             WebkitOverflowScrolling: 'touch',

@@ -718,7 +718,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       </style>
       {/* Photo viewer - fixed vertical rectangle container */}
       <div 
-        className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm aspect-3-4-fallback" 
+        className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/70 aspect-3-4-fallback" 
         style={{ 
           width: '100%', 
           height: (isIPad || isTablet || (isLandscape && isTouchMode)) ? '75vh' : undefined,
@@ -1125,7 +1125,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
         {/* Photo name overlay */}
         <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20">
-          <div className="bg-black/60 backdrop-blur-sm px-2 py-1 sm:px-4 sm:py-2 rounded-lg">
+          <div className="bg-black/70 px-2 py-1 sm:px-4 sm:py-2 rounded-lg">
             <h3
               className="text-white font-semibold text-sm sm:text-lg leading-snug"
               style={{
@@ -1141,7 +1141,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
         {/* Zoom controls - compact in top right */}
         {isTouchMode && (
-          <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg p-1">
+          <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 bg-black/70 rounded-lg p-1">
             {(scale > 1 || position.x !== 0 || position.y !== 0) && (
               <>
                 <button
@@ -1242,7 +1242,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           <>
             <button
               onClick={() => handlePhotoNavigation((currentPhotoIndex - 1 + groupPhotos.length) % groupPhotos.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/60 backdrop-blur-sm text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:left-4 md:p-3"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/70 text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:left-4 md:p-3"
               aria-label="Previous photo"
             >
               <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1251,7 +1251,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
             </button>
             <button
               onClick={() => handlePhotoNavigation((currentPhotoIndex + 1) % groupPhotos.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/60 backdrop-blur-sm text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:right-4 md:p-3"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/70 text-white p-2.5 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation shadow-lg md:right-4 md:p-3"
               aria-label="Next photo"
             >
               <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
