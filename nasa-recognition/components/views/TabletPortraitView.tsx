@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { GroupPhoto, Person } from '@/types';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
-import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 import { useViewportHeight } from '@/hooks/useViewportHeight';
 
 interface TabletPortraitViewProps {
@@ -18,26 +17,13 @@ interface TabletPortraitViewProps {
 export default function TabletPortraitView({ groupPhotos, people }: TabletPortraitViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
-  const [dismissedCallouts, setDismissedCallouts] = useState<Set<string>>(new Set());
   
   // Use custom viewport height hook for proper iOS Safari handling
-  const { isReady: viewportReady } = useViewportHeight();
+  useViewportHeight();
 
   // Scroll to top on mount/reload
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
-
-  // Load dismissed callouts from localStorage
-  useEffect(() => {
-    try {
-      const dismissed = localStorage.getItem('dismissedCallouts');
-      if (dismissed) {
-        setDismissedCallouts(new Set(JSON.parse(dismissed)));
-      }
-    } catch (_e) {
-      // localStorage unavailable or malformed JSON; ignore and use default
-    }
   }, []);
 
   // Handle scroll effects - Minimal processing for iOS stability
@@ -55,17 +41,6 @@ export default function TabletPortraitView({ groupPhotos, people }: TabletPortra
       window.removeEventListener('scroll', handleScroll);
     };
   }, [showScrollHint]);
-
-  const dismissCallout = (id: string) => {
-    const newDismissed = new Set(dismissedCallouts);
-    newDismissed.add(id);
-    setDismissedCallouts(newDismissed);
-    try {
-      localStorage.setItem('dismissedCallouts', JSON.stringify(Array.from(newDismissed)));
-    } catch (e) {
-      console.error('Failed to save dismissed callouts to localStorage:', e);
-    }
-  };
 
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card without heavy DOM manipulation

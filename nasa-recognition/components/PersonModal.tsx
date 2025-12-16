@@ -25,11 +25,13 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     };
     
     // Prevent body scroll when modal is open
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleEscape);
     
     return () => {
-      document.body.style.overflow = 'unset';
+      // Restore original overflow (empty string properly resets to CSS default)
+      document.body.style.overflow = originalOverflow || '';
       window.removeEventListener('keydown', handleEscape);
     };
   }, [onClose]);

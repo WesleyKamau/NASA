@@ -20,23 +20,26 @@ export default function TMinusCounter() {
   const [nextLaunchTs, setNextLaunchTs] = useState(() => getNextLaunchTimestamp() ?? (Date.now() + LAUNCH_INITIAL_DELAY_MS));
   const [now, setNow] = useState(Date.now());
   const [justLaunched, setJustLaunched] = useState(false);
-  const rafRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const launchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const tick = () => {
+    // Use setInterval instead of RAF - more efficient for a simple counter
+    intervalRef.current = setInterval(() => {
       setNow(Date.now());
-      rafRef.current = requestAnimationFrame(tick);
-    };
+    }, 1000); // Update once per second is sufficient for countdown
 
     const unsubscribe = subscribeToNextLaunch((ts) => {
       setNextLaunchTs(ts);
       setJustLaunched(true);
-      setTimeout(() => setJustLaunched(false), 1000);
+      // Track timeout for cleanup
+      if (launchTimeoutRef.current) clearTimeout(launchTimeoutRef.current);
+      launchTimeoutRef.current = setTimeout(() => setJustLaunched(false), 1000);
     });
 
-    rafRef.current = requestAnimationFrame(tick);
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (launchTimeoutRef.current) clearTimeout(launchTimeoutRef.current);
       unsubscribe();
     };
   }, []);
