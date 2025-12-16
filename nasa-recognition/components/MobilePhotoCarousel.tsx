@@ -772,7 +772,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               height={photoHeight}
               unoptimized
               className="w-full h-full object-contain pointer-events-none"
-              style={{ imageRendering: 'auto' }}
+              style={{ imageRendering: 'auto', objectPosition: 'center center' }}
               priority
               draggable={false}
               onLoad={(e) => {
