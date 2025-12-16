@@ -341,7 +341,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     if (!current) return;
 
     const enabled = isAutoScrolling && isAutoHighlighting && shuffledPeople.length > 0;
-    const peopleCount = getPeopleInPhoto(people, current.id).length;
+    const peopleCount = shuffledPeople.length;
 
     const cleanup = startAutoCycle({
       enabled,
