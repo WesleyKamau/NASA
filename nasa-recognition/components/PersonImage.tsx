@@ -19,6 +19,7 @@ interface PersonImageProps {
 export default function PersonImage({ person, groupPhotos, className = '', priority = false, forcePhotoId, show = true }: PersonImageProps) {
   const [imageError, setImageError] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(priority); // Only load immediately if priority
+  const [isLoaded, setIsLoaded] = useState(false); // Track when image finishes loading for animation
   const containerRef = useRef<HTMLDivElement>(null);
   const [isQueued, setIsQueued] = useState(false);
   const onLoadDoneRef = useRef<(() => void) | null>(null);
@@ -181,7 +182,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
           alt={person.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className={`object-cover ${className}`}
+          className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
           onError={() => {
             setImageError(true);
             if (onLoadDoneRef.current) {
@@ -190,6 +191,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
             }
           }}
           onLoad={() => {
+            setIsLoaded(true);
             if (onLoadDoneRef.current) {
               onLoadDoneRef.current();
               onLoadDoneRef.current = null;
@@ -211,7 +213,9 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
       const cy = y + height / 2;
 
       return (
-        <div className="relative w-full h-full overflow-hidden">
+        <div 
+          className={`relative w-full h-full overflow-hidden transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={imageInfo.src}
@@ -237,6 +241,7 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
               }
             }}
             onLoad={() => {
+              setIsLoaded(true);
               if (onLoadDoneRef.current) {
                 onLoadDoneRef.current();
                 onLoadDoneRef.current = null;
