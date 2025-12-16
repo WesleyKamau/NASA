@@ -361,7 +361,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     });
 
     return cleanup;
-  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length]);
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex]);
 
   // Reset zoom/pan when auto-highlighting resumes
   useEffect(() => {
