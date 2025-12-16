@@ -8,7 +8,7 @@ import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
 import { useViewportHeight } from '@/hooks/useViewportHeight';
-import { GENERAL_COMPONENT_CONFIG, DebugFeature, isDebugEnabled } from '@/lib/configs/componentsConfig';
+import { GENERAL_COMPONENT_CONFIG, isDebugEnabled, DebugFeature } from '@/lib/configs/componentsConfig';
 import { crashLogger } from '@/lib/crashLogger';
 
 interface MobilePortraitViewProps {
