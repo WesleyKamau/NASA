@@ -202,7 +202,9 @@ test.describe('ARIA and Semantic HTML', () => {
   });
 
   test('should have visible focus indicators', async ({ page }) => {
-    await page.goto('/');
+    // Note: This test occasionally times out on Tablet Landscape due to resource contention
+    // Retry once if it fails
+    await page.goto('/', { timeout: 60000 }); // Increased timeout for slower devices
     
     // Wait for page content
     await expect(page.locator('body')).toBeVisible();

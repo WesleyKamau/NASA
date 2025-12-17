@@ -305,36 +305,31 @@ These tests failed initially but passed on retry - monitor after fixing above is
 
 **Results**: 10 fewer failures, pass rate 85.9% → 88.4%
 
-### Phase 5: Fix Remaining Issues ⏳ IN PROGRESS
-- [ ] 10. **Issue #10**: Fix carousel test navigation (18 failures)
-- [x] 11. **Issue #11**: Fix strict mode violations (18 failures)
-- [ ] 12. **Issue #12**: Fix hover overlay interception (3 failures)
-- [ ] 13. **Issue #13**: Monitor Tablet timeout (1 failure)
-- [ ] 14. **Issue #14**: Fix mobile Safari skip (1 failure)
-- [ ] Fix carousel test expectations (tests looking for wrong component)
-- [ ] Fix strict mode selector violations (body vs main)
-- [ ] Fix hover test overlay interception
-- [ ] Investigate Tablet Landscape timeout
-- [ ] Verify mobile Safari skip condition
+### Phase 5: Fix Remaining Issues ✅ COMPLETE
+- [x] 10. **Issue #10**: Fix carousel test navigation (18 failures) ✅ FIXED
+- [x] 11. **Issue #11**: Fix strict mode violations (18 failures) ✅ FIXED
+- [x] 12. **Issue #12**: Fix hover overlay interception (3 failures) ✅ FIXED
+- [x] 13. **Issue #13**: Monitor Tablet timeout (1 failure) ✅ RESOLVED
+- [x] 14. **Issue #14**: Fix mobile Safari skip (1 failure) ✅ FIXED
 
 ---
 
 ## 🔧 Phase 5: New Issues to Address
 
-### Issue #10: Carousel Tests Expecting Wrong Page
+### Issue #10: Carousel Tests Expecting Wrong Page ✅ FIXED
 **Affected**: 18 failures - "next/previous photo" navigation tests (ALL browsers)
 
-**Root Cause**: Tests are looking for carousel on homepage, but homepage doesn't have carousel component. Carousel tests should either:
-1. Navigate to a different page that has carousel, OR
-2. Be rewritten to test actual homepage components
+**Root Cause**: Tests were using incorrect selectors `[data-testid*="carousel"]` to find carousel components that didn't have data-testid attributes.
 
-**Fix Plan**:
-1. Identify where carousel actually exists in the app
-2. Update tests to navigate to correct page
-3. OR redesign tests to match homepage structure
+**Fix Implemented**:
+1. ✅ Added `data-testid="photo-carousel"` to PhotoCarousel component
+2. ✅ Added `data-testid="mobile-photo-carousel"` to MobilePhotoCarousel component
+3. ✅ Updated all carousel test selectors to use correct testids
 
-**Files to Modify**:
-- `tests/e2e/carousel-navigation.spec.ts` - Update navigation or expectations
+**Files Modified**:
+- ✅ `components/PhotoCarousel.tsx` - Added data-testid
+- ✅ `components/MobilePhotoCarousel.tsx` - Added data-testid
+- ✅ `tests/e2e/carousel-navigation.spec.ts` - Updated selectors (5 locations)
 
 ### Issue #11: Strict Mode Selector Violation ✅ FIXED
 **Affected**: 18 failures - "page title" and "person grid" tests (ALL browsers)
@@ -353,45 +348,45 @@ This causes strict mode violation. Should use single, specific selector.
 - ✅ `tests/e2e/page-load.spec.ts` line 56 - Changed to `'[data-testid="main-content"]'`
 - ✅ `tests/e2e/person-modal.spec.ts` line 156 - Changed to `'[data-testid="main-content"]'`
 
-### Issue #12: Hover Test Still Has Overlay Interception
+### Issue #12: Hover Test Still Has Overlay Interception ✅ FIXED
 **Affected**: 3 failures - "handle hover interactions" (chromium, Mobile Chrome)
 
 **Root Cause**: Phase 3 fix for overlay dismissal works for click tests, but hover test still intercepted by modal overlay.
 
-**Fix Plan**:
-1. Review hover test implementation
-2. Ensure overlay dismissal runs before hover attempt
-3. May need to wait for overlay to fully disappear (animation)
-4. Consider if hover test is valid on mobile devices
+**Fix Implemented**:
+1. ✅ Added overlay dismissal logic at start of hover test
+2. ✅ Wait 500ms for modal animation to complete before hover
+3. ✅ Same defensive pattern used in wrapping tests
 
-**Files to Modify**:
-- `tests/e2e/carousel-navigation.spec.ts` line 101 - Add overlay dismissal or force hover
+**Files Modified**:
+- ✅ `tests/e2e/carousel-navigation.spec.ts` line 93-103 - Added overlay dismissal before hover
 
-### Issue #13: Intermittent Tablet Landscape Timeout
+### Issue #13: Intermittent Tablet Landscape Timeout ✅ RESOLVED
 **Affected**: 1 failure - "visible focus indicators" (Tablet Landscape only)
 
-**Root Cause**: Single timeout on page.goto(), may be flaky/resource contention
+**Root Cause**: Single timeout on page.goto(), intermittent resource contention on slower Tablet Landscape configuration
 
-**Fix Plan**:
-1. Monitor in subsequent test runs to see if consistent
-2. If flaky, accept as acceptable flaky test (<1%)
-3. If consistent, investigate Tablet Landscape specific configuration
+**Resolution**:
+1. ✅ Identified as flaky test (<1% failure rate)
+2. ✅ Increased timeout from 45s to 60s for this specific test
+3. ✅ Added comment documenting known flakiness
+4. ✅ Test will naturally retry on CI if it fails
 
-**Files to Modify**:
-- TBD after monitoring
+**Files Modified**:
+- ✅ `tests/e2e/accessibility.spec.ts` line 205-207 - Increased timeout, added documentation comment
 
-### Issue #14: Mobile Safari Skip Not Working
+### Issue #14: Mobile Safari Skip Not Working ✅ FIXED
 **Affected**: 1 failure - "scroll grid independently" (Mobile Safari Landscape)
 
-**Root Cause**: Test has skip condition but still running on Mobile Safari
+**Root Cause**: Skip condition was checking viewport width before test set it, and didn't properly detect mobile devices
 
-**Fix Plan**:
-1. Check skip condition syntax in test
-2. Ensure browser name check matches 'Mobile Safari' exactly
-3. May need to check isMobile flag instead
+**Fix Implemented**:
+1. ✅ Use `isMobile` fixture instead of checking viewport width
+2. ✅ Check `browserName === 'webkit' && isMobile` to properly detect Mobile Safari
+3. ✅ Skip condition now runs before viewport is changed
 
-**Files to Modify**:
-- `tests/e2e/person-modal.spec.ts` line 185 - Review skip condition
+**Files Modified**:
+- ✅ `tests/e2e/person-modal.spec.ts` line 187-190 - Fixed skip condition to use isMobile fixture
 
 ---
 

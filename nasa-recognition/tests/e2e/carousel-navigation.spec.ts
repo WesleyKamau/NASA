@@ -16,7 +16,7 @@ test.describe('Desktop Carousel Navigation', () => {
 
   test('should navigate to next photo using button', async ({ page }) => {
     // Wait for carousel to be visible
-    const carousel = page.locator('[data-testid*="carousel"], [class*="carousel"]').first();
+    const carousel = page.locator('[data-testid="photo-carousel"], [data-testid="mobile-photo-carousel"]').first();
     await expect(carousel).toBeVisible({ timeout: 10000 });
     
     // Find and click next button
@@ -37,7 +37,7 @@ test.describe('Desktop Carousel Navigation', () => {
   });
 
   test('should navigate to previous photo using button', async ({ page }) => {
-    const carousel = page.locator('[data-testid*="carousel"], [class*="carousel"]').first();
+    const carousel = page.locator('[data-testid="photo-carousel"], [data-testid="mobile-photo-carousel"]').first();
     await expect(carousel).toBeVisible({ timeout: 10000 });
     
     // Find and click previous button
@@ -93,6 +93,16 @@ test.describe('Desktop Carousel Navigation', () => {
   test('should handle hover interactions on desktop', async ({ page }) => {
     await page.waitForTimeout(2000);
     
+    // Dismiss any blocking overlays before hover test
+    const blockingOverlay = page.locator('[class*="fixed"],[class*="modal"],[role="dialog"]').filter({ has: page.locator('[style*="opacity"]') });
+    if (await blockingOverlay.first().isVisible()) {
+      const closeBtn = page.getByRole('button', { name: /close|dismiss/i }).or(page.locator('button[aria-label*="close"]')).first();
+      if (await closeBtn.isVisible()) {
+        await closeBtn.click({ force: true });
+        await page.waitForTimeout(500); // Wait for modal to fully close with animation
+      }
+    }
+    
     // Find a person card or grid item
     const personCards = page.locator('[data-testid*="person"], [class*="person-card"]');
     
@@ -125,7 +135,7 @@ test.describe('Mobile Carousel Navigation', () => {
     await page.waitForTimeout(2000);
     
     // Find mobile carousel
-    const carousel = page.locator('[data-testid*="mobile-carousel"], [data-testid*="carousel"]').first();
+    const carousel = page.locator('[data-testid="photo-carousel"], [data-testid="mobile-photo-carousel"]').first();
     
     if (await carousel.isVisible()) {
       const box = await carousel.boundingBox();
@@ -159,7 +169,7 @@ test.describe('Mobile Carousel Navigation', () => {
     await page.waitForTimeout(2000);
     
     // Tap on the carousel
-    const carousel = page.locator('[data-testid*="carousel"]').first();
+    const carousel = page.locator('[data-testid="photo-carousel"], [data-testid="mobile-photo-carousel"]').first();
     if (await carousel.isVisible()) {
       await carousel.tap();
       await page.waitForTimeout(1000);

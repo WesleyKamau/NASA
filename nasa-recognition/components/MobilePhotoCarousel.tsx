@@ -691,7 +691,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-testid="mobile-photo-carousel">
       {/* Fallback for aspect-ratio using padding-bottom technique */}
       <style>
         {`

@@ -184,9 +184,9 @@ test.describe('Person Grid Navigation', () => {
     expect(headerCount).toBeGreaterThanOrEqual(0);
   });
 
-  test('should scroll grid independently on desktop', async ({ page, browserName }) => {
-    // Skip on mobile Safari - mouse wheel not supported
-    if (browserName === 'webkit' && page.viewportSize()!.width < 768) {
+  test('should scroll grid independently on desktop', async ({ page, browserName, isMobile }) => {
+    // Skip on mobile Safari - mouse wheel not supported in mobile WebKit
+    if (browserName === 'webkit' && isMobile) {
       test.skip();
     }
     
