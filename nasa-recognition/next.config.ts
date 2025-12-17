@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 
+// Enable bundle analyzer via `ANALYZE=true` env
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   /* config options here */
   
@@ -10,4 +16,4 @@ const nextConfig: NextConfig = {
   }),
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

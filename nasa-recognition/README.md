@@ -101,6 +101,12 @@ npm run test:e2e:report
 - [E2E Fixes TODO](E2E_FIXES_TODO.md) - Complete implementation history
 - [E2E Failures Report](E2E_FAILURES_REPORT.md) - Latest test results (0 failures!)
 
+## ⚡ Performance & A11y
+
+- Bundle analysis: `npm run analyze` opens the webpack bundle analyzer (set `ANALYZE=true`).
+- Lighthouse CI: `npm run lhci` runs audits using the config in [.lighthouserc.json](.lighthouserc.json). It builds and starts the app automatically and asserts baseline scores (perf ≥ 0.8, a11y ≥ 0.9).
+- Tuning: adjust budgets or URLs in [.lighthouserc.json](.lighthouserc.json) as needed.
+
 ## 📸 Adding Photos
 
 ### Group Photos
