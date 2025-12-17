@@ -3,8 +3,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Person Modal Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content instead of networkidle
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000); // Wait for initial render
+  });
+
+  test.afterEach(async ({ page }) => {
+    await page.close();
   });
 
   test('should open modal when clicking person card from grid', async ({ page }) => {
@@ -139,25 +145,35 @@ test.describe('Person Modal Flow', () => {
 });
 
 test.describe('Person Grid Navigation', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should display person grid', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    
+    // Wait for page content instead of networkidle
+    await expect(page.locator('[data-testid="main-content"], body')).toBeVisible();
+    await page.waitForTimeout(3000); // Extra time for content to load
     
     // Look for grid container or person cards
-    const grid = page.locator('[data-testid*="grid"], [class*="grid"]').first();
+    const grid = page.locator('[data-testid="person-grid"], [data-testid*="grid"], [class*="grid"]').first();
     const personCards = page.locator('[data-testid="person-card"]');
     
     // Either grid or cards should be visible
     const gridVisible = await grid.isVisible().catch(() => false);
     const cardsCount = await personCards.count();
-    
-    expect(gridVisible || cardsCount > 0).toBe(true);
+
+    if (!gridVisible && cardsCount === 0) {
+      throw new Error('Person grid not visible and no person cards found');
+    }
   });
 
   test('should organize people by categories', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Look for category headers
@@ -168,10 +184,17 @@ test.describe('Person Grid Navigation', () => {
     expect(headerCount).toBeGreaterThanOrEqual(0);
   });
 
-  test('should scroll grid independently on desktop', async ({ page }) => {
+  test('should scroll grid independently on desktop', async ({ page, browserName }) => {
+    // Skip on mobile Safari - mouse wheel not supported
+    if (browserName === 'webkit' && page.viewportSize()!.width < 768) {
+      test.skip();
+    }
+    
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Find scrollable grid area
@@ -193,9 +216,15 @@ test.describe('Person Grid Navigation', () => {
 });
 
 test.describe('Person Selection Flow', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should highlight person in grid when selected', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     const personCard = page.locator('[data-testid="person-card"]').first();
@@ -213,7 +242,9 @@ test.describe('Person Selection Flow', () => {
   test('should sync selection between carousel and grid', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // This tests the bidirectional sync between components

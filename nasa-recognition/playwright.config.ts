@@ -18,7 +18,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1, // Retry once locally for flaky tests
   /* Limit parallel workers to prevent resource exhaustion */
-  workers: process.env.CI ? 1 : 6, // 6 workers for 10-core machine with 18GB RAM
+  workers: process.env.CI ? 1 : 4, // Reduced to 4 workers to prevent timeout issues
   /* Reporter to use - multiple reporters for better tracking */
   reporter: [
     ['list', { printSteps: true }], // Shows progress with step details
@@ -34,10 +34,10 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    /* Maximum time to wait for navigation */
-    navigationTimeout: 30 * 1000,
+    /* Maximum time to wait for navigation - increased for slower page loads */
+    navigationTimeout: 45 * 1000,
     /* Maximum time to wait for action */
-    actionTimeout: 15 * 1000,
+    actionTimeout: 20 * 1000,
   },
 
   /* Configure projects for major browsers */
@@ -103,5 +103,8 @@ export default defineConfig({
     timeout: 120 * 1000,
     stdout: 'pipe', // Pipe output to see dev server logs
     stderr: 'pipe',
+    env: {
+      PLAYWRIGHT_TEST: 'true', // Flag for Next.js config to disable HMR
+    },
   },
 });

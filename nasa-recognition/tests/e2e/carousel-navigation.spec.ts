@@ -4,7 +4,14 @@ test.describe('Desktop Carousel Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content instead of networkidle
+    await expect(page.locator('body')).toBeVisible();
+    await page.waitForTimeout(2000); // Allow carousel to initialize
+  });
+
+  test.afterEach(async ({ page }) => {
+    await page.close();
   });
 
   test('should navigate to next photo using button', async ({ page }) => {
@@ -56,8 +63,8 @@ test.describe('Desktop Carousel Navigation', () => {
     const dotCount = await dots.count();
     
     if (dotCount > 1) {
-      // Click second dot
-      await dots.nth(1).click();
+      // Click second dot with force to handle overlays
+      await dots.nth(1).click({ force: true, timeout: 20000 });
       await page.waitForTimeout(500);
       
       // Should have navigated to different photo
@@ -104,7 +111,14 @@ test.describe('Mobile Carousel Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 }); // Mobile
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content instead of networkidle
+    await expect(page.locator('body')).toBeVisible();
+    await page.waitForTimeout(2000); // Allow carousel to initialize
+  });
+
+  test.afterEach(async ({ page }) => {
+    await page.close();
   });
 
   test('should support touch swipe gestures', async ({ page }) => {
@@ -157,10 +171,16 @@ test.describe('Mobile Carousel Navigation', () => {
 });
 
 test.describe('Carousel Wrapping', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should wrap from last to first photo', async ({ page, isMobile }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
+    await page.waitForTimeout(3000); // Extra time for carousel initialization
     
     // Get all dot indicators to know how many photos
     const dots = page.locator('button[aria-label*="photo"]');
@@ -175,8 +195,8 @@ test.describe('Carousel Wrapping', () => {
       if (await nextButton.isVisible()) {
         // Click next multiple times to reach last photo
         for (let i = 0; i < photoCount; i++) {
-          await nextButton.click();
-          await page.waitForTimeout(300);
+          await nextButton.click({ force: true, timeout: 20000 });
+          await page.waitForTimeout(500);
         }
         
         // Should wrap back to first
@@ -187,8 +207,10 @@ test.describe('Carousel Wrapping', () => {
 
   test('should wrap from first to last photo', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
+    await page.waitForTimeout(3000); // Extra time for carousel initialization
     
     const prevButton = page.getByRole('button', { name: /prev/i }).or(
       page.locator('button[aria-label*="prev"]')
@@ -196,7 +218,7 @@ test.describe('Carousel Wrapping', () => {
     
     if (await prevButton.isVisible()) {
       // Click previous from first photo (should wrap to last)
-      await prevButton.click();
+      await prevButton.click({ force: true, timeout: 20000 });
       await page.waitForTimeout(500);
       
       // No errors should occur

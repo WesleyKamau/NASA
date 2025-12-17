@@ -19,14 +19,14 @@ export default function PersonGrid({ people, groupPhotos, title }: PersonGridPro
 
   return (
     <>
-      <div className="w-full">
+      <div className="w-full" data-testid="person-grid">
         {title && (
           <h2 className="text-3xl font-bold text-white mb-6 text-center">
             {title}
           </h2>
         )}
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" data-testid="person-grid-cards">
           {visiblePeople.map((person) => (
             <PersonCard
               key={person.id}

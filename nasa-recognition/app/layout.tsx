@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE_CONFIG } from "@/lib/configs/siteConfig";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,12 +21,12 @@ const getBaseUrl = () => {
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
-  title: "MSFC Book of Faces",
-  description: "Recognizing the amazing people from my NASA internship experience",
+  title: SITE_CONFIG.title,
+  description: SITE_CONFIG.description,
   openGraph: {
-    title: "MSFC Book of Faces",
-    description: "An interactive digital yearbook celebrating the Spring 2025 NASA internship",
-    siteName: "MSFC Book of Faces",
+    title: SITE_CONFIG.title,
+    description: SITE_CONFIG.shortDescription,
+    siteName: SITE_CONFIG.title,
     locale: 'en_US',
     type: 'website',
   },

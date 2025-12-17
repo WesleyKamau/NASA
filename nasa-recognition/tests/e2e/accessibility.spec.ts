@@ -1,9 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Keyboard Navigation', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should support Tab navigation', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content instead of networkidle
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Press Tab multiple times
@@ -22,7 +28,9 @@ test.describe('Keyboard Navigation', () => {
 
   test('should support Shift+Tab for reverse navigation', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Tab forward first
@@ -39,7 +47,9 @@ test.describe('Keyboard Navigation', () => {
 
   test('should support Escape key to close modals', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Try to open a modal
@@ -60,7 +70,9 @@ test.describe('Keyboard Navigation', () => {
 
   test('should support Enter key to activate buttons', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Tab to a button
@@ -79,7 +91,9 @@ test.describe('Keyboard Navigation', () => {
 
   test('should trap focus within modal', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     const personCard = page.locator('[data-testid="person-card"]').first();
@@ -112,9 +126,15 @@ test.describe('Keyboard Navigation', () => {
 });
 
 test.describe('ARIA and Semantic HTML', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should have proper ARIA roles', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Check for common ARIA roles
@@ -126,7 +146,9 @@ test.describe('ARIA and Semantic HTML', () => {
 
   test('should have accessible button labels', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Check that buttons have aria-label or text content
@@ -147,7 +169,9 @@ test.describe('ARIA and Semantic HTML', () => {
 
   test('should have alt text on images', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(3000); // Wait for images to load
     
     const images = page.locator('img[src*="/photos"]');
@@ -164,7 +188,9 @@ test.describe('ARIA and Semantic HTML', () => {
 
   test('should have proper heading hierarchy', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Check for headings
@@ -177,7 +203,9 @@ test.describe('ARIA and Semantic HTML', () => {
 
   test('should have visible focus indicators', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Tab to first interactive element
@@ -203,9 +231,15 @@ test.describe('ARIA and Semantic HTML', () => {
 });
 
 test.describe('Screen Reader Support', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should have landmark regions', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     
     // Check for main landmark
     const main = page.locator('main, [role="main"]');
@@ -216,7 +250,9 @@ test.describe('Screen Reader Support', () => {
 
   test('should announce dynamic content changes', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Check for live regions
@@ -229,7 +265,9 @@ test.describe('Screen Reader Support', () => {
 
   test('should have descriptive link text', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // Check links
@@ -248,9 +286,15 @@ test.describe('Screen Reader Support', () => {
 });
 
 test.describe('Color Contrast', () => {
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should have sufficient contrast for text', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for page content
+    await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(2000);
     
     // This is a basic check - full contrast analysis requires tools like axe-core

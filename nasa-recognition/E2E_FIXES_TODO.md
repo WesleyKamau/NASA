@@ -293,23 +293,23 @@ These tests failed initially but passed on retry - monitor after fixing above is
 ### Before Starting
 - [x] Analyze test results
 - [x] Create comprehensive TODO
-- [ ] Read through all failed test code
-- [ ] Understand application structure
+- [x] Read through all failed test code
+- [x] Understand application structure
 
 ### Phase 1: Infrastructure
-- [ ] Update playwright.config.ts (navigationTimeout: 45000)
-- [ ] Create test environment detection in next.config.ts
-- [ ] Update all beforeEach hooks to wait for specific elements
-- [ ] Add afterEach cleanup hooks
-- [ ] Reduce workers to 4 in playwright.config.ts
+- [x] Update playwright.config.ts (navigationTimeout: 45000)
+- [x] Create test environment detection in next.config.ts
+- [x] Update all beforeEach hooks to wait for specific elements
+- [x] Add afterEach cleanup hooks
+- [x] Reduce workers to 4 in playwright.config.ts
 - [ ] Run tests to verify timeout fixes
 
 ### Phase 2: Test Logic
-- [ ] Fix page title test (check app/layout.tsx)
-- [ ] Add data-testid="main-content" to layout
-- [ ] Update main element selector in tests
-- [ ] Add data-testid to PersonGrid component
-- [ ] Update grid visibility tests with better assertions
+- [x] Fix page title test (check app/layout.tsx)
+- [x] Add data-testid="main-content" to layout
+- [x] Update main element selector in tests
+- [x] Add data-testid to PersonGrid component
+- [x] Update grid visibility tests with better assertions
 - [ ] Run tests to verify logic fixes
 
 ### Phase 3: Browser-Specific
