@@ -10,7 +10,7 @@ interface PersonHighlightProps {
   photoDimensions: { width: number; height: number };
 }
 
-const PersonHighlight: React.FC<PersonHighlightProps> = ({ photoId, allPeople, photoDimensions }) => {
+const PersonHighlight: React.FC<PersonHighlightProps> = ({ photoId, allPeople }) => {
   const [highlightedPerson, setHighlightedPerson] = useState<{ person: Person; location: PhotoLocation } | null>(null);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const PersonHighlight: React.FC<PersonHighlightProps> = ({ photoId, allPeople, p
 
   const { person, location } = highlightedPerson;
   const { x, y, width: cropWidth, height: cropHeight } = location;
-  const { width, height } = photoDimensions;
+  // const { width } = photoDimensions; // TODO: Not currently used
 
   // Calculate position and size based on original photo dimensions
   const left = `${x + cropWidth / 2}%`;

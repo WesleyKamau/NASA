@@ -5,7 +5,7 @@
 
 import { isDebugEnabled, DebugFeature } from './configs/componentsConfig';
 
-interface CrashLog {
+export interface CrashLog {
   timestamp: string;
   type: 'error' | 'memory' | 'image' | 'scroll';
   message: string;
@@ -109,11 +109,12 @@ class CrashLogger {
         break; // Success
       } catch (e: unknown) {
         // If quota exceeded, remove oldest log and retry
+        const error = e as { name?: string; code?: number };
         if (
           e &&
-          (e.name === 'QuotaExceededError' ||
-            e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-            (typeof e.code === 'number' && e.code === 22))
+          (error.name === 'QuotaExceededError' ||
+            error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+            (typeof error.code === 'number' && error.code === 22))
         ) {
           if (this.logs.length > 0) {
             this.logs.shift(); // Remove oldest log

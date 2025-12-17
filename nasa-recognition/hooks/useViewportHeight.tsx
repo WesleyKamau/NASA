@@ -75,7 +75,7 @@ export function useViewportHeight() {
         document.documentElement.style.removeProperty('--viewport-height');
       }
     };
-  }, []);
+  }, [updateViewportHeight]);
 
   return {
     viewportHeight,

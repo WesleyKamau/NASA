@@ -1,9 +1,9 @@
-import { preloadImage, preloadCarouselImages, preloadPersonImages, preloadCarouselHighlights, preloadAll, cleanupHighlights } from '@/lib/preload';
+import { preloadImage, preloadCarouselImages, preloadPersonImages, preloadCarouselHighlights, preloadAll } from '@/lib/preload';
 
 function mockRAFDeferred() {
   const calls: FrameRequestCallback[] = [];
   const raf = (cb: FrameRequestCallback) => { calls.push(cb); return calls.length; };
-  const caf = (_: number) => void 0;
+  const caf = () => void 0;
   const flush = () => { const cbs = calls.splice(0); cbs.forEach(cb => cb(Date.now())); };
   return { raf, caf, flush };
 }

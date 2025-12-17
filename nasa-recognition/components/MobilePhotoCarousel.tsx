@@ -2,7 +2,8 @@
 
 import { GroupPhoto, Person, PhotoLocation } from '@/types';
 import Image from 'next/image';
-import { useState, useEffect, useRef, useCallback, TouchEvent, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, TouchEvent } from 'react';
+// import { useLayoutEffect } from 'react'; // TODO: Not currently used
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
 import CarouselNameTag from './CarouselNameTag';
@@ -40,8 +41,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isAutoHighlighting, setIsAutoHighlighting] = useState(true);
   const [shuffledPeople, setShuffledPeople] = useState<Person[]>([]);
-  const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
+
   const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
+  const [, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [photoDimensions, setPhotoDimensions] = useState<Record<string, { width: number; height: number }>>({});
   const [showCenterIndicator, setShowCenterIndicator] = useState(false);
   const [overlaysReadyForPhoto, setOverlaysReadyForPhoto] = useState<string | null>(null);
@@ -177,6 +179,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     detectTouchMode();
     window.addEventListener('resize', detectTouchMode);
     return () => window.removeEventListener('resize', detectTouchMode);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Comprehensive cleanup of ALL timers and animation frames on unmount
@@ -362,6 +365,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     });
 
     return cleanup;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex]);
 
   // Reset zoom/pan when auto-highlighting resumes
@@ -447,6 +451,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     setIsAutoHighlighting(false);
     setHighlightedPersonIndex(personIndex);
     pauseAutoScroll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightedPersonId, shuffledPeople, pauseAutoScroll]);
 
   const pauseAllAuto = useCallback(() => {
@@ -553,8 +558,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       pauseAllAuto();
     }
   };
-
-  const handleTouchMove = (e: TouchEvent) => {
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     if (interactionLocked && !isZooming) return;
     
     // Note: Pan hint dismissal is handled by PanGestureHint's own touch listeners,
@@ -618,7 +622,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
       // Update center indicator during drag
       setCenterIndicatorForce(prev => prev + 1);
     }
-  };
+  }, [interactionLocked, isZooming, isDragging, currentPhoto, scale, position, dragStart, autoZoomedOnPan]);
 
   useEffect(() => {
     touchMoveHandlerRef.current = handleTouchMove;
@@ -628,7 +632,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     const element = containerRef.current;
     if (!element) return;
 
-    const listener: EventListener = (event) => {
+    const listener: EventListener = () => {
       const touchEvent = event as unknown as TouchEvent;
       touchEvent.preventDefault();
       touchEvent.stopPropagation();
@@ -661,7 +665,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     }
   };
 
-  const handleDoubleTap = (e: TouchEvent | React.MouseEvent) => {
+  const handleDoubleTap = () => {
     if (interactionLocked) return;
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
@@ -688,7 +692,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     setShowCenterIndicator(true);
   };
 
-  const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
+  // const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
 
   return (
     <div className="w-full" data-testid="mobile-photo-carousel">
@@ -721,9 +725,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
-          onClick={(e) => {
+          onClick={() => {
             if (isTouchMode) {
-              handleDoubleTap(e as unknown as TouchEvent);
+              handleDoubleTap();
             }
           }}
           style={{ touchAction: 'none' }}
@@ -831,7 +835,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 if (isAutoHighlighting && !isHighlighted) return null;
 
                 // Calculate responsive text size based on zoom (inverse scaling with more reduction)
-                const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8)));
+                // const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8))); // TODO: Not currently used
                 const showWhenZoomed = (() => {
                   if (person.id === hoveredPersonId) return true;
                   if (isAutoHighlighting) return false;
@@ -861,12 +865,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                   if (!isInside) return false;
                   
                   // If multiple faces overlap, only show the closest one
-                  const personCenterX = location.x + location.width / 2;
-                  const personCenterY = location.y + location.height / 2;
-                  const myDist = Math.sqrt(
-                    Math.pow(personCenterX - visibleCenterX, 2) + 
-                    Math.pow(personCenterY - visibleCenterY, 2)
-                  );
+                  // const personCenterX = location.x + location.width / 2;
+                  // const personCenterY = location.y + location.height / 2;
+                  // const myDist = Math.sqrt(
+                  //   Math.pow(personCenterX - visibleCenterX, 2) + 
+                  //   Math.pow(personCenterY - visibleCenterY, 2)
+                  // ); // TODO: Not currently used
                   
                   const peopleInsideHitbox = shuffledPeople.filter(p => {
                     const pLoc = p.photoLocations.find(l => l.photoId === currentPhoto.id);

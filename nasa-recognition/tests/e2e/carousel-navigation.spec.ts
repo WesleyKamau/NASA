@@ -196,7 +196,8 @@ test.describe('Carousel Wrapping', () => {
     await page.close();
   });
 
-  test('should wrap from last to first photo', async ({ page, isMobile }) => {
+  test('should wrap from last to first photo', async ({ page }) => { // TODO: isMobile parameter was removed - not currently used
+    // Previously: async ({ page, isMobile }) => {
     await page.goto('/');
     
     // Wait for page content

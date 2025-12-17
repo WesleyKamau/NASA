@@ -30,8 +30,8 @@ jest.mock('next/image', () => {
     height?: number;
     [key: string]: unknown;
   }
-  const Mock = React.forwardRef<HTMLImageElement, NextImageProps>(function NextImageMock(props, ref) {
-    const { src, alt, priority, unoptimized, ...rest } = props;
+  const Mock = React.forwardRef(function NextImageMock(props: NextImageProps, ref: React.Ref<HTMLImageElement>) {
+    const { src, alt, ...rest } = props;
     // Omit next/image specific props that aren't valid DOM attributes
     return React.createElement('img', { ref, src, alt, ...rest });
   });
@@ -58,7 +58,7 @@ class MockResizeObserver {
 
 // requestAnimationFrame mock fallback
 if (!((global as unknown as { requestAnimationFrame?: unknown }).requestAnimationFrame)) {
-  (global as unknown as { requestAnimationFrame: (cb: FrameRequestCallback) => number }).requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 16);
+  (global as unknown as { requestAnimationFrame: (cb: FrameRequestCallback) => number }).requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 16) as unknown as number;
   (global as unknown as { cancelAnimationFrame: (id: number) => void }).cancelAnimationFrame = (id: number) => clearTimeout(id as unknown as NodeJS.Timeout);
 }
 

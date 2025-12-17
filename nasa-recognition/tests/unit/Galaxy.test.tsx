@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, fireEvent, act } from '../../test/utils/render';
+import { render } from '../../test/utils/render';
+// import { fireEvent, act } from '../../test/utils/render'; // TODO: Not currently used
 import GalaxyBackground from '@/components/GalaxyBackground';
 
 // Mock the Galaxy component since it uses WebGL (ogl library with ES modules)

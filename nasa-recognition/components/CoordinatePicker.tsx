@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Person, PhotoLocation, Category, GroupPhoto } from '@/types';
+import { Person, Category, GroupPhoto } from '@/types';
 import PersonPreview from './PersonPreview';
 
 interface CoordinatePickerProps {
@@ -488,14 +488,14 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                   handleMouseMove(e);
                 }
               }}
-              onMouseUp={(e) => {
+              onMouseUp={() => {
                 if (isPanning) {
                   setIsPanning(false);
                 } else {
                   handleMouseUp();
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={() => {
                 if (isPanning) {
                   setIsPanning(false);
                 } else {
@@ -1065,7 +1065,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
             {selectedRectIndex === null && (
               <div className="bg-slate-800 rounded-lg p-6 text-center text-slate-400">
                 <p className="mb-2">No person selected</p>
-                <p className="text-sm">Click "Edit" on a mapped person to see a preview with rotation applied</p>
+                <p className="text-sm">Click &quot;Edit&quot; on a mapped person to see a preview with rotation applied</p>
               </div>
             )}
           </div>

@@ -107,7 +107,7 @@ test.describe('Person Modal Flow', () => {
     
     if (await personCard.isVisible()) {
       // Get person name from card
-      const cardText = await personCard.textContent();
+      // const cardText = await personCard.textContent(); // TODO: Not currently used
       
       await personCard.click();
       await page.waitForTimeout(500);

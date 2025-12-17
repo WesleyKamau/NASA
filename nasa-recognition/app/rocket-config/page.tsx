@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
@@ -42,7 +42,7 @@ export default function RocketConfigPage() {
     rotation: number;
   } | null>(null);
 
-  const triggerLaunch = () => {
+  const triggerLaunch = useCallback(() => {
     const startSide: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
     const startY = Math.random() * 100;
     const endY = Math.random() * 100;
@@ -55,7 +55,7 @@ export default function RocketConfigPage() {
     setTimeout(() => {
       setIsLaunching(false);
     }, rocketSpeed * 1000);
-  };
+  }, [rocketSpeed]);
 
   const copyConfig = () => {
     const config = `// Shared rocket configuration constants
@@ -77,7 +77,7 @@ export const ROCKET_CONFIG = {
     // Auto-launch for demo
     const timeout = setTimeout(triggerLaunch, 1000);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [triggerLaunch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-8">
@@ -399,7 +399,7 @@ export const ROCKET_CONFIG = {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-slate-500">
                     <div className="text-6xl mb-4">🚀</div>
-                    <p className="text-lg">Click "Launch Rocket" to test</p>
+                    <p className="text-lg">Click &quot;Launch Rocket&quot; to test</p>
                   </div>
                 </div>
               )}

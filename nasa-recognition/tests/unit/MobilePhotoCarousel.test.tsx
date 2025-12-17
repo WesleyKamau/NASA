@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../test/utils/render';
+import { render, screen, fireEvent } from '../../test/utils/render';
+// import { waitFor } from '../../test/utils/render'; // TODO: Not currently used
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import { GroupPhoto, Person } from '@/types';
 

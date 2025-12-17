@@ -1,6 +1,6 @@
 import { Person } from '@/types';
 import { getPeopleInPhoto, shuffleArray, startAutoCycle, AutoCycleTimers } from '@/lib/carouselUtils';
-import { useRef } from 'react';
+// import { useRef } from 'react';
 
 // Mock the auto cycle utils
 jest.mock('@/lib/autoCycleUtils', () => ({

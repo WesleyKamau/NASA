@@ -7,8 +7,9 @@ import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
 import { OG_IMAGE_CONFIG } from '@/lib/configs/ogConfig';
 import { OG_GENERATOR_CONFIG } from '@/lib/configs/componentsConfig';
+import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 
-// const { ROCKET_SIZE: DEFAULT_ROCKET_SIZE, ENGINE_GLOW_OFFSET_X, ENGINE_GLOW_OFFSET_Y } = ROCKET_CONFIG;
+const { ENGINE_GLOW_OFFSET_X, ENGINE_GLOW_OFFSET_Y } = ROCKET_CONFIG;
 
 const FONTS = OG_GENERATOR_CONFIG.AVAILABLE_FONTS;
 

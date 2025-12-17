@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../test/utils/render';
+import { render, screen, fireEvent } from '../../test/utils/render';
+// import { waitFor } from '../../test/utils/render'; // TODO: Not currently used
 import PhotoCarousel from '@/components/PhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import { GroupPhoto, Person } from '@/types';
@@ -131,7 +132,8 @@ describe('Data Flow Integration', () => {
     });
 
     it('groups people correctly under categories', () => {
-      const { container } = render(
+      // const { container } = // TODO: Not currently used
+      render(
         <OrganizedPersonGrid
           people={mockPeople}
           groupPhotos={mockGroupPhotos}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '../../test/utils/render';
+import { render, screen, fireEvent } from '../../test/utils/render';
+// import { act } from '../../test/utils/render'; // TODO: Not currently used
 import PhotoCarousel from '@/components/PhotoCarousel';
 import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import PersonModal from '@/components/PersonModal';

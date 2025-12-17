@@ -1,6 +1,6 @@
 'use client';
 
-import { Person, GroupPhoto } from '@/types';
+import { Person, PhotoLocation, GroupPhoto } from '@/types';
 import React from 'react';
 
 interface CenterIndicatorProps {
@@ -40,6 +40,7 @@ export default function CenterIndicator({
   const visibleCenterY = 50 + imageCenterOffsetY;
 
   // Find the closest person whose expanded hitbox contains the center point
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const closestPersonData = React.useMemo(() => {
     let closestPerson: Person | null = null;
     let closestLocation = null;
@@ -85,9 +86,11 @@ export default function CenterIndicator({
     }
 
     return { closestPerson, closestLocation };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAutoHighlighting, shuffledPeople, currentPhoto.id, visibleCenterX, visibleCenterY, FACE_HITBOX_PADDING, centerIndicatorForce]);
 
   // Notify parent of highlighted person change
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   React.useEffect(() => {
     if (!isAutoHighlighting) {
       onHighlightedPersonChange?.(closestPersonData.closestPerson?.id || null);

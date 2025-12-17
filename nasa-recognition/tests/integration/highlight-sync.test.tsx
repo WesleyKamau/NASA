@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '../../test/utils/render';
+import { render, screen, fireEvent } from '../../test/utils/render';
+// import { within } from '../../test/utils/render'; // TODO: Not currently used
 import PhotoCarousel from '@/components/PhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import { GroupPhoto, Person } from '@/types';
