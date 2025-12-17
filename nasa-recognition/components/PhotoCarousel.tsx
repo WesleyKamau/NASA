@@ -252,7 +252,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center" data-testid="photo-carousel">
       {/* Photo viewer */}
       <div 
         className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm"

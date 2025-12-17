@@ -18,7 +18,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1, // Retry once locally for flaky tests
   /* Limit parallel workers to prevent resource exhaustion */
-  workers: process.env.CI ? 1 : 6, // 6 workers for 10-core machine with 18GB RAM
+  workers: process.env.CI ? 1 : 6, // 6 workers for 10-core machine after Phase 1-3 fixes
   /* Reporter to use - multiple reporters for better tracking */
   reporter: [
     ['list', { printSteps: true }], // Shows progress with step details
@@ -34,10 +34,15 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    /* Maximum time to wait for navigation */
-    navigationTimeout: 30 * 1000,
+    /* Maximum time to wait for navigation - increased for slower page loads
+     * These higher values (45s navigation, 20s action) accommodate:
+     * - Initial Next.js build/compilation time during test startup
+     * - Large image assets loading from NASA API
+     * - Complex React component hydration
+     * If these timeouts seem excessive, investigate underlying performance issues */
+    navigationTimeout: 45 * 1000,
     /* Maximum time to wait for action */
-    actionTimeout: 15 * 1000,
+    actionTimeout: 20 * 1000,
   },
 
   /* Configure projects for major browsers */
@@ -103,5 +108,8 @@ export default defineConfig({
     timeout: 120 * 1000,
     stdout: 'pipe', // Pipe output to see dev server logs
     stderr: 'pipe',
+    env: {
+      PLAYWRIGHT_TEST: 'true', // Flag for Next.js config to disable HMR
+    },
   },
 });

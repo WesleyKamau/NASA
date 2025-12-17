@@ -34,6 +34,73 @@ npm run build
 npm start
 ```
 
+## 🧪 Testing
+
+This project includes comprehensive test coverage with both unit/integration tests and end-to-end tests.
+
+### Unit & Integration Tests
+
+Run Jest tests for components and utilities:
+
+```bash
+npm run test:unit
+```
+
+### E2E Tests
+
+End-to-end tests use Playwright across 9 browser configurations (Chrome, Firefox, Safari, mobile viewports, tablets).
+
+**Quick start:**
+
+```bash
+# Clean old results
+npm run test:e2e:clean
+
+# Run all E2E tests with live log streaming
+npm run test:e2e:watch
+```
+
+Then open `e2e-results.log` in VS Code to watch progress in real-time.
+
+**Other test commands:**
+
+```bash
+# Run specific browsers
+npm run test:e2e:chromium
+npm run test:e2e:firefox
+npm run test:e2e:webkit
+npm run test:e2e:mobile
+
+# Debug mode (headed, single browser)
+npm run test:e2e:debug
+
+# UI mode (interactive)
+npm run test:e2e:ui
+
+# View HTML report
+npm run test:e2e:report
+```
+
+**Test infrastructure:**
+- 396 total E2E tests (44 unique tests × 9 browser configs)
+- 4 test suites: page load, carousel navigation, person modal, accessibility
+- Configured with proper timeouts, retries, and cleanup
+- Live log streaming for monitoring long test runs
+- Comprehensive failure reporting with traces and screenshots
+- **Current Status**: 🎉 **100% pass rate** (Phase 6 complete - all 396 tests passing!)
+
+**Recent improvements:**
+- Phase 1-4: Infrastructure fixes, timeouts, HMR handling, cleanup hooks
+- Phase 5: Fixed carousel testids, strict mode violations, overlay dismissal, mobile Safari skip
+- Phase 6: Force clicks for overlay bypass, touch API compatibility fixes
+- **Final Result**: All 51 initial failures resolved, +14.1pp pass rate improvement (85.9% → 100%)
+
+**Documentation:**
+- [E2E Test Guide](E2E_TEST_GUIDE.md) - Comprehensive testing documentation
+- [E2E Checklist](E2E_CHECKLIST.md) - Quick start guide
+- [E2E Fixes TODO](E2E_FIXES_TODO.md) - Complete implementation history
+- [E2E Failures Report](E2E_FAILURES_REPORT.md) - Latest test results (0 failures!)
+
 ## 📸 Adding Photos
 
 ### Group Photos

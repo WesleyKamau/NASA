@@ -82,7 +82,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
     return (
       <>
-        <div className="w-full space-y-4 sm:space-y-5">
+        <div className="w-full space-y-4 sm:space-y-5" data-testid="person-grid">
           {categoryOrder.map(category => {
             const categoryPeople = allPeopleByCategory[category];
             if (!categoryPeople || categoryPeople.length === 0) return null;
@@ -153,7 +153,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
   return (
     <>
-      <div className="w-full space-y-12">
+      <div className="w-full space-y-12" data-testid="person-grid">
         {/* Me first */}
         {wesley && (
           <div>

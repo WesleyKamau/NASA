@@ -11,23 +11,25 @@ export default function Home() {
   const rocketZIndex = GENERAL_COMPONENT_CONFIG.ROCKET_POSITION === 'on_top_of_blur' ? 'z-30' : 'z-10';
 
   return (
-    <LoadingWrapper>
-      <div className="min-h-screen relative overflow-x-hidden">
-        
-        {/* Debug panel - triple-tap anywhere to open (only when crash logger enabled) */}
-        {isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER) && <DebugPanel />}
-        
-        {/* Flying SLS rocket decoration - positioned absolutely within page */}
-        <div className={`absolute inset-0 pointer-events-none overflow-x-hidden ${rocketZIndex}`}>
-          <SLSRocket />
-        </div>
+    <main data-testid="main-content" role="main">
+      <LoadingWrapper>
+        <div className="min-h-screen relative overflow-x-hidden">
+          
+          {/* Debug panel - triple-tap anywhere to open (only when crash logger enabled) */}
+          {isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER) && <DebugPanel />}
+          
+          {/* Flying SLS rocket decoration - positioned absolutely within page */}
+          <div className={`absolute inset-0 pointer-events-none overflow-x-hidden ${rocketZIndex}`}>
+            <SLSRocket />
+          </div>
 
-        {/* Client-side layout decision based on orientation and device type */}
-        <ClientHome 
-          groupPhotos={data.groupPhotos}
-          people={data.people}
-        />
-      </div>
-    </LoadingWrapper>
+          {/* Client-side layout decision based on orientation and device type */}
+          <ClientHome 
+            groupPhotos={data.groupPhotos}
+            people={data.people}
+          />
+        </div>
+      </LoadingWrapper>
+    </main>
   );
 }
