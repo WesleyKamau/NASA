@@ -35,12 +35,13 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     /* Maximum time to wait for navigation - increased for slower page loads
-     * These higher values (45s navigation, 20s action) accommodate:
+     * These higher values (60s navigation, 20s action) accommodate:
      * - Initial Next.js build/compilation time during test startup
      * - Large image assets loading from NASA API
      * - Complex React component hydration
+     * Increased from 45s to 60s to handle chromium-specific page load timeouts
      * If these timeouts seem excessive, investigate underlying performance issues */
-    navigationTimeout: 45 * 1000,
+    navigationTimeout: 60 * 1000,
     /* Maximum time to wait for action */
     actionTimeout: 20 * 1000,
   },

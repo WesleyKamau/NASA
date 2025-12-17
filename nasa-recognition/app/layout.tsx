@@ -23,12 +23,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: SITE_CONFIG.title,
   description: SITE_CONFIG.description,
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: SITE_CONFIG.title,
     description: SITE_CONFIG.shortDescription,
     siteName: SITE_CONFIG.title,
     locale: 'en_US',
     type: 'website',
+  },
+  alternates: {
+    canonical: getBaseUrl(),
   },
 };
 
@@ -47,6 +54,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_CONFIG.title,
+    description: SITE_CONFIG.description,
+    url: getBaseUrl(),
+  };
+
   return (
     <html lang="en">
       <head>
@@ -56,6 +71,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-native scroll-native no-overscroll`}

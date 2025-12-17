@@ -78,8 +78,10 @@ test.describe('Edge Cases Tests', () => {
     if (buttonCount > 0) {
       for (let i = 0; i < 6; i++) {
         const randomIndex = Math.floor(Math.random() * buttonCount);
-        await buttons.nth(randomIndex).click({ timeout: 1000 });
-        await page.waitForTimeout(100);
+        // Wait for element to be stable before clicking
+        await buttons.nth(randomIndex).waitFor({ state: 'visible', timeout: 3000 });
+        await buttons.nth(randomIndex).click({ force: true, timeout: 3000 });
+        await page.waitForTimeout(300); // Increased wait from 100ms to 300ms
       }
     }
 

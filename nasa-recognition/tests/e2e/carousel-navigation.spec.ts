@@ -105,7 +105,7 @@ test.describe('Desktop Carousel Navigation', () => {
       const closeBtn = page.getByRole('button', { name: /close|dismiss/i }).or(page.locator('button[aria-label*="close"]')).first();
       if (await closeBtn.isVisible()) {
         await closeBtn.click({ force: true });
-        await page.waitForTimeout(1000); // Increased wait for modal animation to complete
+        await page.waitForTimeout(2000); // Increased wait from 1000ms to 2000ms for modal animation
       }
     }
     

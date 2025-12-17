@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Playwright generated reports
+    "playwright-report/**",
+    "test-results/**",
   ]),
   // Disable strict rules for complex/legacy code
   {
