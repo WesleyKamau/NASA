@@ -38,7 +38,7 @@ describe('CenterIndicator', () => {
         shuffledPeople={[basePerson]}
         isAutoHighlighting
         centerIndicatorForce={0}
-        convertPhotoToContainerCoords={() => ({ x: 0, y: 0, width: 0, height: 0 })}
+        convertPhotoToContainerCoords={() => ({ photoId: 'test', x: 0, y: 0, width: 0, height: 0 })}
         containerRef={containerRef}
         FACE_HITBOX_PADDING={6}
       />
@@ -57,7 +57,7 @@ describe('CenterIndicator', () => {
         shuffledPeople={[basePerson]}
         isAutoHighlighting
         centerIndicatorForce={0}
-        convertPhotoToContainerCoords={() => ({ x: 5, y: 5, width: 12, height: 12 })}
+        convertPhotoToContainerCoords={() => ({ photoId: 'test', x: 5, y: 5, width: 12, height: 12 })}
         containerRef={containerRef}
         FACE_HITBOX_PADDING={6}
       />
