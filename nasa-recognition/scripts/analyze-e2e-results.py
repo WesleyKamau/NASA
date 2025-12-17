@@ -15,6 +15,12 @@ def load_results(file_path: str) -> Dict[str, Any]:
     with open(file_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
+def format_percentage(count: int, total: int) -> str:
+    """Format a percentage safely, handling division by zero."""
+    if total > 0:
+        return f"{count/total*100:.1f}%"
+    return "0.0%"
+
 def extract_failure_info(result: Dict[str, Any]) -> Dict[str, Any]:
     """Extract relevant failure information from a test result."""
     errors = []
@@ -128,14 +134,8 @@ def generate_markdown_report(analysis: Dict[str, Any], output_file: str) -> None
         stats = analysis['stats']
         f.write("## 📊 Summary Statistics\n\n")
         f.write(f"- **Total Tests**: {stats['total']}\n")
-        
-        if stats['total'] > 0:
-            f.write(f"- **✅ Passed**: {stats['passed']} ({stats['passed']/stats['total']*100:.1f}%)\n")
-            f.write(f"- **❌ Failed**: {stats['failed']} ({stats['failed']/stats['total']*100:.1f}%)\n")
-        else:
-            f.write(f"- **✅ Passed**: {stats['passed']} (0.0%)\n")
-            f.write(f"- **❌ Failed**: {stats['failed']} (0.0%)\n")
-        
+        f.write(f"- **✅ Passed**: {stats['passed']} ({format_percentage(stats['passed'], stats['total'])})\n")
+        f.write(f"- **❌ Failed**: {stats['failed']} ({format_percentage(stats['failed'], stats['total'])})\n")
         f.write(f"- **⚠️ Flaky** (passed on retry): {stats['flaky']}\n")
         f.write(f"- **⏱️ Timed Out**: {stats['timedOut']}\n")
         f.write(f"- **⏭️ Skipped**: {stats['skipped']}\n\n")
@@ -225,14 +225,8 @@ def main():
         print("="*60)
         stats = analysis['stats']
         print(f"Total Tests:    {stats['total']}")
-        
-        if stats['total'] > 0:
-            print(f"✅ Passed:      {stats['passed']} ({stats['passed']/stats['total']*100:.1f}%)")
-            print(f"❌ Failed:      {stats['failed']} ({stats['failed']/stats['total']*100:.1f}%)")
-        else:
-            print(f"✅ Passed:      {stats['passed']} (0.0%)")
-            print(f"❌ Failed:      {stats['failed']} (0.0%)")
-        
+        print(f"✅ Passed:      {stats['passed']} ({format_percentage(stats['passed'], stats['total'])})")
+        print(f"❌ Failed:      {stats['failed']} ({format_percentage(stats['failed'], stats['total'])})")
         print(f"⚠️  Flaky:       {stats['flaky']}")
         print(f"⏱️  Timed Out:   {stats['timedOut']}")
         print("="*60)

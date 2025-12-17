@@ -25,7 +25,7 @@ test.describe('Desktop Carousel Navigation', () => {
     ).first();
     
     if (await nextButton.isVisible()) {
-      // Force click to bypass any overlays (see comment on line 67 for rationale)
+      // Force click to bypass any overlays (see comment on line 68 for rationale)
       await nextButton.click({ force: true });
       // Wait for carousel to be ready after transition (checking stability)
       await page.waitForLoadState('domcontentloaded');
@@ -47,7 +47,7 @@ test.describe('Desktop Carousel Navigation', () => {
     ).first();
     
     if (await prevButton.isVisible()) {
-      // Force click to bypass any overlays (see comment on line 67 for rationale)
+      // Force click to bypass any overlays (see comment on line 68 for rationale)
       await prevButton.click({ force: true });
       await page.waitForLoadState('domcontentloaded');
       
