@@ -5,7 +5,7 @@ import { crashLogger } from '@/lib/crashLogger';
 
 export default function DebugPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<Array<{ message: string; timestamp: number }>>([]);
   const tapCountRef = useRef(0);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

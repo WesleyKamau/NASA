@@ -17,7 +17,7 @@ describe('preload utilities', () => {
     const promise = preloadImage('/x.jpg');
     // Find the appended img and trigger onload
     const container = document.getElementById('preload-images-container')!;
-    const img = container.querySelector('img') as any;
+    const img = container.querySelector('img') as HTMLImageElement;
     expect(img).toBeTruthy();
     img.onload();
     await expect(promise).resolves.toBeUndefined();
@@ -26,7 +26,7 @@ describe('preload utilities', () => {
   it('preloadImage rejects on error', async () => {
     const promise = preloadImage('/y.jpg');
     const container = document.getElementById('preload-images-container')!;
-    const img = container.querySelector('img:last-of-type') as any;
+    const img = container.querySelector('img:last-of-type') as HTMLImageElement;
     img.onerror();
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
@@ -34,18 +34,18 @@ describe('preload utilities', () => {
   it('preloads carousel and person images with logging on failure', async () => {
     const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const groupPhotos = [ { id: 'p1', name: 'p1', imagePath: '/p1.jpg', category: 'interns' } as any ];
-    const people = [ { id: 'a', name: 'A', category: 'interns', individualPhoto: '/a.jpg', photoLocations: [] } as any ];
+    const groupPhotos = [ { id: 'p1', name: 'p1', imagePath: '/p1.jpg', category: 'interns' as const } ];
+    const people = [ { id: 'a', name: 'A', category: 'interns' as const, individualPhoto: '/a.jpg', photoLocations: [] } ];
 
     const p1 = preloadCarouselImages(groupPhotos);
     // trigger onload for all preloaded images
     const c1 = document.getElementById('preload-images-container')!;
-    c1.querySelectorAll('img').forEach((img: any) => img.onload());
+    c1.querySelectorAll('img').forEach((img: HTMLImageElement) => (img as HTMLImageElement & { onload: () => void }).onload());
     await p1;
 
     const p2 = preloadPersonImages(people);
     const c2 = document.getElementById('preload-images-container')!;
-    c2.querySelectorAll('img').forEach((img: any) => img.onload());
+    c2.querySelectorAll('img').forEach((img: HTMLImageElement) => (img as HTMLImageElement & { onload: () => void }).onload());
     await p2;
     expect(consoleWarn).not.toHaveBeenCalled();
     consoleWarn.mockRestore();
@@ -53,11 +53,11 @@ describe('preload utilities', () => {
 
   it('preloads highlights and cleans up', async () => {
     const { raf, caf, flush } = mockRAFDeferred();
-    (global as any).requestAnimationFrame = raf as any;
-    (global as any).cancelAnimationFrame = caf as any;
+    (global as unknown as { requestAnimationFrame: (cb: FrameRequestCallback) => number }).requestAnimationFrame = raf as unknown as (cb: FrameRequestCallback) => number;
+    (global as unknown as { cancelAnimationFrame: (id: number) => void }).cancelAnimationFrame = caf as unknown as (id: number) => void;
 
-    const groupPhotos = [ { id: 'p1', name: 'p1', imagePath: '/p1.jpg', category: 'interns' } as any ];
-    const people = [ { id: 'a', name: 'A', category: 'interns', individualPhoto: null, photoLocations: [ { photoId: 'p1', x: 1, y: 2, width: 3, height: 4 } ] } as any ];
+    const groupPhotos = [ { id: 'p1', name: 'p1', imagePath: '/p1.jpg', category: 'interns' as const } ];
+    const people = [ { id: 'a', name: 'A', category: 'interns' as const, individualPhoto: null, photoLocations: [ { photoId: 'p1', x: 1, y: 2, width: 3, height: 4 } ] } ];
 
     await preloadCarouselHighlights(groupPhotos, people);
     const container = document.getElementById('preload-highlights-container');

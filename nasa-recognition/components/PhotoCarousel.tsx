@@ -42,6 +42,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   const currentPhoto = groupPhotos[currentPhotoIndex];
 
   // Get people in current photo and shuffle them
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!currentPhoto) return;
     const peopleInPhoto = getPeopleInPhoto(people, currentPhoto.id);

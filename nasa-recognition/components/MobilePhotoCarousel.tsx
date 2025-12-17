@@ -648,7 +648,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
     const parentEl = containerRef.current?.parentElement;
     if (parentEl) {
       parentEl.style.touchAction = '';
-      (parentEl.style as any).overscrollBehavior = '';
+      (parentEl.style as unknown as { overscrollBehavior: string }).overscrollBehavior = '';
     }
     setIsDragging(false);
     setIsPinching(false);
@@ -723,7 +723,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
           onTouchCancel={handleTouchEnd}
           onClick={(e) => {
             if (isTouchMode) {
-              handleDoubleTap(e as any);
+              handleDoubleTap(e as unknown as TouchEvent);
             }
           }}
           style={{ touchAction: 'none' }}

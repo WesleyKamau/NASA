@@ -258,7 +258,7 @@ export const ROCKET_CONFIG = {
 } as const;`}</pre>
               </div>
               <p className="text-slate-400 text-sm mt-4">
-                Click "Copy Config" and paste these values into <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code>
+                Click &quot;Copy Config&quot; and paste these values into <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code>
               </p>
             </div>
 
@@ -412,8 +412,8 @@ export const ROCKET_CONFIG = {
           <h3 className="text-xl font-bold text-white mb-4">How to Apply Changes</h3>
           <ol className="text-slate-300 space-y-2 list-decimal list-inside">
             <li>Adjust the sliders above until you&apos;re happy with the animation</li>
-            <li>Click "Launch Rocket" to test your settings in real-time</li>
-            <li>Click "Copy Config" to copy the configuration code</li>
+            <li>Click &quot;Launch Rocket&quot; to test your settings in real-time</li>
+            <li>Click &quot;Copy Config&quot; to copy the configuration code</li>
             <li>Open <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code></li>
             <li>Replace the entire ROCKET_CONFIG object with your copied values</li>
             <li>Save the file and the changes will apply to the main page</li>

@@ -1,6 +1,13 @@
 import React from 'react';
 
-const Lottie = React.forwardRef((props: any, ref: any) => {
+interface LottieProps {
+  animationData?: unknown;
+  className?: string;
+  style?: React.CSSProperties;
+  [key: string]: unknown;
+}
+
+const Lottie = React.forwardRef<HTMLDivElement, LottieProps>((props, ref) => {
   return React.createElement('div', {
     ref,
     'data-testid': 'lottie-animation',
@@ -28,5 +35,5 @@ export interface LottieRefCurrentProps {
   destroy: () => void;
   animationContainerRef: React.RefObject<HTMLDivElement>;
   animationLoaded: boolean;
-  animationItem: any;
+  animationItem: unknown;
 }

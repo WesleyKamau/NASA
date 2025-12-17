@@ -186,7 +186,7 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
       setDragStart({ x, y });
     } else if (isResizing && resizeIndex !== null) {
       const oldRect = rectangles[resizeIndex];
-      let newRect = { ...oldRect };
+      const newRect = { ...oldRect };
 
       if (resizeHandle.includes('right')) {
         newRect.width = Math.max(1, x - oldRect.x);

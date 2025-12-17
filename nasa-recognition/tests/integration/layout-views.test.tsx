@@ -15,7 +15,7 @@ jest.mock('@/components/Galaxy', () => ({
 // Mock ClientHome which uses Galaxy
 jest.mock('@/components/ClientHome', () => ({
   __esModule: true,
-  default: ({ groupPhotos, people }: { groupPhotos: any[], people: any[] }) => (
+  default: ({ groupPhotos, people }: { groupPhotos: unknown[], people: unknown[] }) => (
     <div data-testid="client-home">
       <div data-testid="mock-galaxy">Galaxy</div>
       <div>{groupPhotos.length} photos</div>

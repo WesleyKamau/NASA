@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 // Suppress React warnings about boolean attributes on SVG elements in tests
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Received `true` for a non-boolean attribute') ||
@@ -21,9 +21,16 @@ afterAll(() => {
 
 // Basic mock for next/image to behave like an img in tests
 jest.mock('next/image', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const React = require('react');
-  const Mock = React.forwardRef(function NextImageMock(props: any, ref: any) {
+  interface NextImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    [key: string]: unknown;
+  }
+  const Mock = React.forwardRef<HTMLImageElement, NextImageProps>(function NextImageMock(props, ref) {
     const { src, alt, priority, unoptimized, ...rest } = props;
     // Omit next/image specific props that aren't valid DOM attributes
     return React.createElement('img', { ref, src, alt, ...rest });
@@ -39,7 +46,7 @@ class MockIntersectionObserver {
   disconnect() {}
   takeRecords() { return []; }
 }
-(global as any).IntersectionObserver = MockIntersectionObserver as any;
+(global as unknown as { IntersectionObserver: typeof MockIntersectionObserver }).IntersectionObserver = MockIntersectionObserver;
 
 // ResizeObserver mock
 class MockResizeObserver {
@@ -47,17 +54,17 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-(global as any).ResizeObserver = MockResizeObserver as any;
+(global as unknown as { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver;
 
 // requestAnimationFrame mock fallback
-if (!(global as any).requestAnimationFrame) {
-  (global as any).requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 16);
-  (global as any).cancelAnimationFrame = (id: number) => clearTimeout(id as unknown as NodeJS.Timeout);
+if (!((global as unknown as { requestAnimationFrame?: unknown }).requestAnimationFrame)) {
+  (global as unknown as { requestAnimationFrame: (cb: FrameRequestCallback) => number }).requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 16);
+  (global as unknown as { cancelAnimationFrame: (id: number) => void }).cancelAnimationFrame = (id: number) => clearTimeout(id as unknown as NodeJS.Timeout);
 }
 
 // matchMedia mock for components using media queries
-if (!(window as any).matchMedia) {
-  (window as any).matchMedia = (query: string) => ({
+if (!((window as unknown as { matchMedia?: unknown }).matchMedia)) {
+  (window as unknown as { matchMedia: (query: string) => unknown }).matchMedia = (query: string) => ({
     matches: false,
     media: query,
     addListener: () => {},

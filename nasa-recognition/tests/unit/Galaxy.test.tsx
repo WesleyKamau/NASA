@@ -4,7 +4,7 @@ import GalaxyBackground from '@/components/GalaxyBackground';
 
 // Mock the Galaxy component since it uses WebGL (ogl library with ES modules)
 jest.mock('@/components/Galaxy', () => {
-  return function MockGalaxy(props: any) {
+  return function MockGalaxy(props: Record<string, unknown>) {
     return (
       <div 
         className="w-full h-full relative" 

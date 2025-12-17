@@ -19,7 +19,7 @@ describe('crashLogger', () => {
       writable: true,
     });
     // performance.memory mock
-    (global as any).performance = { memory: { usedJSHeapSize: 10, totalJSHeapSize: 20, jsHeapSizeLimit: 100 } };
+    (global as unknown as { performance: { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } } }).performance = { memory: { usedJSHeapSize: 10, totalJSHeapSize: 20, jsHeapSizeLimit: 100 } };
     // navigator mock
     Object.defineProperty(window, 'navigator', { value: { userAgent: 'jest' }, writable: true });
   });

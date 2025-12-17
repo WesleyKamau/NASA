@@ -11,7 +11,7 @@ interface CenterIndicatorProps {
   shuffledPeople: Person[];
   isAutoHighlighting: boolean;
   centerIndicatorForce: number;
-  convertPhotoToContainerCoords: (location: any) => any;
+  convertPhotoToContainerCoords: (location: PhotoLocation) => PhotoLocation;
   containerRef: React.RefObject<HTMLDivElement | null>;
   FACE_HITBOX_PADDING: number;
   onHighlightedPersonChange?: (personId: string | null) => void;
@@ -74,7 +74,7 @@ export default function CenterIndicator({
 
           return { person: p, location: loc, expandedLocation: { x: expandedX, y: expandedY, width: expandedWidth, height: expandedHeight }, distance };
         })
-        .filter((item): item is { person: Person; location: any; expandedLocation: any; distance: number } => item !== null)
+        .filter((item): item is { person: Person; location: PhotoLocation; expandedLocation: PhotoLocation; distance: number } => item !== null)
         .sort((a, b) => a.distance - b.distance);
 
       if (peopleInsideHitbox.length > 0) {

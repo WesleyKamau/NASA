@@ -1,4 +1,5 @@
 import { getPeopleData, getPersonById, getPeopleByCategory, getGroupPhotosByCategory } from '@/lib/data';
+import { Category } from '@/types';
 
 describe('data selectors', () => {
   it('loads people data', () => {
@@ -23,7 +24,7 @@ describe('data selectors', () => {
     const data = getPeopleData();
     const categories = new Set(data.people.map(p => p.category));
     for (const cat of categories) {
-      const list = getPeopleByCategory(cat as any);
+      const list = getPeopleByCategory(cat as Category);
       expect(list.every(p => p.category === cat)).toBe(true);
     }
   });
@@ -32,7 +33,7 @@ describe('data selectors', () => {
     const data = getPeopleData();
     const categories = new Set(data.groupPhotos.map(p => p.category));
     for (const cat of categories) {
-      const list = getGroupPhotosByCategory(cat as any);
+      const list = getGroupPhotosByCategory(cat as Category);
       expect(list.every(p => p.category === cat)).toBe(true);
     }
   });
