@@ -34,7 +34,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    /* Maximum time to wait for navigation - increased for slower page loads */
+    /* Maximum time to wait for navigation - increased for slower page loads
+     * These higher values (45s navigation, 20s action) accommodate:
+     * - Initial Next.js build/compilation time during test startup
+     * - Large image assets loading from NASA API
+     * - Complex React component hydration
+     * If these timeouts seem excessive, investigate underlying performance issues */
     navigationTimeout: 45 * 1000,
     /* Maximum time to wait for action */
     actionTimeout: 20 * 1000,
