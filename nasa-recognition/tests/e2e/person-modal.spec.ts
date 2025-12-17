@@ -9,10 +9,6 @@ test.describe('Person Modal Flow', () => {
     await page.waitForTimeout(2000); // Wait for initial render
   });
 
-  test.afterEach(async ({ page }) => {
-    await page.close();
-  });
-
   test('should open modal when clicking person card from grid', async ({ page }) => {
     // Find person cards in grid
     const personCards = page.locator('[data-testid="person-card"], button[class*="person"]').first();
@@ -165,7 +161,7 @@ test.describe('Person Grid Navigation', () => {
     const cardsCount = await personCards.count();
 
     if (!gridVisible && cardsCount === 0) {
-      throw new Error('Person grid not visible and no person cards found');
+      throw new Error(`Person grid not visible (gridVisible: ${gridVisible}) and no person cards found (cardsCount: ${cardsCount})`);
     }
   });
 

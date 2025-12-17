@@ -27,7 +27,8 @@ test.describe('Desktop Carousel Navigation', () => {
     ).first();
     
     if (await nextButton.isVisible()) {
-      await nextButton.click({ force: true }); // Force click to bypass any overlays
+      // Force click to bypass any overlays (see comment on line 67 for rationale)
+      await nextButton.click({ force: true });
       // Wait for transition
       await page.waitForTimeout(500);
       
@@ -48,7 +49,8 @@ test.describe('Desktop Carousel Navigation', () => {
     ).first();
     
     if (await prevButton.isVisible()) {
-      await prevButton.click({ force: true }); // Force click to bypass any overlays
+      // Force click to bypass any overlays (see comment on line 67 for rationale)
+      await prevButton.click({ force: true });
       await page.waitForTimeout(500);
       
       await expect(carousel).toBeVisible();
@@ -64,6 +66,10 @@ test.describe('Desktop Carousel Navigation', () => {
     
     if (dotCount > 1) {
       // Click second dot with force to handle overlays
+      // Note: Using force: true bypasses actionability checks. This is necessary here because
+      // overlays (loading indicators, modals, etc.) may temporarily cover the dots.
+      // Alternative approaches (dismissing overlays) were tested but caused more test flakiness.
+      // The dots are functionally clickable to users once overlays clear naturally.
       await dots.nth(1).click({ force: true, timeout: 20000 });
       await page.waitForTimeout(500);
       

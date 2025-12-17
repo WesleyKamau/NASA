@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 from collections import defaultdict
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 def load_results(file_path: str) -> Dict[str, Any]:
     """Load the Playwright results JSON file."""
@@ -128,8 +128,14 @@ def generate_markdown_report(analysis: Dict[str, Any], output_file: str) -> None
         stats = analysis['stats']
         f.write("## 📊 Summary Statistics\n\n")
         f.write(f"- **Total Tests**: {stats['total']}\n")
-        f.write(f"- **✅ Passed**: {stats['passed']} ({stats['passed']/stats['total']*100:.1f}%)\n")
-        f.write(f"- **❌ Failed**: {stats['failed']} ({stats['failed']/stats['total']*100:.1f}%)\n")
+        
+        if stats['total'] > 0:
+            f.write(f"- **✅ Passed**: {stats['passed']} ({stats['passed']/stats['total']*100:.1f}%)\n")
+            f.write(f"- **❌ Failed**: {stats['failed']} ({stats['failed']/stats['total']*100:.1f}%)\n")
+        else:
+            f.write(f"- **✅ Passed**: {stats['passed']} (0.0%)\n")
+            f.write(f"- **❌ Failed**: {stats['failed']} (0.0%)\n")
+        
         f.write(f"- **⚠️ Flaky** (passed on retry): {stats['flaky']}\n")
         f.write(f"- **⏱️ Timed Out**: {stats['timedOut']}\n")
         f.write(f"- **⏭️ Skipped**: {stats['skipped']}\n\n")
@@ -219,8 +225,14 @@ def main():
         print("="*60)
         stats = analysis['stats']
         print(f"Total Tests:    {stats['total']}")
-        print(f"✅ Passed:      {stats['passed']} ({stats['passed']/stats['total']*100:.1f}%)")
-        print(f"❌ Failed:      {stats['failed']} ({stats['failed']/stats['total']*100:.1f}%)")
+        
+        if stats['total'] > 0:
+            print(f"✅ Passed:      {stats['passed']} ({stats['passed']/stats['total']*100:.1f}%)")
+            print(f"❌ Failed:      {stats['failed']} ({stats['failed']/stats['total']*100:.1f}%)")
+        else:
+            print(f"✅ Passed:      {stats['passed']} (0.0%)")
+            print(f"❌ Failed:      {stats['failed']} (0.0%)")
+        
         print(f"⚠️  Flaky:       {stats['flaky']}")
         print(f"⏱️  Timed Out:   {stats['timedOut']}")
         print("="*60)
