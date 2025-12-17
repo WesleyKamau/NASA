@@ -153,7 +153,7 @@ test.describe('Person Grid Navigation', () => {
     await page.goto('/');
     
     // Wait for page content instead of networkidle
-    await expect(page.locator('[data-testid="main-content"], body')).toBeVisible();
+    await expect(page.locator('[data-testid="main-content"]')).toBeVisible();
     await page.waitForTimeout(3000); // Extra time for content to load
     
     // Look for grid container or person cards

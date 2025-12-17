@@ -53,7 +53,7 @@ test.describe('Page Load and Initial Render', () => {
     await page.goto('/');
     
     // Wait for page to load
-      await expect(page.locator('[data-testid="main-content"], body')).toBeVisible();
+      await expect(page.locator('[data-testid="main-content"]')).toBeVisible();
     
     // Check page title
     await expect(page).toHaveTitle(SITE_CONFIG.title);

@@ -181,6 +181,16 @@ test.describe('Carousel Wrapping', () => {
     // Wait for page content
     await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(3000); // Extra time for carousel initialization
+
+    // Ensure no blocking overlay/modal intercepts clicks
+    const blockingOverlay = page.locator('[class*="fixed"],[class*="modal"],[role="dialog"]').filter({ has: page.locator('[style*="opacity"]') });
+    if (await blockingOverlay.first().isVisible()) {
+      const closeBtn = page.getByRole('button', { name: /close|dismiss/i }).or(page.locator('button[aria-label*="close"]')).first();
+      if (await closeBtn.isVisible()) {
+        await closeBtn.click({ force: true });
+        await page.waitForTimeout(300);
+      }
+    }
     
     // Get all dot indicators to know how many photos
     const dots = page.locator('button[aria-label*="photo"]');
@@ -211,6 +221,16 @@ test.describe('Carousel Wrapping', () => {
     // Wait for page content
     await expect(page.locator('body')).toBeVisible();
     await page.waitForTimeout(3000); // Extra time for carousel initialization
+
+    // Ensure no blocking overlay/modal intercepts clicks
+    const blockingOverlay = page.locator('[class*="fixed"],[class*="modal"],[role="dialog"]').filter({ has: page.locator('[style*="opacity"]') });
+    if (await blockingOverlay.first().isVisible()) {
+      const closeBtn = page.getByRole('button', { name: /close|dismiss/i }).or(page.locator('button[aria-label*="close"]')).first();
+      if (await closeBtn.isVisible()) {
+        await closeBtn.click({ force: true });
+        await page.waitForTimeout(300);
+      }
+    }
     
     const prevButton = page.getByRole('button', { name: /prev/i }).or(
       page.locator('button[aria-label*="prev"]')

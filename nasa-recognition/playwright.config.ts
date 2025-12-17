@@ -18,7 +18,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1, // Retry once locally for flaky tests
   /* Limit parallel workers to prevent resource exhaustion */
-  workers: process.env.CI ? 1 : 4, // Reduced to 4 workers to prevent timeout issues
+  workers: process.env.CI ? 1 : 6, // 6 workers for 10-core machine after Phase 1-3 fixes
   /* Reporter to use - multiple reporters for better tracking */
   reporter: [
     ['list', { printSteps: true }], // Shows progress with step details
