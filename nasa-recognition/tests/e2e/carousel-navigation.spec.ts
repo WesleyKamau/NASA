@@ -7,11 +7,9 @@ test.describe('Desktop Carousel Navigation', () => {
     
     // Wait for page content instead of networkidle
     await expect(page.locator('body')).toBeVisible();
-    await page.waitForTimeout(2000); // Allow carousel to initialize
-  });
-
-  test.afterEach(async ({ page }) => {
-    await page.close();
+    // Wait for carousel to be ready
+    await page.locator('[data-testid="photo-carousel"], [data-testid="mobile-photo-carousel"]').first()
+      .waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   });
 
   test('should navigate to next photo using button', async ({ page }) => {
@@ -29,8 +27,8 @@ test.describe('Desktop Carousel Navigation', () => {
     if (await nextButton.isVisible()) {
       // Force click to bypass any overlays (see comment on line 67 for rationale)
       await nextButton.click({ force: true });
-      // Wait for transition
-      await page.waitForTimeout(500);
+      // Wait for carousel to be ready after transition (checking stability)
+      await page.waitForLoadState('domcontentloaded');
       
       // Carousel should still be visible after navigation
       await expect(carousel).toBeVisible();
@@ -51,17 +49,18 @@ test.describe('Desktop Carousel Navigation', () => {
     if (await prevButton.isVisible()) {
       // Force click to bypass any overlays (see comment on line 67 for rationale)
       await prevButton.click({ force: true });
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('domcontentloaded');
       
       await expect(carousel).toBeVisible();
     }
   });
 
   test('should navigate using dot indicators', async ({ page }) => {
-    await page.waitForTimeout(2000); // Wait for carousel to initialize
+    // Wait for dots to be available
+    const dots = page.locator('button[aria-label*="photo"], [role="tablist"] button, [class*="dot"]');
+    await dots.first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     
     // Look for dot/pagination indicators
-    const dots = page.locator('button[aria-label*="photo"], [role="tablist"] button, [class*="dot"]');
     const dotCount = await dots.count();
     
     if (dotCount > 1) {

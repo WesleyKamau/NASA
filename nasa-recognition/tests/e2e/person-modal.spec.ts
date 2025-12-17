@@ -6,7 +6,10 @@ test.describe('Person Modal Flow', () => {
     
     // Wait for page content instead of networkidle
     await expect(page.locator('body')).toBeVisible();
-    await page.waitForTimeout(2000); // Wait for initial render
+    // Wait for main content to be ready - more reliable than fixed timeout
+    await page.locator('[data-testid="main-content"], main, [role="main"]').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
+      // Fallback if main content selector not found
+    });
   });
 
   test('should open modal when clicking person card from grid', async ({ page }) => {
@@ -15,13 +18,12 @@ test.describe('Person Modal Flow', () => {
     
     if (await personCards.isVisible()) {
       await personCards.click();
-      await page.waitForTimeout(500);
       
       // Check if modal opened (look for modal indicators)
       const modal = page.locator('[role="dialog"], [data-testid="person-modal"], [class*="modal"]');
       
-      // Modal might be present
-      const modalVisible = await modal.isVisible().catch(() => false);
+      // Wait for modal to appear or timeout
+      const modalVisible = await modal.waitFor({ state: 'visible', timeout: 1000 }).then(() => true).catch(() => false);
       
       if (modalVisible) {
         await expect(modal).toBeVisible();
@@ -35,18 +37,22 @@ test.describe('Person Modal Flow', () => {
     
     if (await personCard.isVisible()) {
       await personCard.click();
-      await page.waitForTimeout(500);
       
-      // Look for close button
+      // Look for close button (wait for it to appear)
       const closeButton = page.getByRole('button', { name: /close/i }).or(
         page.locator('button[aria-label*="close"]')
       ).or(
         page.locator('button').filter({ hasText: '×' })
       );
       
+      // Wait for close button to be ready
+      await closeButton.first().waitFor({ state: 'visible', timeout: 1000 }).catch(() => {});
+      
       if (await closeButton.isVisible()) {
         await closeButton.click();
-        await page.waitForTimeout(300);
+        // Wait for modal to close
+        const modal = page.locator('[role="dialog"]');
+        await modal.waitFor({ state: 'hidden', timeout: 1000 }).catch(() => {});
         
         // Modal should close
         const modal = page.locator('[role="dialog"]');
@@ -150,7 +156,10 @@ test.describe('Person Grid Navigation', () => {
     
     // Wait for page content instead of networkidle
     await expect(page.locator('[data-testid="main-content"]')).toBeVisible();
-    await page.waitForTimeout(3000); // Extra time for content to load
+    // Wait for grid or person cards to appear
+    await page.locator('[data-testid="person-grid"], [data-testid="person-card"]').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
+      // Content may load dynamically
+    });
     
     // Look for grid container or person cards
     const grid = page.locator('[data-testid="person-grid"], [data-testid*="grid"], [class*="grid"]').first();
