@@ -70,7 +70,8 @@ test.describe('Desktop Carousel Navigation', () => {
       // Alternative approaches (dismissing overlays) were tested but caused more test flakiness.
       // The dots are functionally clickable to users once overlays clear naturally.
       await dots.nth(1).click({ force: true, timeout: 20000 });
-      await page.waitForTimeout(500);
+      // Wait for DOM to stabilize after navigation
+      await page.waitForLoadState('domcontentloaded');
       
       // Should have navigated to different photo
       expect(true).toBe(true); // Navigation occurred

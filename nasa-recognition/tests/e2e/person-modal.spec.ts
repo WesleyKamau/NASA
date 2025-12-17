@@ -55,7 +55,6 @@ test.describe('Person Modal Flow', () => {
         await modal.waitFor({ state: 'hidden', timeout: 1000 }).catch(() => {});
         
         // Modal should close
-        const modal = page.locator('[role="dialog"]');
         await expect(modal).not.toBeVisible();
       }
     }
