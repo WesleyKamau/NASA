@@ -175,8 +175,8 @@ function GeneratorContent() {
                 className={`text-white tracking-tight drop-shadow-lg flex flex-col items-center gap-2 ${isBold ? 'font-bold' : 'font-normal'}`}
                 style={{ fontFamily }}
               >
-                <span style={{ fontSize: `${fontSize.line1}px` }}>Marshall Space Flight Center</span>
-                <span style={{ fontSize: `${fontSize.line2}px` }}>Book of Faces</span>
+                  <span style={{ fontSize: `${fontSize.line1}px` }}>Wesley Kamau</span>
+                  <span style={{ fontSize: `${fontSize.line2}px` }}>@ NASA</span>
               </h1>
             </div>
           </div>

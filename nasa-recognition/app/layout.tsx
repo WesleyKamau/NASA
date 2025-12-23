@@ -19,8 +19,10 @@ const getBaseUrl = () => {
   return 'http://localhost:3000';
 };
 
+const siteUrl = getBaseUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(getBaseUrl()),
+  metadataBase: new URL(siteUrl),
   title: SITE_CONFIG.title,
   description: SITE_CONFIG.description,
   robots: {
@@ -30,12 +32,27 @@ export const metadata: Metadata = {
   openGraph: {
     title: SITE_CONFIG.title,
     description: SITE_CONFIG.shortDescription,
+    url: siteUrl,
     siteName: SITE_CONFIG.title,
     locale: 'en_US',
     type: 'website',
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: SITE_CONFIG.title,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_CONFIG.title,
+    description: SITE_CONFIG.description,
+    images: ['/opengraph-image.png'],
   },
   alternates: {
-    canonical: getBaseUrl(),
+    canonical: siteUrl,
   },
 };
 
