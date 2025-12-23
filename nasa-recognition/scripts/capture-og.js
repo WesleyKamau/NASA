@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
-// const fs = require('fs');
+const fs = require('fs');
 
 (async () => {
   const browser = await puppeteer.launch();
@@ -26,7 +26,14 @@ const path = require('path');
   // Wait a moment for animations/fonts to settle
   await new Promise(r => setTimeout(r, 1000));
 
-  const outputPath = path.join(process.cwd(), 'app', 'opengraph-image.png');
+  // Ensure public directory exists
+  const publicDir = path.join(process.cwd(), 'public');
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+
+  // Write to crawler-proof static path
+  const outputPath = path.join(publicDir, 'og.png');
   
   // Take screenshot
   await page.screenshot({ 
@@ -35,6 +42,7 @@ const path = require('path');
   });
   
   console.log(`✅ Open Graph image generated at: ${outputPath}`);
+  console.log('ℹ️  Layout metadata references https://nasa.wesleykamau.com/og.png');
   
   await browser.close();
 })();

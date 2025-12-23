@@ -13,11 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return 'http://localhost:3000';
-};
+const getBaseUrl = () => 'https://nasa.wesleykamau.com';
 
 const siteUrl = getBaseUrl();
 
@@ -38,7 +34,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/opengraph-image.png',
+        url: `${siteUrl}/og.png`,
         width: 1200,
         height: 630,
         alt: SITE_CONFIG.title,
@@ -49,7 +45,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: SITE_CONFIG.title,
     description: SITE_CONFIG.description,
-    images: ['/opengraph-image.png'],
+    images: [`${siteUrl}/og.png`],
   },
   alternates: {
     canonical: siteUrl,
