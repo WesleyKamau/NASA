@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { crashLogger } from '@/lib/crashLogger';
+import type { CrashLog } from '@/lib/crashLogger';
 
 export default function DebugPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<CrashLog[]>([]);
   const tapCountRef = useRef(0);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -132,7 +133,7 @@ export default function DebugPanel() {
                   <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
                 </div>
                 <div className="text-white mb-1">{log.message}</div>
-                {log.memory && (
+                {log.memory && log.memory.usedJSHeapSize && log.memory.jsHeapSizeLimit && (
                   <div className="text-gray-400 text-[10px]">
                     Memory: {Math.round(log.memory.usedJSHeapSize / 1024 / 1024)}MB / 
                     {Math.round(log.memory.jsHeapSizeLimit / 1024 / 1024)}MB

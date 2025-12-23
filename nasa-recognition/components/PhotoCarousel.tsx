@@ -18,7 +18,7 @@ interface PhotoCarouselProps {
 export default function PhotoCarousel({ groupPhotos, people, onPersonClick, highlightedPersonId, onHighlightedPersonChange }: PhotoCarouselProps) {
   const FACE_HITBOX_PADDING = 10; // Percentage padding to expand face hitboxes
   const AUTO_RESUME_MS = GENERAL_COMPONENT_CONFIG.AUTO_RESUME_SECONDS * 1000;
-  const [showDebugHitboxes, setShowDebugHitboxes] = useState(false);
+  const [showDebugHitboxes] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 }); // percentage position
   const [touchPos, setTouchPos] = useState({ x: 50, y: 50 }); // percentage position for touch
   const [isTouching, setIsTouching] = useState(false);
@@ -30,8 +30,9 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
   const [isAutoHighlighting, setIsAutoHighlighting] = useState(true);
   const [shuffledPeople, setShuffledPeople] = useState<Person[]>([]);
   
-  const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+
   const highlightTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  // const photoScrollTimer = useRef<NodeJS.Timeout | undefined>(undefined); // TODO: Not currently used
   const cooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const highlightCooldownTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const autoCycleResetTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -70,7 +71,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     });
 
     return cleanup;
-  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhotoIndex]);
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhoto, highlightedPersonIndex]);
 
   const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);
@@ -233,26 +234,27 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     setIsTouching(false);
   };
 
-  const isInsideExpandedHitbox = (person: Person) => {
-    const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
-    if (!location) return false;
-
-    const expandedX = location.x - FACE_HITBOX_PADDING / 2;
-    const expandedY = location.y - FACE_HITBOX_PADDING / 2;
-    const expandedWidth = location.width + FACE_HITBOX_PADDING;
-    const expandedHeight = location.height + FACE_HITBOX_PADDING;
-
-    // Use touch position if touching, otherwise mouse position
-    const pos = isTouching ? touchPos : mousePos;
-
-    return pos.x >= expandedX && 
-           pos.x <= expandedX + expandedWidth &&
-           pos.y >= expandedY && 
-           pos.y <= expandedY + expandedHeight;
-  };
+  // TODO: Not currently used - function below kept for reference
+  // const isInsideExpandedHitbox = (person: Person) => {
+  //   const location = person.photoLocations.find(loc => loc.photoId === currentPhoto.id);
+  //   if (!location) return false;
+  //
+  //   const expandedX = location.x - FACE_HITBOX_PADDING / 2;
+  //   const expandedY = location.y - FACE_HITBOX_PADDING / 2;
+  //   const expandedWidth = location.width + FACE_HITBOX_PADDING;
+  //   const expandedHeight = location.height + FACE_HITBOX_PADDING;
+  //
+  //   // Use touch position if touching, otherwise mouse position
+  //   const pos = isTouching ? touchPos : mousePos;
+  //
+  //   return pos.x >= expandedX && 
+  //          pos.x <= expandedX + expandedWidth &&
+  //          pos.y >= expandedY && 
+  //          pos.y <= expandedY + expandedHeight;
+  // };
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center" data-testid="photo-carousel">
       {/* Photo viewer */}
       <div 
         className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm"
@@ -360,7 +362,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
                       person={person}
                       isVisible={isHighlighted || isHovered || isExternalHighlight}
                       location={location}
-                      onClick={(e) => handlePersonClick(person)}
+                      onClick={() => handlePersonClick(person)}
                       variant="desktop"
                     />
                   </button>

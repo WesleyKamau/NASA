@@ -5,7 +5,7 @@
 
 import { isDebugEnabled, DebugFeature } from './configs/componentsConfig';
 
-interface CrashLog {
+export interface CrashLog {
   timestamp: string;
   type: 'error' | 'memory' | 'image' | 'scroll';
   message: string;
@@ -67,7 +67,7 @@ class CrashLogger {
 
     // Add memory info if available (Chrome/Edge only, but useful)
     if ('memory' in performance) {
-      const mem = (performance as any).memory;
+      const mem = (performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
       logEntry.memory = {
         usedJSHeapSize: mem.usedJSHeapSize,
         totalJSHeapSize: mem.totalJSHeapSize,
@@ -107,13 +107,14 @@ class CrashLogger {
       try {
         localStorage.setItem('crash-logs', JSON.stringify(this.logs));
         break; // Success
-      } catch (e: any) {
+      } catch (e: unknown) {
         // If quota exceeded, remove oldest log and retry
+        const error = e as { name?: string; code?: number };
         if (
           e &&
-          (e.name === 'QuotaExceededError' ||
-            e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-            (typeof e.code === 'number' && e.code === 22))
+          (error.name === 'QuotaExceededError' ||
+            error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+            (typeof error.code === 'number' && error.code === 22))
         ) {
           if (this.logs.length > 0) {
             this.logs.shift(); // Remove oldest log
@@ -132,7 +133,7 @@ class CrashLogger {
     // Log memory every 5 seconds
     this.memoryMonitoringInterval = setInterval(() => {
       if ('memory' in performance) {
-        const mem = (performance as any).memory;
+        const mem = (performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
         const usedMB = Math.round(mem.usedJSHeapSize / 1024 / 1024);
         const limitMB = Math.round(mem.jsHeapSizeLimit / 1024 / 1024);
         const percent = Math.round((mem.usedJSHeapSize / mem.jsHeapSizeLimit) * 100);
@@ -193,5 +194,5 @@ if (
   isDebugEnabled(DebugFeature.ENABLE_CRASH_LOGGER) &&
   (typeof process === 'undefined' || !process.env || process.env.NODE_ENV !== 'production')
 ) {
-  (window as any).crashLogger = crashLogger;
+  (window as unknown as { crashLogger: typeof crashLogger }).crashLogger = crashLogger;
 }

@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
-const fs = require('fs');
+// const fs = require('fs');
 
 (async () => {
   const browser = await puppeteer.launch();
@@ -16,7 +16,7 @@ const fs = require('fs');
       waitUntil: 'networkidle0',
       timeout: 10000
     });
-  } catch (e) {
+  } catch {
     console.error('❌ Could not connect to http://localhost:3000');
     console.error('Please ensure your Next.js dev server is running (npm run dev)');
     await browser.close();

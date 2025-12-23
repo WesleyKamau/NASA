@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import StarfieldBackground from '@/components/StarfieldBackground';
 import GalaxyBackground from '@/components/GalaxyBackground';
-import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 import { OG_IMAGE_CONFIG } from '@/lib/configs/ogConfig';
 import { OG_GENERATOR_CONFIG } from '@/lib/configs/componentsConfig';
+import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 
-const { ROCKET_SIZE: DEFAULT_ROCKET_SIZE, ENGINE_GLOW_OFFSET_X, ENGINE_GLOW_OFFSET_Y } = ROCKET_CONFIG;
+const { ENGINE_GLOW_OFFSET_X, ENGINE_GLOW_OFFSET_Y } = ROCKET_CONFIG;
 
 const FONTS = OG_GENERATOR_CONFIG.AVAILABLE_FONTS;
 
@@ -70,11 +70,11 @@ function GeneratorContent() {
 
   const loadSystemFonts = async () => {
     try {
-      // @ts-ignore - queryLocalFonts is experimental
+      // @ts-expect-error - queryLocalFonts is experimental API
       if (window.queryLocalFonts) {
-        // @ts-ignore
+        // @ts-expect-error - experimental API
         const fonts = await window.queryLocalFonts();
-        const fontNames = new Set(fonts.map((f: any) => f.family));
+        const fontNames = new Set(fonts.map((f: { family: string }) => f.family));
         const systemFonts = Array.from(fontNames).map(name => ({
           name: name as string,
           value: `"${name}", sans-serif`

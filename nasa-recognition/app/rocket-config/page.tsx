@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
@@ -42,7 +42,7 @@ export default function RocketConfigPage() {
     rotation: number;
   } | null>(null);
 
-  const triggerLaunch = () => {
+  const triggerLaunch = useCallback(() => {
     const startSide: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
     const startY = Math.random() * 100;
     const endY = Math.random() * 100;
@@ -55,7 +55,7 @@ export default function RocketConfigPage() {
     setTimeout(() => {
       setIsLaunching(false);
     }, rocketSpeed * 1000);
-  };
+  }, [rocketSpeed]);
 
   const copyConfig = () => {
     const config = `// Shared rocket configuration constants
@@ -77,7 +77,7 @@ export const ROCKET_CONFIG = {
     // Auto-launch for demo
     const timeout = setTimeout(triggerLaunch, 1000);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [triggerLaunch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-8">
@@ -258,7 +258,7 @@ export const ROCKET_CONFIG = {
 } as const;`}</pre>
               </div>
               <p className="text-slate-400 text-sm mt-4">
-                Click "Copy Config" and paste these values into <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code>
+                Click &quot;Copy Config&quot; and paste these values into <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code>
               </p>
             </div>
 
@@ -399,7 +399,7 @@ export const ROCKET_CONFIG = {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-slate-500">
                     <div className="text-6xl mb-4">🚀</div>
-                    <p className="text-lg">Click "Launch Rocket" to test</p>
+                    <p className="text-lg">Click &quot;Launch Rocket&quot; to test</p>
                   </div>
                 </div>
               )}
@@ -412,8 +412,8 @@ export const ROCKET_CONFIG = {
           <h3 className="text-xl font-bold text-white mb-4">How to Apply Changes</h3>
           <ol className="text-slate-300 space-y-2 list-decimal list-inside">
             <li>Adjust the sliders above until you&apos;re happy with the animation</li>
-            <li>Click "Launch Rocket" to test your settings in real-time</li>
-            <li>Click "Copy Config" to copy the configuration code</li>
+            <li>Click &quot;Launch Rocket&quot; to test your settings in real-time</li>
+            <li>Click &quot;Copy Config&quot; to copy the configuration code</li>
             <li>Open <code className="bg-slate-700 px-2 py-1 rounded">lib/rocketConfig.ts</code></li>
             <li>Replace the entire ROCKET_CONFIG object with your copied values</li>
             <li>Save the file and the changes will apply to the main page</li>
