@@ -973,6 +973,8 @@ export default function CoordinatePicker({ imagePath, photoId, allPeople, groupP
                     <option value="interns">Interns</option>
                     <option value="girlfriend">Girlfriend</option>
                     <option value="family">Family</option>
+                    <option value="sil-lab">SIL Lab</option>
+                    <option value="astronaut">Astronaut</option>
                   </select>
                 </div>
 
