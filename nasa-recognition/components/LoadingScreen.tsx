@@ -63,6 +63,8 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-400 ${
         isComplete ? 'opacity-0' : 'opacity-100'
       }`}
@@ -91,8 +93,12 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
             {/* Progress Bar */}
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
+                role="progressbar"
+                aria-valuenow={Math.round(progress)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                className="h-full w-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-transform duration-300 ease-out origin-left"
+                style={{ transform: `scaleX(${progress / 100})` }}
               />
             </div>
             

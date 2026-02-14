@@ -36,6 +36,9 @@ export default function PanGestureHint({ onInteraction }: PanGestureHintProps) {
   const startTimer = useCallback(() => {
     if (!ENABLE_PAN_GESTURE_HINT || hasInteractedRef.current) return;
 
+    // Skip animated hint when user prefers reduced motion
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     if (timerRef.current) clearTimeout(timerRef.current);
     if (durationTimerRef.current) clearTimeout(durationTimerRef.current);
 

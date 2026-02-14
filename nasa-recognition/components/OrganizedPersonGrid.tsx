@@ -79,9 +79,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
             return (
               <div key={category}>
-                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center gradient-text">
+                <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center gradient-text">
                   {categoryLabels[category]}
-                </h3>
+                </h2>
                 <div className={`flex flex-wrap justify-center ${gapClass}`}>
                   {categoryPeople.map((person) => (
                     <div key={person.id} className={itemClass}>
@@ -141,9 +141,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
         {/* Me first */}
         {wesley && (
           <div>
-            <h3 className="text-2xl font-bold mb-4 text-center gradient-text">
+            <h2 className="text-2xl font-bold mb-4 text-center gradient-text">
               Me
-            </h3>
+            </h2>
             <div className="flex justify-center">
               <div className="w-full max-w-xs md:max-w-sm">
                 <PersonCard
@@ -180,9 +180,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                 </div>
               )}
 
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center gradient-text">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center gradient-text">
                 {categoryLabels[category]}
-              </h3>
+              </h2>
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                 {categoryPeople.map((person) => (
                   <div key={person.id} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.75rem)] md:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(25%-0.75rem)]">

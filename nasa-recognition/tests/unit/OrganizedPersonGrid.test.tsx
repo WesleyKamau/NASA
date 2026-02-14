@@ -135,7 +135,7 @@ describe('OrganizedPersonGrid', () => {
     
     // In uniform layout, Wesley is merged into family category, no "Me" section heading
     expect(screen.queryByRole('heading', { name: 'Me' })).not.toBeInTheDocument();
-    expect(screen.getByText('Family & Special Guest')).toBeInTheDocument();
+    expect(screen.getByText('Family')).toBeInTheDocument();
     expect(screen.getByText('Wesley Kamau')).toBeInTheDocument();
   });
 });

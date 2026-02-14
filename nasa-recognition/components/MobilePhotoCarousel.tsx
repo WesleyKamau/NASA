@@ -751,7 +751,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 : isDragging 
                   ? 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
                   : 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              willChange: 'width, height, transform',
+              willChange: 'transform',
               position: 'absolute',
               top: '50%',
               left: '50%',

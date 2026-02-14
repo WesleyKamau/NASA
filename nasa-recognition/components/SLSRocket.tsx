@@ -1,9 +1,21 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 import { setNextLaunchTimestamp } from '@/lib/rocketSchedule';
+
+function usePrefersReducedMotion() {
+  const [prefersReduced, setPrefersReduced] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReduced(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+  return prefersReduced;
+}
 
 const {
   ENABLE_ROCKET,
@@ -42,6 +54,7 @@ function calculateRocketRotation(
 }
 
 export default function SLSRocket() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [isLaunching, setIsLaunching] = useState(false);
   const [position, setPosition] = useState<RocketPosition | null>(null);
   const [pageHeight, setPageHeight] = useState(0);
@@ -125,7 +138,7 @@ export default function SLSRocket() {
     };
   }, [pageHeight, scheduleLaunch]);
 
-  if (!ENABLE_ROCKET || !isLaunching || !position) return null;
+  if (!ENABLE_ROCKET || prefersReducedMotion || !isLaunching || !position) return null;
 
   const { startSide, startY, endY, rotation } = position;
 
@@ -145,7 +158,7 @@ export default function SLSRocket() {
         width: `${ROCKET_SIZE}px`,
         height: `${ROCKET_SIZE * 2}px`,
         top: `${startY}px`,
-        willChange: 'left, right, top, transform',
+        willChange: 'transform',
         left: startSide === 'left' ? '-150px' : 'auto',
         right: startSide === 'right' ? '-150px' : 'auto',
         animation: `
@@ -156,7 +169,7 @@ export default function SLSRocket() {
     >
       <Image
         src="/SLS.png"
-        alt="SLS Rocket"
+        alt=""
         width={ROCKET_SIZE}
         height={ROCKET_SIZE * 2}
         className="drop-shadow-2xl"

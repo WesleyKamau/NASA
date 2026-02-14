@@ -85,7 +85,9 @@ export default function LoadingWrapper({ children }: LoadingWrapperProps) {
           />
         </div>
       )}
-      {children}
+      <div aria-busy={showOverlay}>
+        {children}
+      </div>
     </LoadingContext.Provider>
   );
 }

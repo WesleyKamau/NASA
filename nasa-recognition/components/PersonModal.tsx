@@ -18,21 +18,56 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
   const lastY = useRef(0);
   const lastTime = useRef(0);
   const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    // Store the element that opened the modal so we can restore focus on close
+    triggerRef.current = document.activeElement as HTMLElement;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      // Focus trap: keep Tab focus within the modal
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
     };
-    
+
     // Prevent body scroll when modal is open
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handleEscape);
-    
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Move focus into the modal
+    modalRef.current?.focus();
+
     return () => {
       // Restore original overflow (empty string properly resets to CSS default)
       document.body.style.overflow = originalOverflow || '';
-      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to the element that opened the modal
+      triggerRef.current?.focus();
     };
   }, [onClose]);
 
@@ -100,10 +135,14 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/90 backdrop-blur-sm animate-fadeIn overflow-y-auto"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="person-modal-title"
     >
       <div
         ref={modalRef}
-        className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/95 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto"
+        tabIndex={-1}
+        className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/95 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto outline-none"
         style={{
           transform: `translateY(${dragY}px)`,
           opacity: dragY > 0 ? Math.max(0.3, 1 - dragY / 400) : 1,
@@ -152,7 +191,7 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+              <h2 id="person-modal-title" className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
                 {person.name}
               </h2>
 
