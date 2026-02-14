@@ -1067,23 +1067,6 @@
       "preferredPhotoId": "staff-photo"
     },
     {
-      "id": "hailey-kuhl",
-      "name": "Hailey Kuhl",
-      "description": "My girlfriend",
-      "category": "girlfriend",
-      "individualPhoto": null,
-      "photoLocations": [
-        {
-          "photoId": "staff-photo",
-          "x": 51.62,
-          "y": 30.09,
-          "width": 9.44,
-          "height": 7.08
-        }
-      ],
-      "preferredPhotoId": "staff-photo"
-    },
-    {
       "id": "dr.-vemitra-white-alexander",
       "name": "Dr. Vemitra White-Alexander",
       "description": "",

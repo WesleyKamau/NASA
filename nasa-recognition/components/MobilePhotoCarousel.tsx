@@ -98,7 +98,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const animationFrameRef = useRef<number>(0);
   const positionRef = useRef({ x: 0, y: 0 });
   const scaleRef = useRef(1);
-  const [centerIndicatorForce, setCenterIndicatorForce] = useState(0); // Force re-render
+  const [centerIndicatorForce, setCenterIndicatorForce] = useState(0); // Force re-render (throttled)
+  const lastCenterUpdateRef = useRef(0); // Throttle center indicator updates to ~10fps
 
   const currentPhoto = groupPhotos[currentPhotoIndex];
   const photoWidth = currentPhoto?.width || 2400;
@@ -528,9 +529,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         animationFrameRef.current = 0;
         cancelAnimationFrame(frameId);
       }
-      // Start RAF loop to continuously update center indicator during drag
+      // Start RAF loop to continuously update center indicator during drag (throttled to ~10fps)
       const updateCenterIndicator = () => {
-        setCenterIndicatorForce(prev => prev + 1);
+        const now = Date.now();
+        if (now - lastCenterUpdateRef.current >= 100) {
+          lastCenterUpdateRef.current = now;
+          setCenterIndicatorForce(prev => prev + 1);
+        }
         animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
       };
       animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
@@ -619,8 +624,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
       };
-      // Update center indicator during drag
-      setCenterIndicatorForce(prev => prev + 1);
+      // Update center indicator during drag (throttled - RAF loop handles periodic updates)
+      const now = Date.now();
+      if (now - lastCenterUpdateRef.current >= 100) {
+        lastCenterUpdateRef.current = now;
+        setCenterIndicatorForce(prev => prev + 1);
+      }
     }
   }, [interactionLocked, isZooming, isDragging, currentPhoto, scale, position, dragStart, autoZoomedOnPan]);
 
@@ -754,10 +763,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               alt={currentPhoto.name}
               width={photoWidth}
               height={photoHeight}
-              unoptimized
               className="w-full h-full object-contain object-center block pointer-events-none"
               style={{ imageRendering: 'auto' }}
               priority
+              sizes="(max-width: 500px) 100vw, (max-width: 1024px) 75vw, 50vw"
               draggable={false}
               onLoad={(e) => {
                 const img = e.currentTarget;

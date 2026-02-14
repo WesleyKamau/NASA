@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPersonImage } from '@/lib/imageUtils';
 import { imageLoadQueue } from '@/lib/imageLoadQueue';
-import { scrollManager } from '@/lib/scrollManager';
 import { crashLogger } from '@/lib/crashLogger';
 
 interface PersonImageProps {
@@ -28,7 +27,6 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
   const observerRef = useRef<IntersectionObserver | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInViewportRef = useRef(false); // Track if currently in viewport
-  const scrollUnsubRef = useRef<(() => void) | null>(null);
   const isMountedRef = useRef(true);
   
   // Generate stable ID for this image for queue deduplication
@@ -51,10 +49,6 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
-      }
-      if (scrollUnsubRef.current) {
-        scrollUnsubRef.current();
-        scrollUnsubRef.current = null;
       }
     };
   }, []);
@@ -83,34 +77,9 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
         observerRef.current.disconnect();
         observerRef.current = null;
       }
-      // Unsubscribe from scroll events
-      if (scrollUnsubRef.current) {
-        scrollUnsubRef.current();
-        scrollUnsubRef.current = null;
-      }
     }
-    // If not successful (scroll blocking or queue full), keep observer active for retry
+    // If not successful (queue full), keep observer active for retry
   }, [imageId, isQueued, shouldLoad, priority]);
-
-  // Subscribe to scroll stop events for retry
-  useEffect(() => {
-    if (priority || shouldLoad || isQueued) return;
-    
-    // Subscribe to scroll state changes to retry when scrolling stops
-    scrollUnsubRef.current = scrollManager.subscribe(() => {
-      // Scroll just stopped - try to queue if we're in viewport
-      if (isInViewportRef.current) {
-        tryQueue();
-      }
-    });
-    
-    return () => {
-      if (scrollUnsubRef.current) {
-        scrollUnsubRef.current();
-        scrollUnsubRef.current = null;
-      }
-    };
-  }, [priority, shouldLoad, isQueued, tryQueue]);
 
   // Intersection Observer for lazy loading with queue
   useEffect(() => {

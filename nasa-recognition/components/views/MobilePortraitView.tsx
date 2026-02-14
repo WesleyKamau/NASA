@@ -125,7 +125,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
       {/* Dynamic overlay - Smooth opacity transition on scroll */}
       <div 
         ref={overlayRef}
-        className="fixed inset-0 bg-black/30 backdrop-blur-md pointer-events-none z-20 transition-opacity duration-0"
+        className="fixed inset-0 bg-black/40 pointer-events-none z-20 transition-opacity duration-0"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY }}
       />
 

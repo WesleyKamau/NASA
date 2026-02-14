@@ -20,8 +20,8 @@ interface OrganizedPersonGridProps {
 const categoryOrder: Category[] = ['family', 'staff', 'sil-lab', 'interns'];
 
 const categoryLabels: Record<Category, string> = {
-  'family': 'Family & Special Guest',
-  'girlfriend': 'Special Guest',
+  'family': 'Family',
+  // 'girlfriend': 'Special Guest',
   'staff': 'Staff & Mentors',
   'sil-lab': 'SIL Lab',
   'interns': 'Fellow Interns'
@@ -43,27 +43,17 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
   if (uniformLayout) {
     // Uniform layout: all people sorted by category, then alphabetically, including Wesley
-    // Filter girlfriend and wesley only once for efficiency (single pass)
-    const { girlfriendPeople, wesleyPeople } = visiblePeople.reduce((acc, person) => {
-      if (person.category === 'girlfriend') {
-        acc.girlfriendPeople.push(person);
-      }
-      if (person.id === 'wesley-kamau') {
-        acc.wesleyPeople.push(person);
-      }
-      return acc;
-    }, { girlfriendPeople: [] as Person[], wesleyPeople: [] as Person[] });
-    
+    // Filter Wesley only once for merging into family
+    const wesleyPeople = visiblePeople.filter(p => p.id === 'wesley-kamau');
+
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
-      // Note: 'girlfriend' people are only shown in the 'family' category (see below).
-      // We exclude 'wesley-kamau' here, as he is merged into 'family' as well.
-      let categoryPeople = visiblePeople.filter(p => 
-        p.category === category && p.id !== 'wesley-kamau' && p.category !== 'girlfriend'
+      let categoryPeople = visiblePeople.filter(p =>
+        p.category === category && p.id !== 'wesley-kamau'
       );
-      
-      // Merge girlfriend and Wesley into family
+
+      // Merge Wesley into family
       if (category === 'family') {
-        categoryPeople = [...categoryPeople, ...girlfriendPeople, ...wesleyPeople];
+        categoryPeople = [...categoryPeople, ...wesleyPeople];
       }
 
       // Sort alphabetically by name
@@ -133,12 +123,6 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
   const peopleByCategory = categoryOrder.reduce((acc, category) => {
     let categoryPeople = visiblePeopleExceptWesley.filter(p => p.category === category);
     
-    // Merge girlfriend into family
-    if (category === 'family') {
-      const girlfriend = visiblePeopleExceptWesley.filter(p => p.category === 'girlfriend');
-      categoryPeople = [...categoryPeople, ...girlfriend];
-    }
-
     // Sort alphabetically by name
     categoryPeople.sort((a, b) => a.name.localeCompare(b.name));
 

@@ -96,18 +96,22 @@ body {
 @keyframes flyRight {
   from {
     left: -150px;
+    top: var(--start-y, 0px);
   }
   to {
     left: calc(100vw + 150px);
+    top: var(--end-y, 0px);
   }
 }
 
 @keyframes flyLeft {
   from {
     right: -150px;
+    top: var(--start-y, 0px);
   }
   to {
     right: calc(100vw + 150px);
+    top: var(--end-y, 0px);
   }
 }
 

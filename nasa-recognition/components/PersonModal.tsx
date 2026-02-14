@@ -98,12 +98,12 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/85 backdrop-blur-lg animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/90 backdrop-blur-sm animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div
         ref={modalRef}
-        className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto backdrop-blur-xl"
+        className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/95 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto"
         style={{
           transform: `translateY(${dragY}px)`,
           opacity: dragY > 0 ? Math.max(0.3, 1 - dragY / 400) : 1,
@@ -140,15 +140,13 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
             <div className="flex-1 flex flex-col">
               <div className="mb-3">
                 <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-full inline-block ${
-                  person.category === 'staff' 
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
-                    : person.category === 'girlfriend'
-                      ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
-                      : person.category === 'family'
-                        ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                        : person.category === 'sil-lab'
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                          : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  person.category === 'staff'
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : person.category === 'family'
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                      : person.category === 'sil-lab'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                 }`}>
                   {person.category === 'sil-lab' ? 'SIL Lab' : person.category}
                 </span>

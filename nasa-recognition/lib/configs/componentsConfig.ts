@@ -14,8 +14,8 @@ export const enum DebugFeature {
 }
 
 export const DEBUG_CONFIG: Record<DebugFeature, boolean> = {
-  [DebugFeature.ENABLE_DEBUG_MODE]: true,
-  [DebugFeature.ENABLE_CRASH_LOGGER]: true,
+  [DebugFeature.ENABLE_DEBUG_MODE]: false,
+  [DebugFeature.ENABLE_CRASH_LOGGER]: false,
   [DebugFeature.SHOW_DEBUG_HITBOXES]: false,
 };
 
@@ -222,6 +222,6 @@ export const STARFIELD_CONFIG = {
 
 export const LOADING_SCREEN_CONFIG = {
   // Animation settings
-  MIN_LOADING_TIME_MS: 2000,
+  MIN_LOADING_TIME_MS: 800,
   FADE_OUT_MS: 400,              // Should match the duration-400 class in LoadingScreen
 } as const;
