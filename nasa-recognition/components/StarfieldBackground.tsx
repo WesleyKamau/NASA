@@ -117,8 +117,9 @@ export default function StarfieldBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className={`fixed inset-0 pointer-events-none z-0 transition-opacity ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 pointer-events-none z-0 bg-black transition-opacity ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       style={{
+        backgroundColor: '#000',
         background: `linear-gradient(to bottom, ${STARFIELD_CONFIG.GRADIENT_START}, ${STARFIELD_CONFIG.GRADIENT_END})`,
         transitionDuration: `${STARFIELD_CONFIG.FADE_DURATION_MS}ms`
       }}

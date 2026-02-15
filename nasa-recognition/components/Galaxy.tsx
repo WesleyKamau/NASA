@@ -301,6 +301,9 @@ export default function Galaxy({
       renderer.render({ scene: mesh });
     }
     animateId = requestAnimationFrame(update);
+    
+    // Set canvas background to black to prevent white flash
+    gl.canvas.style.backgroundColor = '#000';
     ctn.appendChild(gl.canvas);
 
     function handleMouseMove(e: MouseEvent) {
@@ -349,5 +352,12 @@ export default function Galaxy({
     transparent
   ]);
 
-  return <div ref={ctnDom} className="w-full h-full relative" {...rest} />;
+  return (
+    <div 
+      ref={ctnDom} 
+      className="w-full h-full relative bg-black" 
+      style={{ backgroundColor: '#000' }}
+      {...rest} 
+    />
+  );
 }

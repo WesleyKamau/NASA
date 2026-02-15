@@ -54,17 +54,25 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
       }
     };
 
-    // Prevent body scroll when modal is open
+    // Prevent body scroll when modal is open and compensate for scrollbar
     const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    
+    // Calculate scrollbar width to prevent layout shift
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    
     document.body.style.overflow = 'hidden';
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    
     window.addEventListener('keydown', handleKeyDown);
 
     // Move focus into the modal
     modalRef.current?.focus();
 
     return () => {
-      // Restore original overflow (empty string properly resets to CSS default)
+      // Restore original styles
       document.body.style.overflow = originalOverflow || '';
+      document.body.style.paddingRight = originalPaddingRight || '';
       window.removeEventListener('keydown', handleKeyDown);
       // Restore focus to the element that opened the modal
       triggerRef.current?.focus();
@@ -171,8 +179,8 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
           {/* Photo and basic info */}
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Photo */}
-            <div className="w-full sm:w-48 aspect-square rounded-xl overflow-hidden bg-slate-800/50 relative flex-shrink-0 mx-auto sm:mx-0 max-w-xs">
-              <PersonImage person={person} groupPhotos={groupPhotos} className="text-5xl sm:text-6xl" priority />
+            <div className="w-full sm:w-48 sm:h-48 rounded-xl overflow-hidden bg-slate-800/50 relative flex-shrink-0 mx-auto sm:mx-0 max-w-xs aspect-square">
+              <PersonImage person={person} groupPhotos={groupPhotos} className="text-5xl sm:text-6xl !object-contain !object-center" priority />
             </div>
 
             {/* Info */}

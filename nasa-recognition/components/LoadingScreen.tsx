@@ -73,9 +73,10 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
     <div
       role="status"
       aria-live="polite"
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500 ${
         isComplete ? 'opacity-0' : 'opacity-100'
       }`}
+      style={{ backgroundColor: '#000' }}
     >
       {/* Deep space radial glow */}
       <div
