@@ -142,7 +142,7 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/95 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-2xl shadow-blue-500/10 animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto outline-none"
+        className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl p-6 sm:p-10 max-w-2xl w-full shadow-[0_0_40px_rgba(96,165,250,0.15)] animate-slideUp sm:animate-scaleIn max-h-screen sm:max-h-[90vh] overflow-y-auto outline-none"
         style={{
           transform: `translateY(${dragY}px)`,
           opacity: dragY > 0 ? Math.max(0.3, 1 - dragY / 400) : 1,
@@ -178,20 +178,12 @@ export default function PersonModal({ person, groupPhotos, onClose }: PersonModa
             {/* Info */}
             <div className="flex-1 flex flex-col">
               <div className="mb-3">
-                <span className={`text-xs sm:text-sm px-3 py-1.5 rounded-full inline-block ${
-                  person.category === 'staff'
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    : person.category === 'family'
-                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                      : person.category === 'sil-lab'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                }`}>
-                  {person.category === 'sil-lab' ? 'SIL Lab' : person.category}
+                <span className="text-xs sm:text-sm px-3 py-1.5 rounded-full inline-block bg-blue-500/15 text-blue-300 border border-blue-400/30">
+                  {person.category === 'sil-lab' ? 'SIL Lab' : person.category === 'staff' ? 'Staff & Mentors' : person.category === 'family' ? 'Family' : 'Fellow Interns'}
                 </span>
               </div>
 
-              <h2 id="person-modal-title" className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+              <h2 id="person-modal-title" className="text-2xl sm:text-3xl font-bold text-white mb-4">
                 {person.name}
               </h2>
 

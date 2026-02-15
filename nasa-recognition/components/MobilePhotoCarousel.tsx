@@ -974,9 +974,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             const cardTop = cardElement.offsetTop;
                             rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
                           }
-                          cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                          cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                           setTimeout(() => {
-                            cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                           }, 2000);
                         }
                         
@@ -999,9 +999,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                               cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                               scrollToCardTimeoutRef.current = undefined;
                             }, 50);
-                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             setTimeout(() => {
-                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             }, 2000);
                           }
                         }
@@ -1055,13 +1055,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     )}
 
                     {/* Highlight border */}
-                    <div 
-                      className={`absolute inset-0 rounded-lg transition-all duration-500 z-10`}
+                    <div
+                      className={`absolute inset-0 rounded-lg transition-all duration-300 z-10`}
                       style={{
-                        boxShadow: isHighlighted 
-                          ? `0 0 0 ${getBorderWidth(scale)}px rgb(250 204 21), 0 10px 15px -3px rgb(250 204 21 / 0.5)` 
+                        boxShadow: isHighlighted
+                          ? `0 0 0 ${getBorderWidth(scale)}px rgb(96 165 250), 0 10px 15px -3px rgb(96 165 250 / 0.4)`
                           : showWhenZoomed
-                            ? `0 0 0 ${getBorderWidth(scale)}px rgb(255 255 255), 0 20px 25px -5px rgb(255 255 255 / 0.5)`
+                            ? `0 0 0 ${getBorderWidth(scale)}px rgb(96 165 250 / 0.8), 0 10px 15px -3px rgb(96 165 250 / 0.3)`
                             : isAutoHighlighting
                               ? 'none'
                               : `0 0 0 ${getBorderWidth(scale)}px rgb(255 255 255 / 0.2)`
@@ -1084,9 +1084,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                               const cardTop = cardElement.offsetTop;
                               rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
                             }
-                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             setTimeout(() => {
-                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             }, 2000);
                           }
                           
@@ -1103,9 +1103,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                           const cardElement = document.getElementById(personCardId);
                           if (cardElement) {
                             cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             setTimeout(() => {
-                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             }, 2000);
                           }
                           

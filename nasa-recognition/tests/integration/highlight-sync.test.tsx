@@ -51,7 +51,7 @@ describe('Highlight State Synchronization', () => {
       );
 
       const aliceCard = container.querySelector('#person-card-alice');
-      expect(aliceCard).toHaveClass('border-white/50');
+      expect(aliceCard).toHaveClass('border-blue-400/60');
       expect(aliceCard).toHaveClass('scale-105');
     });
 

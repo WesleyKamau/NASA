@@ -83,7 +83,7 @@ describe('OrganizedPersonGrid', () => {
     );
     
     const bobCard = container.querySelector('#person-card-person-2');
-    expect(bobCard).toHaveClass('border-white/50');
+    expect(bobCard).toHaveClass('border-blue-400/60');
     expect(bobCard).toHaveClass('scale-105');
   });
 

@@ -15,6 +15,13 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
   const [isComplete, setIsComplete] = useState(false);
   const [shouldHide, setShouldHide] = useState(false);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Staggered entrance animation
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 100);
+    return () => clearTimeout(t);
+  }, []);
 
   // Ensure minimum display time for smooth UX
   useEffect(() => {
@@ -27,15 +34,14 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
 
   // Smooth progress animation that follows actual loading
   useEffect(() => {
-    const targetProgress = fontsLoaded && assetsLoaded ? 100 : 
-                          fontsLoaded ? 60 : 
+    const targetProgress = fontsLoaded && assetsLoaded ? 100 :
+                          fontsLoaded ? 60 :
                           assetsLoaded ? 70 : 30;
 
     const animateProgress = () => {
       setProgress(current => {
         const diff = targetProgress - current;
         if (Math.abs(diff) < 0.1) return targetProgress;
-        // Faster interpolation for more responsive feel
         return current + diff * 0.2;
       });
     };
@@ -61,66 +67,79 @@ export default function LoadingScreen({ onLoadingComplete, assetsLoaded, fontsLo
     return null;
   }
 
+  const pct = Math.round(progress);
+
   return (
     <div
       role="status"
       aria-live="polite"
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-400 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-500 ${
         isComplete ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-950" />
+      {/* Deep space radial glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(15, 23, 42, 0.6) 0%, transparent 60%)',
+        }}
+      />
 
-      {/* Main Content - Glassmorphic Card */}
-      <div className="relative z-10 px-8 py-12 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl max-w-md w-full mx-4">
-        
-        {/* Content Container */}
-        <div className="flex flex-col items-center gap-10">
-          
-          {/* Typography */}
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              {SITE_CONFIG.title}
-            </h1>
-            <p className="text-slate-400 text-xs font-medium tracking-[0.3em] uppercase">
-              by Wesley Kamau
-            </p>
+      {/* Content — no card, no border, just floating in space */}
+      <div className="relative z-10 flex flex-col items-center w-full max-w-sm mx-6">
+
+        {/* Title — wide-tracked, staggered entrance */}
+        <div
+          className="text-center transition-all duration-700 ease-out"
+          style={{
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(12px)',
+          }}
+        >
+          <h1
+            className="text-white font-bold tracking-tight leading-none"
+            style={{ fontSize: 'clamp(1.75rem, 5vw, 2.5rem)' }}
+          >
+            {SITE_CONFIG.title}
+          </h1>
+        </div>
+
+        {/* Thin separator line */}
+        <div
+          className="w-12 h-px bg-white/20 my-6 transition-all duration-700 ease-out delay-100"
+          style={{
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'scaleX(1)' : 'scaleX(0)',
+          }}
+        />
+
+        {/* Progress section */}
+        <div
+          className="w-full transition-all duration-700 ease-out delay-200"
+          style={{
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+          }}
+        >
+          {/* Progress line — thin and precise */}
+          <div className="h-px w-full bg-white/10 relative overflow-hidden">
+            <div
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className="h-full bg-white/70 transition-transform duration-300 ease-out origin-left"
+              style={{ transform: `scaleX(${progress / 100})` }}
+            />
           </div>
 
-          {/* Progress Bar Container */}
-          <div className="w-full space-y-3">
-            {/* Progress Bar */}
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div
-                role="progressbar"
-                aria-valuenow={Math.round(progress)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                className="h-full w-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-transform duration-300 ease-out origin-left"
-                style={{ transform: `scaleX(${progress / 100})` }}
-              />
-            </div>
-            
-            {/* Progress Text */}
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-light">Loading</span>
-              <span className="text-slate-400 font-mono">{Math.round(progress)}%</span>
-            </div>
-          </div>
-
-          {/* Loading Indicator Dots */}
-          <div className="flex gap-2">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-white/40"
-                style={{
-                  animation: `pulse 1.5s ease-in-out ${i * 0.15}s infinite`,
-                }}
-              />
-            ))}
-          </div>
+          {/* Status text — monospace, mission-control feel */}
+          <p
+            className="text-white/30 text-[11px] tracking-[0.25em] uppercase mt-3 text-center"
+            style={{ fontFamily: 'var(--font-geist-mono), monospace' }}
+          >
+            {pct < 100 ? `Initializing ${pct}%` : 'Ready'}
+          </p>
         </div>
       </div>
     </div>

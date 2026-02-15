@@ -13,7 +13,7 @@ const MobileLandscapeView = dynamic(() => import('@/components/views/MobileLands
 const DesktopPortraitView = dynamic(() => import('@/components/views/DesktopPortraitView'));
 const MobilePortraitView = dynamic(() => import('@/components/views/MobilePortraitView'));
 const TabletPortraitView = dynamic(() => import('@/components/views/TabletPortraitView'));
-const GalaxyBackground = dynamic(() => import('@/components/GalaxyBackground'));
+const GalaxyBackground = dynamic(() => import('@/components/GalaxyBackground'), { ssr: false });
 const StarfieldBackground = dynamic(() => import('@/components/StarfieldBackground'));
 
 interface ClientHomeProps {
@@ -21,11 +21,15 @@ interface ClientHomeProps {
   people: Person[];
 }
 
+type LayoutState = {
+  useSplitView: boolean;
+  useCompactSplit: boolean;
+  useMobilePortrait: boolean;
+  useTabletPortrait: boolean;
+};
+
 export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
-  const [useSplitView, setUseSplitView] = useState(false);
-  const [useCompactSplit, setUseCompactSplit] = useState(false);
-  const [useMobilePortrait, setUseMobilePortrait] = useState(false);
-  const [useTabletPortrait, setUseTabletPortrait] = useState(false);
+  const [layout, setLayout] = useState<LayoutState | null>(null);
   const loadingContext = useLoadingContext();
   const hasSignaledLoaded = useRef(false);
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,12 +54,15 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
     const isMobileLandscape = isLandscape && isTouchDevice && !hasHover;
     const isDesktopSplitView = isXL;
 
-    setUseMobilePortrait(isPortraitPhone);
-    setUseTabletPortrait(isTabletPortrait);
-
     const shouldUseSplitView = isDesktopSplitView || isMobileLandscape;
-    setUseSplitView(shouldUseSplitView);
-    setUseCompactSplit(!isXL && shouldUseSplitView);
+
+    // Single state update to prevent intermediate renders / background flicker
+    setLayout({
+      useMobilePortrait: isPortraitPhone,
+      useTabletPortrait: isTabletPortrait,
+      useSplitView: shouldUseSplitView,
+      useCompactSplit: !isXL && shouldUseSplitView,
+    });
   }, []);
 
   useEffect(() => {
@@ -78,23 +85,25 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   }, [checkLayout]);
 
   // Determine which view and background to use
-  const getActiveViewAndBackground = (): { view: JSX.Element; background: 'starfield' | 'galaxy' } => {
-    if (useMobilePortrait) {
+  const getActiveViewAndBackground = (): { view: JSX.Element; background: 'starfield' | 'galaxy' } | null => {
+    if (!layout) return null; // Layout not determined yet — stay on black
+
+    if (layout.useMobilePortrait) {
       return {
         view: <MobilePortraitView groupPhotos={groupPhotos} people={people} />,
         background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.MOBILE_PORTRAIT,
       };
     }
 
-    if (useTabletPortrait) {
+    if (layout.useTabletPortrait) {
       return {
         view: <TabletPortraitView groupPhotos={groupPhotos} people={people} />,
         background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.TABLET_PORTRAIT,
       };
     }
 
-    if (useSplitView) {
-      if (useCompactSplit) {
+    if (layout.useSplitView) {
+      if (layout.useCompactSplit) {
         return {
           view: <MobileLandscapeView groupPhotos={groupPhotos} people={people} />,
           background: GENERAL_COMPONENT_CONFIG.BACKGROUND_BY_VIEW.MOBILE_LANDSCAPE,
@@ -112,20 +121,20 @@ export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
     };
   };
 
-  const { view, background } = getActiveViewAndBackground();
+  const result = getActiveViewAndBackground();
 
   return (
     <>
-      {/* Background */}
-      <div className={`fixed inset-0 z-0 ${GENERAL_COMPONENT_CONFIG.BACKGROUND_GRADIENT ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-black' : ''}`}>
-        {background === 'galaxy' ? (
+      {/* Background — stays black until layout is determined to prevent starfield→galaxy flash */}
+      <div className={`fixed inset-0 z-0 bg-black ${GENERAL_COMPONENT_CONFIG.BACKGROUND_GRADIENT ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-black' : ''}`}>
+        {result && (result.background === 'galaxy' ? (
           <GalaxyBackground />
         ) : (
           <StarfieldBackground />
-        )}
+        ))}
       </div>
 
-      {view}
+      {result?.view}
     </>
   );
 }

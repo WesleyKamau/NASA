@@ -109,11 +109,11 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
     const cardElement = document.getElementById(personCardId);
     
     if (cardElement) {
-      // Highlight the card briefly (white glow for modern look)
-      cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-      
+      // Highlight the card briefly with blue accent to match carousel highlights
+      cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
+
       setTimeout(() => {
-        cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
         // Clear the clicked person ID after highlighting
         setClickedPersonId(null);
       }, 2000);
@@ -132,7 +132,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
       {/* Main Content - Continuous Scroll with dark blur aesthetic */}
       <main className="relative z-40 min-h-viewport touch-native safe-area-inset-top">
         {/* Photo Carousel Section - Full viewport height with proper iOS Safari handling */}
-        <section className="relative min-h-viewport flex flex-col items-center justify-center px-3">
+        <section className="relative min-h-viewport flex flex-col items-center justify-center px-4">
           <div className="w-full max-w-2xl">
             <MobilePhotoCarousel
               groupPhotos={groupPhotos}

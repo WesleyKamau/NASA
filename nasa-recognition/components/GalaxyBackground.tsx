@@ -1,10 +1,27 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Galaxy from './Galaxy';
 
 export default function GalaxyBackground() {
+  const [ready, setReady] = useState(false);
+
+  // Fade in after a brief delay to let the WebGL canvas render its first frame
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setReady(true);
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden>
+    <div
+      className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-700"
+      aria-hidden
+      style={{ opacity: ready ? 1 : 0 }}
+    >
       <Galaxy
         focal={[0.5, 0.5]}
         rotation={[1.0, 0.0]}

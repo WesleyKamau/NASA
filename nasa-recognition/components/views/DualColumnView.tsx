@@ -37,15 +37,15 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
         rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
       }
       
-      // Briefly highlight the card with a white accent to indicate click (white highlight is used for both click and hover)
-      cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-      
+      // Briefly highlight the card with blue accent to match carousel highlights
+      cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
+
       // Open modal after a short delay (only on desktop, not on touch devices like iPad)
       setTimeout(() => {
         if (!isTabletLandscape) {
           setSelectedPerson(person);
         }
-        cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
       }, GENERAL_COMPONENT_CONFIG.MODAL_AUTO_OPEN_DELAY_MS);
     }
   };
