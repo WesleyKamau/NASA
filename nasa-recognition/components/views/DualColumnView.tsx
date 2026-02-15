@@ -7,6 +7,7 @@ import MobilePhotoCarousel from '@/components/MobilePhotoCarousel';
 import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
+import TMinusCounter from '@/components/TMinusCounter';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
 import { BIDIRECTIONAL_HIGHLIGHT_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
@@ -36,15 +37,15 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
         rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
       }
       
-      // Briefly highlight the card with a white accent to indicate click (white highlight is used for both click and hover)
-      cardElement.classList.add('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
-      
+      // Briefly highlight the card with blue accent to match carousel highlights
+      cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
+
       // Open modal after a short delay (only on desktop, not on touch devices like iPad)
       setTimeout(() => {
         if (!isTabletLandscape) {
           setSelectedPerson(person);
         }
-        cardElement.classList.remove('ring-2', 'ring-white/80', 'shadow-[0_0_30px_rgba(255,255,255,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-500');
+        cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
       }, GENERAL_COMPONENT_CONFIG.MODAL_AUTO_OPEN_DELAY_MS);
     }
   };
@@ -90,7 +91,7 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
         {/* Right side - Scrollable content */}
         <div 
           id="desktop-right-panel"
-          className="flex-1 overflow-y-auto border-l border-white/10 relative animate-none bg-black/30 backdrop-blur-md"
+          className="flex-1 overflow-y-auto border-l border-white/10 relative animate-none bg-black/40 backdrop-blur-sm"
           style={{
             touchAction: 'pan-y',
             WebkitOverflowScrolling: 'touch',
@@ -136,7 +137,10 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
 
             {/* Footer */}
             <BackToTop containerId="desktop-right-panel" />
-            <footer className="text-center py-12 border-t border-white/5 mt-8">
+            <footer className="text-center py-12 border-t border-white/5 mt-8 space-y-2.5">
+              <div className="flex items-center justify-center">
+                <TMinusCounter />
+              </div>
               <p className="text-slate-500 text-sm font-light">
                 Made by <a className="text-slate-400 hover:text-white transition-colors duration-300" href="https://wesleykamau.com" target="_blank" rel="noreferrer">Wesley Kamau</a>
               </p>
@@ -146,13 +150,11 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
       </div>
 
       {/* Person Modal */}
-      {selectedPerson && (
-        <PersonModal
-          person={selectedPerson}
-          groupPhotos={groupPhotos}
-          onClose={() => setSelectedPerson(null)}
-        />
-      )}
+      <PersonModal
+        person={selectedPerson}
+        groupPhotos={groupPhotos}
+        onClose={() => setSelectedPerson(null)}
+      />
     </>
   );
 }

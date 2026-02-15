@@ -43,11 +43,22 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Prevent white flash on load - set immediately */
+html {
+  background-color: #000;
+}
+
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
   background-color: #000;
   color: #f8fafc;
+}
+
+/* Ensure Next.js root and main element are also black */
+#__next,
+main {
+  background-color: #000;
 }
 
 /* Custom animations */
@@ -96,18 +107,22 @@ body {
 @keyframes flyRight {
   from {
     left: -150px;
+    top: var(--start-y, 0px);
   }
   to {
     left: calc(100vw + 150px);
+    top: var(--end-y, 0px);
   }
 }
 
 @keyframes flyLeft {
   from {
     right: -150px;
+    top: var(--start-y, 0px);
   }
   to {
     right: calc(100vw + 150px);
+    top: var(--end-y, 0px);
   }
 }
 
@@ -206,6 +221,7 @@ body {
 }
 
 :root {
+  background-color: #000;
   --radius: 0.625rem;
   --background: oklch(0 0 0);
   --foreground: oklch(0.98 0 0);
@@ -359,4 +375,25 @@ body {
 /* Native-like momentum scrolling */
 .momentum-scroll {
   -webkit-overflow-scrolling: touch;
+}
+
+/* Respect prefers-reduced-motion: disable non-essential animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin-slow,
+  .animate-fadeIn,
+  .animate-scaleIn,
+  .animate-slideUp,
+  .animate-bounce-slow,
+  .animate-float,
+  .animate-rainbow-border,
+  .hover\:shadow-rainbow-glow:hover {
+    animation: none !important;
+  }
+
+  /* Disable rocket animations */
+  *[style*="flyRight"],
+  *[style*="flyLeft"],
+  *[style*="rocketVibrate"] {
+    animation: none !important;
+  }
 }

@@ -14,8 +14,8 @@ export const enum DebugFeature {
 }
 
 export const DEBUG_CONFIG: Record<DebugFeature, boolean> = {
-  [DebugFeature.ENABLE_DEBUG_MODE]: true,
-  [DebugFeature.ENABLE_CRASH_LOGGER]: true,
+  [DebugFeature.ENABLE_DEBUG_MODE]: false,
+  [DebugFeature.ENABLE_CRASH_LOGGER]: false,
   [DebugFeature.SHOW_DEBUG_HITBOXES]: false,
 };
 
@@ -121,8 +121,8 @@ export const GENERAL_COMPONENT_CONFIG = {
   SCROLL_TO_CARD_DELAY_MS: 10, // Delay before scrolling to card after click
 
   // Mobile View Blur Settings
-  INITIAL_BLUR_OPACITY: 1.0,    // Opacity of the blur layer at the top of the page
-  SCROLLED_BLUR_OPACITY: 0.80,   // Minimum opacity of the blur layer after scrolling
+  INITIAL_BLUR_OPACITY: 0.85,    // Opacity of the blur layer at the top of the page
+  SCROLLED_BLUR_OPACITY: 0.70,   // Minimum opacity of the blur layer after scrolling
 
   // Auto-highlight settings for carousels
   AUTO_HIGHLIGHT_DELAY_MS: 100,
@@ -222,6 +222,6 @@ export const STARFIELD_CONFIG = {
 
 export const LOADING_SCREEN_CONFIG = {
   // Animation settings
-  MIN_LOADING_TIME_MS: 2000,
+  MIN_LOADING_TIME_MS: 800,
   FADE_OUT_MS: 400,              // Should match the duration-400 class in LoadingScreen
 } as const;

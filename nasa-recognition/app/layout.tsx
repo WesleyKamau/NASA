@@ -76,7 +76,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: '#000' }}>
       <head>
         {/* Apple/iOS specific meta tags for native-like experience */}
         <meta name="apple-mobile-web-app-title" content="MSFC Faces" />
@@ -84,6 +84,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
+        <meta name="color-scheme" content="dark" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -91,7 +92,14 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-native scroll-native no-overscroll`}
+        style={{ backgroundColor: '#000' }}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[10000] focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded focus:outline-none"
+        >
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>

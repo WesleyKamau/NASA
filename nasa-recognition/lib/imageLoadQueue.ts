@@ -6,7 +6,6 @@
  * Must track all timers and provide cleanup to prevent accumulation.
  */
 
-import { scrollManager } from './scrollManager';
 import { crashLogger } from './crashLogger';
 
 interface QueueItem {
@@ -24,13 +23,6 @@ class ImageLoadQueue {
   private processedIds: Set<string> = new Set(); // Track completed images
 
   enqueue(id: string, loadFn: (done: () => void) => void): boolean {
-    // CRITICAL: Block ALL queueing during active scrolling
-    // This prevents memory spikes from rapid scroll events
-    if (scrollManager.getIsScrolling()) {
-      crashLogger.log('scroll', `Queue blocked during scroll: ${id}`);
-      return false; // Return false so caller knows to retry later
-    }
-
     // Deduplicate: skip if already processed, loading, or queued
     if (this.processedIds.has(id) || this.activeIds.has(id)) {
       return true; // Return true - already handled, no retry needed
@@ -103,16 +95,9 @@ class ImageLoadQueue {
   }
 }
 
-// Cleanup on page unload
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    imageLoadQueue.reset();
-  });
-}
-
 export const imageLoadQueue = new ImageLoadQueue();
 
-// Auto-cleanup on page unload to prevent accumulation across refreshes
+// Cleanup on page unload to prevent accumulation across refreshes
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     imageLoadQueue.reset();

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '../../test/utils/render';
 import LoadingScreen from '@/components/LoadingScreen';
+import { SITE_CONFIG } from '@/lib/configs/siteConfig';
 
 describe('LoadingScreen', () => {
   it('renders without crashing', () => {
@@ -9,7 +10,7 @@ describe('LoadingScreen', () => {
 
   it('displays site title', () => {
     render(<LoadingScreen assetsLoaded={false} fontsLoaded={false} />);
-    expect(screen.getByText('MSFC Book of Faces')).toBeInTheDocument();
+    expect(screen.getByText(SITE_CONFIG.title)).toBeInTheDocument();
   });
 
   it('handles loaded assets prop', () => {

@@ -1,19 +1,13 @@
-jest.mock('@/lib/scrollManager', () => ({
-  scrollManager: { getIsScrolling: jest.fn(() => false) },
-}));
-
 jest.mock('@/lib/crashLogger', () => ({
   crashLogger: { log: jest.fn() },
 }));
 
 import { imageLoadQueue } from '@/lib/imageLoadQueue';
-import { scrollManager } from '@/lib/scrollManager';
 
 describe('imageLoadQueue', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     imageLoadQueue.reset();
-    (scrollManager.getIsScrolling as jest.Mock).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -37,16 +31,18 @@ describe('imageLoadQueue', () => {
     expect(completed).toBe(5);
   });
 
-  it('blocks enqueue during active scrolling', () => {
-    (scrollManager.getIsScrolling as jest.Mock).mockReturnValue(true);
-    const ok = imageLoadQueue.enqueue('x', (done) => done());
-    expect(ok).toBe(false);
-  });
-
   it('deduplicates by id', () => {
     const a = imageLoadQueue.enqueue('dup', (done) => done());
     const b = imageLoadQueue.enqueue('dup', (done) => done());
     expect(a).toBe(true);
     expect(b).toBe(true); // second call is treated as already handled
+  });
+
+  it('resets queue state', () => {
+    imageLoadQueue.enqueue('r1', (done) => setTimeout(done, 10000));
+    imageLoadQueue.reset();
+    // After reset, same id can be enqueued again
+    const ok = imageLoadQueue.enqueue('r1', (done) => done());
+    expect(ok).toBe(true);
   });
 });

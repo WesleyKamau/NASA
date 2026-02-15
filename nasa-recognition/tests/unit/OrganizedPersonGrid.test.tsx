@@ -41,7 +41,7 @@ describe('OrganizedPersonGrid', () => {
     expect(screen.getByText('Wesley Kamau')).toBeInTheDocument();
     // 'Me' appears as both section heading and description
     expect(screen.getAllByText('Me').length).toBeGreaterThan(0);
-    expect(screen.getByText('Family & Special Guest')).toBeInTheDocument();
+    expect(screen.getByText('Family')).toBeInTheDocument();
     expect(screen.getByText('Fellow Interns')).toBeInTheDocument();
   });
 
@@ -83,7 +83,7 @@ describe('OrganizedPersonGrid', () => {
     );
     
     const bobCard = container.querySelector('#person-card-person-2');
-    expect(bobCard).toHaveClass('border-white/50');
+    expect(bobCard).toHaveClass('border-blue-400/60');
     expect(bobCard).toHaveClass('scale-105');
   });
 
@@ -135,7 +135,7 @@ describe('OrganizedPersonGrid', () => {
     
     // In uniform layout, Wesley is merged into family category, no "Me" section heading
     expect(screen.queryByRole('heading', { name: 'Me' })).not.toBeInTheDocument();
-    expect(screen.getByText('Family & Special Guest')).toBeInTheDocument();
+    expect(screen.getByText('Family')).toBeInTheDocument();
     expect(screen.getByText('Wesley Kamau')).toBeInTheDocument();
   });
 });

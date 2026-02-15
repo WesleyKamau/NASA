@@ -37,7 +37,7 @@ describe('PersonCard', () => {
     );
     
     const card = container.querySelector('button');
-    expect(card).toHaveClass('border-white/50');
+    expect(card).toHaveClass('border-blue-400/60');
     expect(card).toHaveClass('scale-105');
   });
 

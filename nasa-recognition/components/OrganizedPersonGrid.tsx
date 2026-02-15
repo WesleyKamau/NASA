@@ -20,8 +20,8 @@ interface OrganizedPersonGridProps {
 const categoryOrder: Category[] = ['family', 'staff', 'sil-lab', 'interns'];
 
 const categoryLabels: Record<Category, string> = {
-  'family': 'Family & Special Guest',
-  'girlfriend': 'Special Guest',
+  'family': 'Family',
+  // 'girlfriend': 'Special Guest',
   'staff': 'Staff & Mentors',
   'sil-lab': 'SIL Lab',
   'interns': 'Fellow Interns'
@@ -43,27 +43,17 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
   if (uniformLayout) {
     // Uniform layout: all people sorted by category, then alphabetically, including Wesley
-    // Filter girlfriend and wesley only once for efficiency (single pass)
-    const { girlfriendPeople, wesleyPeople } = visiblePeople.reduce((acc, person) => {
-      if (person.category === 'girlfriend') {
-        acc.girlfriendPeople.push(person);
-      }
-      if (person.id === 'wesley-kamau') {
-        acc.wesleyPeople.push(person);
-      }
-      return acc;
-    }, { girlfriendPeople: [] as Person[], wesleyPeople: [] as Person[] });
-    
+    // Filter Wesley only once for merging into family
+    const wesleyPeople = visiblePeople.filter(p => p.id === 'wesley-kamau');
+
     const allPeopleByCategory = categoryOrder.reduce((acc, category) => {
-      // Note: 'girlfriend' people are only shown in the 'family' category (see below).
-      // We exclude 'wesley-kamau' here, as he is merged into 'family' as well.
-      let categoryPeople = visiblePeople.filter(p => 
-        p.category === category && p.id !== 'wesley-kamau' && p.category !== 'girlfriend'
+      let categoryPeople = visiblePeople.filter(p =>
+        p.category === category && p.id !== 'wesley-kamau'
       );
-      
-      // Merge girlfriend and Wesley into family
+
+      // Merge Wesley into family
       if (category === 'family') {
-        categoryPeople = [...categoryPeople, ...girlfriendPeople, ...wesleyPeople];
+        categoryPeople = [...categoryPeople, ...wesleyPeople];
       }
 
       // Sort alphabetically by name
@@ -89,9 +79,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
 
             return (
               <div key={category}>
-                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center gradient-text">
+                <h2 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center gradient-text">
                   {categoryLabels[category]}
-                </h3>
+                </h2>
                 <div className={`flex flex-wrap justify-center ${gapClass}`}>
                   {categoryPeople.map((person) => (
                     <div key={person.id} className={itemClass}>
@@ -133,12 +123,6 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
   const peopleByCategory = categoryOrder.reduce((acc, category) => {
     let categoryPeople = visiblePeopleExceptWesley.filter(p => p.category === category);
     
-    // Merge girlfriend into family
-    if (category === 'family') {
-      const girlfriend = visiblePeopleExceptWesley.filter(p => p.category === 'girlfriend');
-      categoryPeople = [...categoryPeople, ...girlfriend];
-    }
-
     // Sort alphabetically by name
     categoryPeople.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -157,9 +141,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
         {/* Me first */}
         {wesley && (
           <div>
-            <h3 className="text-2xl font-bold mb-4 text-center gradient-text">
+            <h2 className="text-2xl font-bold mb-4 text-center gradient-text">
               Me
-            </h3>
+            </h2>
             <div className="flex justify-center">
               <div className="w-full max-w-xs md:max-w-sm">
                 <PersonCard
@@ -196,9 +180,9 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                 </div>
               )}
 
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center gradient-text">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center gradient-text">
                 {categoryLabels[category]}
-              </h3>
+              </h2>
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                 {categoryPeople.map((person) => (
                   <div key={person.id} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.75rem)] md:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(25%-0.75rem)]">

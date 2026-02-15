@@ -59,45 +59,19 @@ describe('CarouselNameTag', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it('shifts horizontally when the label would overflow on mobile', () => {
-    const viewportWidth = 360;
-    const originalWidth = window.innerWidth;
-    Object.defineProperty(window, 'innerWidth', { writable: true, value: viewportWidth });
-    const addListenerSpy = jest.spyOn(window, 'addEventListener');
-
-    const mobileLocation = { ...location, x: 2, width: 10 } as PhotoLocation;
-    const longName = 'Aurora Nova';
-
+  it('uses CSS max-width for overflow prevention instead of JS calculations', () => {
     render(
       <CarouselNameTag
-        person={{ ...person, name: longName }}
+        person={{ ...person, name: 'Aurora Nova' }}
         isVisible
-        location={mobileLocation}
+        location={location}
         variant="mobile"
       />
     );
 
-    const wrapper = screen.getByText(longName).parentElement?.parentElement as HTMLElement;
-
-    const calculateShift = (loc: PhotoLocation, label: string) => {
-      const faceCenterX = loc.x + loc.width / 2;
-      const scaleFactor = viewportWidth < 400 ? 1.3 : viewportWidth < 768 ? 1.1 : 0.7;
-      const basePadding = viewportWidth < 400 ? 9 : viewportWidth < 768 ? 7 : 5;
-      const estimatedLabelWidthPct = label.length * scaleFactor + basePadding;
-      const halfLabelWidth = estimatedLabelWidthPct / 2;
-      const edgeBuffer = viewportWidth < 768 ? 4 : 2;
-      const leftOverflow = Math.max(0, (halfLabelWidth + edgeBuffer) - faceCenterX);
-      const rightOverflow = Math.max(0, (faceCenterX + halfLabelWidth + edgeBuffer) - 100);
-      let horizontalShift = 0;
-      if (leftOverflow > 0) horizontalShift = leftOverflow;
-      else if (rightOverflow > 0) horizontalShift = -rightOverflow;
-      return (horizontalShift / loc.width) * 100;
-    };
-
-    const expectedShift = calculateShift(mobileLocation, longName);
-    const renderedLeft = parseFloat(wrapper.style.left);
-    expect(renderedLeft).toBeCloseTo(50 + expectedShift, 2);
-    expect(addListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
-    Object.defineProperty(window, 'innerWidth', { writable: true, value: originalWidth });
+    const wrapper = screen.getByText('Aurora Nova').parentElement?.parentElement as HTMLElement;
+    // Name tag is always centered at 50% — CSS handles overflow via max-width
+    expect(wrapper.style.left).toBe('50%');
+    expect(wrapper.style.maxWidth).toBe('calc(100vw - 2rem)');
   });
 });

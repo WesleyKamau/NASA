@@ -98,7 +98,8 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
   const animationFrameRef = useRef<number>(0);
   const positionRef = useRef({ x: 0, y: 0 });
   const scaleRef = useRef(1);
-  const [centerIndicatorForce, setCenterIndicatorForce] = useState(0); // Force re-render
+  const [centerIndicatorForce, setCenterIndicatorForce] = useState(0); // Force re-render (throttled)
+  const lastCenterUpdateRef = useRef(0); // Throttle center indicator updates to ~10fps
 
   const currentPhoto = groupPhotos[currentPhotoIndex];
   const photoWidth = currentPhoto?.width || 2400;
@@ -528,9 +529,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         animationFrameRef.current = 0;
         cancelAnimationFrame(frameId);
       }
-      // Start RAF loop to continuously update center indicator during drag
+      // Start RAF loop to continuously update center indicator during drag (throttled to ~10fps)
       const updateCenterIndicator = () => {
-        setCenterIndicatorForce(prev => prev + 1);
+        const now = Date.now();
+        if (now - lastCenterUpdateRef.current >= 100) {
+          lastCenterUpdateRef.current = now;
+          setCenterIndicatorForce(prev => prev + 1);
+        }
         animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
       };
       animationFrameRef.current = requestAnimationFrame(updateCenterIndicator);
@@ -619,8 +624,12 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y
       };
-      // Update center indicator during drag
-      setCenterIndicatorForce(prev => prev + 1);
+      // Update center indicator during drag (throttled - RAF loop handles periodic updates)
+      const now = Date.now();
+      if (now - lastCenterUpdateRef.current >= 100) {
+        lastCenterUpdateRef.current = now;
+        setCenterIndicatorForce(prev => prev + 1);
+      }
     }
   }, [interactionLocked, isZooming, isDragging, currentPhoto, scale, position, dragStart, autoZoomedOnPan]);
 
@@ -742,7 +751,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                 : isDragging 
                   ? 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
                   : 'width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              willChange: 'width, height, transform',
+              willChange: 'transform',
               position: 'absolute',
               top: '50%',
               left: '50%',
@@ -754,10 +763,10 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               alt={currentPhoto.name}
               width={photoWidth}
               height={photoHeight}
-              unoptimized
               className="w-full h-full object-contain object-center block pointer-events-none"
               style={{ imageRendering: 'auto' }}
               priority
+              sizes="(max-width: 500px) 100vw, (max-width: 1024px) 75vw, 50vw"
               draggable={false}
               onLoad={(e) => {
                 const img = e.currentTarget;
@@ -965,9 +974,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             const cardTop = cardElement.offsetTop;
                             rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
                           }
-                          cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                          cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                           setTimeout(() => {
-                            cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                           }, 2000);
                         }
                         
@@ -990,9 +999,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                               cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                               scrollToCardTimeoutRef.current = undefined;
                             }, 50);
-                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             setTimeout(() => {
-                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             }, 2000);
                           }
                         }
@@ -1046,13 +1055,13 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                     )}
 
                     {/* Highlight border */}
-                    <div 
-                      className={`absolute inset-0 rounded-lg transition-all duration-500 z-10`}
+                    <div
+                      className={`absolute inset-0 rounded-lg transition-all duration-300 z-10`}
                       style={{
-                        boxShadow: isHighlighted 
-                          ? `0 0 0 ${getBorderWidth(scale)}px rgb(250 204 21), 0 10px 15px -3px rgb(250 204 21 / 0.5)` 
+                        boxShadow: isHighlighted
+                          ? `0 0 0 ${getBorderWidth(scale)}px rgb(96 165 250), 0 10px 15px -3px rgb(96 165 250 / 0.4)`
                           : showWhenZoomed
-                            ? `0 0 0 ${getBorderWidth(scale)}px rgb(255 255 255), 0 20px 25px -5px rgb(255 255 255 / 0.5)`
+                            ? `0 0 0 ${getBorderWidth(scale)}px rgb(96 165 250 / 0.8), 0 10px 15px -3px rgb(96 165 250 / 0.3)`
                             : isAutoHighlighting
                               ? 'none'
                               : `0 0 0 ${getBorderWidth(scale)}px rgb(255 255 255 / 0.2)`
@@ -1075,9 +1084,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                               const cardTop = cardElement.offsetTop;
                               rightPanel.scrollTo({ top: cardTop - 100, behavior: 'smooth' });
                             }
-                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                            cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             setTimeout(() => {
-                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
+                              cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
                             }, 2000);
                           }
                           
@@ -1089,21 +1098,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             }, 1200);
                           }
                         } else {
-                          // Scroll to the person's card (mobile behavior)
-                          const personCardId = `person-card-mobile-${person.id}`;
-                          const cardElement = document.getElementById(personCardId);
-                          if (cardElement) {
-                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            cardElement.classList.add('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                            setTimeout(() => {
-                              cardElement.classList.remove('ring-4', 'ring-yellow-400', 'shadow-lg', 'shadow-yellow-400/50');
-                            }, 2000);
-                          }
-                          
+                          // Open the drawer immediately
                           if (onPersonClick) {
-                            setTimeout(() => {
-                              onPersonClick(person);
-                            }, 1200);
+                            onPersonClick(person);
                           }
                         }
                       }}

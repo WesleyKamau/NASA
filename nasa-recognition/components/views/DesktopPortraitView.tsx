@@ -181,13 +181,11 @@ export default function DesktopPortraitView({ groupPhotos, people }: DesktopPort
       </main>
 
       {/* Person Modal */}
-      {selectedPerson && (
-        <PersonModal
-          person={selectedPerson}
-          groupPhotos={groupPhotos}
-          onClose={() => setSelectedPerson(null)}
-        />
-      )}
+      <PersonModal
+        person={selectedPerson}
+        groupPhotos={groupPhotos}
+        onClose={() => setSelectedPerson(null)}
+      />
     </>
   );
 }

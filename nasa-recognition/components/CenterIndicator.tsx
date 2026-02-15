@@ -105,7 +105,7 @@ export default function CenterIndicator({
       return sum + Math.max(loc.width, loc.height);
     }, 0) / Math.max(shuffledPeople.length, 1);
 
-  // If a person is selected, morph to their rectangle
+  // If a person is selected, morph to their face rectangle
   if (closestPersonData.closestLocation) {
     const adjustedLocation = convertPhotoToContainerCoords(closestPersonData.closestLocation);
     return (
@@ -118,16 +118,15 @@ export default function CenterIndicator({
           width: `${adjustedLocation.width}%`,
           height: `${adjustedLocation.height}%`,
           transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          filter: 'blur(0.3px)',
         }}
       >
-        <div className="absolute inset-0 bg-white/20 border-2 border-white/60 rounded-lg shadow-lg" />
+        <div className="absolute inset-0 border-2 border-blue-400/60 rounded-lg shadow-[0_0_12px_rgba(96,165,250,0.3)]" />
       </div>
     );
   }
 
-  // Otherwise, show as a circle at the center with motion blur
-  const circleSize = avgFaceSize; // This is in percentage
+  // Otherwise, show as a circle at the center
+  const circleSize = avgFaceSize;
 
   return (
     <div
@@ -138,17 +137,14 @@ export default function CenterIndicator({
         top: `${visibleCenterY}%`,
         transform: 'translate(-50%, -50%)',
         transition: 'left 0.1s ease-out, top 0.1s ease-out',
-        filter: 'blur(1.5px)',
-        willChange: 'left, top',
+        willChange: 'transform',
       }}
     >
       <div
-        className="bg-white/20 border-2 border-white/60 rounded-full shadow-lg"
+        className="bg-white/10 border-2 border-white/50 rounded-full shadow-[0_0_12px_rgba(255,255,255,0.2)]"
         style={{
           width: `${circleSize}vw`,
           height: `${circleSize}vw`,
-          aspectRatio: '1 / 1',
-          filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.4))',
         }}
       />
     </div>
