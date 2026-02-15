@@ -1098,21 +1098,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
                             }, 1200);
                           }
                         } else {
-                          // Scroll to the person's card (mobile behavior)
-                          const personCardId = `person-card-mobile-${person.id}`;
-                          const cardElement = document.getElementById(personCardId);
-                          if (cardElement) {
-                            cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            cardElement.classList.add('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
-                            setTimeout(() => {
-                              cardElement.classList.remove('ring-2', 'ring-blue-400/80', 'shadow-[0_0_30px_rgba(96,165,250,0.3)]', 'scale-[1.02]', 'transition-all', 'duration-300');
-                            }, 2000);
-                          }
-                          
+                          // Open the drawer immediately
                           if (onPersonClick) {
-                            setTimeout(() => {
-                              onPersonClick(person);
-                            }, 1200);
+                            onPersonClick(person);
                           }
                         }
                       }}
