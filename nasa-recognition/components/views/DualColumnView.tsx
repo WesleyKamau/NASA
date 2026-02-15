@@ -150,13 +150,11 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
       </div>
 
       {/* Person Modal */}
-      {selectedPerson && (
-        <PersonModal
-          person={selectedPerson}
-          groupPhotos={groupPhotos}
-          onClose={() => setSelectedPerson(null)}
-        />
-      )}
+      <PersonModal
+        person={selectedPerson}
+        groupPhotos={groupPhotos}
+        onClose={() => setSelectedPerson(null)}
+      />
     </>
   );
 }

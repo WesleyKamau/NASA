@@ -86,19 +86,7 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
   }, [showScrollHint, updateOverlayOpacity]);
 
   const handlePersonClick = (person: Person) => {
-    // Track which person was clicked from carousel
-    setClickedPersonId(person.id);
-    
-    // Scroll to the person's card
-    const personCardId = `person-card-mobile-portrait-${person.id}`;
-    const cardElement = document.getElementById(personCardId);
-    
-    if (cardElement) {
-      cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      // Wait for the person's image to load before highlighting
-      // The onImageLoad callback from OrganizedPersonGrid will trigger the highlight
-    }
+    setSelectedPerson(person);
   };
 
   const handleImageLoad = (personId: string) => {
@@ -220,13 +208,11 @@ export default function MobilePortraitView({ groupPhotos, people }: MobilePortra
       </main>
 
       {/* Person Modal */}
-      {selectedPerson && (
-        <PersonModal
-          person={selectedPerson}
-          groupPhotos={groupPhotos}
-          onClose={() => setSelectedPerson(null)}
-        />
-      )}
+      <PersonModal
+        person={selectedPerson}
+        groupPhotos={groupPhotos}
+        onClose={() => setSelectedPerson(null)}
+      />
     </>
   );
 }
