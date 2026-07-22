@@ -1,7 +1,16 @@
 import { Person, GroupPhoto } from '@/types';
+import faceCrops from '@/lib/generated/faceCrops.json';
+
+// Pre-baked face crops (scripts/generate-face-crops.mjs). Serving these tiny
+// files instead of CSS-cropping the full group photo keeps phones from
+// decoding multi-megapixel images once per card — the main OOM-crash source.
+const FACE_CROPS: Record<string, string> = faceCrops;
 
 export interface PersonImageInfo {
-  type: 'individual' | 'cropped-group' | 'placeholder';
+  /** 'cropped-static' is a pre-baked face crop file — render it like an
+   *  individual photo but stretched (object-fill) to match the legacy CSS
+   *  crop's framing. */
+  type: 'individual' | 'cropped-static' | 'cropped-group' | 'placeholder';
   src?: string;
   backgroundSize?: string;
   backgroundPosition?: string;
@@ -62,6 +71,16 @@ export function getPersonImage(person: Person, groupPhotos: GroupPhoto[], ignore
     return {
       type: 'placeholder',
       placeholder: person.name.charAt(0),
+    };
+  }
+
+  // Prefer the pre-baked crop file when one exists (rotation already baked
+  // in, so ignoreRotation needs the legacy path)
+  const preCropped = FACE_CROPS[`${person.id}|${photoLocation.photoId}`];
+  if (preCropped && !(ignoreRotation && photoLocation.rotation)) {
+    return {
+      type: 'cropped-static',
+      src: preCropped,
     };
   }
 
