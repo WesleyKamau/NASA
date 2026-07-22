@@ -142,10 +142,11 @@ export default function SLSRocket() {
 
   const { startSide, startY, endY, rotation } = position;
 
-  // CSS custom properties consumed by flyRight/flyLeft/rocketVibrate keyframes in globals.css
+  // CSS custom properties consumed by flyRight/flyLeft/rocketVibrate keyframes
+  // in globals.css. Flight (outer) and vibration (inner) live on separate
+  // elements so both can be pure-transform animations.
   const cssVars = {
-    '--start-y': `${startY}px`,
-    '--end-y': `${endY}px`,
+    '--delta-y': `${endY - startY}px`,
     '--rotation': `${rotation}deg`,
     '--vibration': `${VIBRATION_INTENSITY}px`,
   } as React.CSSProperties;
@@ -161,12 +162,13 @@ export default function SLSRocket() {
         willChange: 'transform',
         left: startSide === 'left' ? '-150px' : 'auto',
         right: startSide === 'right' ? '-150px' : 'auto',
-        animation: `
-          ${startSide === 'left' ? 'flyRight' : 'flyLeft'} ${ROCKET_SPEED}s linear forwards,
-          rocketVibrate 0.1s infinite
-        `,
+        animation: `${startSide === 'left' ? 'flyRight' : 'flyLeft'} ${ROCKET_SPEED}s linear forwards`,
       }}
     >
+      <div
+        className="relative w-full h-full"
+        style={{ animation: 'rocketVibrate 0.1s infinite' }}
+      >
       <Image
         src="/SLS.png"
         alt=""
@@ -186,6 +188,7 @@ export default function SLSRocket() {
           transform: `translateX(${ENGINE_GLOW_OFFSET_X}%) translateY(${ENGINE_GLOW_OFFSET_Y}%)`
         }}
       />
+      </div>
     </div>
   );
 }

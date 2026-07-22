@@ -191,7 +191,7 @@ export default function OrganizedPersonGrid({ people, groupPhotos, onPersonClick
                       groupPhotos={groupPhotos}
                       onClick={() => handlePersonClick(person)}
                       idPrefix={idPrefix}
-                      priority={true}
+                      priority={false}
                       isHighlighted={highlightedPersonId === person.id}
                       onMouseEnter={() => onPersonHover?.(person.id)}
                       onMouseLeave={() => onPersonHover?.(null)}

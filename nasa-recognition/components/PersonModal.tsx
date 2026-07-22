@@ -87,7 +87,7 @@ function MobileDrawer({ person, groupPhotos, onClose }: PersonModalProps) {
       <DrawerContent className="bg-gradient-to-br from-slate-800 to-slate-900 border-white/10 max-h-[92vh] outline-none">
         {person && (
           <div className="overflow-y-auto px-6 pt-4 pb-6">
-            <DrawerClose className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-all duration-200 touch-manipulation z-10 backdrop-blur-sm">
+            <DrawerClose className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-all duration-200 touch-manipulation z-10 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>

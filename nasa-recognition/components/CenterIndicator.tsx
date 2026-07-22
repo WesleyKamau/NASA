@@ -30,22 +30,23 @@ export default function CenterIndicator({
   FACE_HITBOX_PADDING,
   onHighlightedPersonChange,
 }: CenterIndicatorProps) {
-  if (!show || !containerRef.current) return null;
+  // Hooks must run on every render — the bail-out happens after them.
+  const active = show && !!containerRef.current;
 
-  const rect = containerRef.current.getBoundingClientRect();
-  const imageCenterOffsetX = -position.x / (rect.width * scale) * 100;
-  const imageCenterOffsetY = -position.y / (rect.height * scale) * 100;
-
-  const visibleCenterX = 50 + imageCenterOffsetX;
-  const visibleCenterY = 50 + imageCenterOffsetY;
+  let visibleCenterX = 50;
+  let visibleCenterY = 50;
+  if (active && containerRef.current) {
+    const rect = containerRef.current.getBoundingClientRect();
+    visibleCenterX = 50 + (-position.x / (rect.width * scale)) * 100;
+    visibleCenterY = 50 + (-position.y / (rect.height * scale)) * 100;
+  }
 
   // Find the closest person whose expanded hitbox contains the center point
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const closestPersonData = React.useMemo(() => {
     let closestPerson: Person | null = null;
     let closestLocation = null;
 
-    if (!isAutoHighlighting) {
+    if (active && !isAutoHighlighting) {
       const peopleInsideHitbox = shuffledPeople
         .map(p => {
           const loc = p.photoLocations.find(l => l.photoId === currentPhoto.id);
@@ -87,15 +88,16 @@ export default function CenterIndicator({
 
     return { closestPerson, closestLocation };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoHighlighting, shuffledPeople, currentPhoto.id, visibleCenterX, visibleCenterY, FACE_HITBOX_PADDING, centerIndicatorForce]);
+  }, [active, isAutoHighlighting, shuffledPeople, currentPhoto.id, visibleCenterX, visibleCenterY, FACE_HITBOX_PADDING, centerIndicatorForce]);
 
   // Notify parent of highlighted person change
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   React.useEffect(() => {
-    if (!isAutoHighlighting) {
+    if (active && !isAutoHighlighting) {
       onHighlightedPersonChange?.(closestPersonData.closestPerson?.id || null);
     }
-  }, [closestPersonData.closestPerson?.id, isAutoHighlighting, onHighlightedPersonChange]);
+  }, [active, closestPersonData.closestPerson?.id, isAutoHighlighting, onHighlightedPersonChange]);
+
+  if (!active) return null;
 
   // Calculate average face rectangle size for the circle
   const avgFaceSize =

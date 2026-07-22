@@ -24,14 +24,18 @@ export default function DesktopPortraitView({ groupPhotos, people }: DesktopPort
     window.scrollTo(0, 0);
   }, []);
 
-  // Handle scroll effects (Blur fade and Scroll hint)
+  // Handle scroll effects (Blur fade and Scroll hint) — rAF-throttled passive
+  // listener; the full-screen blur layer is only written to when the value
+  // actually changes.
   useEffect(() => {
-    let fadeTimeout: NodeJS.Timeout;
-    
-    const handleScroll = () => {
+    let rafId: number | null = null;
+    let fadeTimeout: ReturnType<typeof setTimeout> | null = null;
+    let lastOpacity = -1;
+
+    const update = () => {
+      rafId = null;
       const scrollY = window.scrollY;
 
-      // Update blur opacity
       if (blurLayerRef.current) {
         const windowHeight = window.innerHeight;
         // Fade out over the first viewport height, but keep some blur
@@ -39,26 +43,31 @@ export default function DesktopPortraitView({ groupPhotos, people }: DesktopPort
           GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY,
           GENERAL_COMPONENT_CONFIG.INITIAL_BLUR_OPACITY - (scrollY / windowHeight)
         );
-        blurLayerRef.current.style.opacity = opacity.toString();
+        if (Math.abs(opacity - lastOpacity) > 0.004) {
+          lastOpacity = opacity;
+          blurLayerRef.current.style.opacity = opacity.toString();
+        }
       }
 
-      // Handle scroll hint
-      if (scrollY > 100 && showScrollHint) {
-        fadeTimeout = setTimeout(() => {
-          setShowScrollHint(false);
-        }, 300);
+      if (scrollY > 100 && !fadeTimeout) {
+        fadeTimeout = setTimeout(() => setShowScrollHint(false), 300);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      if (rafId === null) rafId = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     // Initial check
-    handleScroll();
-    
+    update();
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
       if (fadeTimeout) clearTimeout(fadeTimeout);
     };
-  }, [showScrollHint]);
+  }, []);
 
   const handlePersonClick = (person: Person) => {
     // Scroll to the person's card

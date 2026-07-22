@@ -1,8 +1,6 @@
 'use client';
 
-// Note: This page intentionally does NOT use LoadingWrapper.
-// It's a testing/preview page for developers to view Lottie animations
-// directly without the loading screen that appears on the home page.
+// Testing/preview page for developers to view Lottie animations directly.
 
 import { useRef } from 'react';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
