@@ -73,15 +73,11 @@ export default function StarfieldBackground() {
       };
     }
 
-    // Animation loop with visibility pause
-    let animationId: number;
+    // Animation loop — fully stopped while the tab is hidden (restarted by
+    // visibilitychange) instead of idling at 60 wakeups/s.
+    let animationId: number | null = null;
     const animate = () => {
-      // Skip rendering when tab is hidden to save CPU/battery
-      if (document.hidden) {
-        animationId = requestAnimationFrame(animate);
-        return;
-      }
-
+      const now = Date.now();
       ctx.fillStyle = STARFIELD_CONFIG.BACKGROUND_COLOR;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -93,7 +89,7 @@ export default function StarfieldBackground() {
           star.x = Math.random() * canvas.width;
         }
 
-        star.opacity = Math.sin(Date.now() * STARFIELD_CONFIG.TWINKLE_SPEED + star.x) * STARFIELD_CONFIG.TWINKLE_AMPLITUDE + STARFIELD_CONFIG.TWINKLE_BASE;
+        star.opacity = Math.sin(now * STARFIELD_CONFIG.TWINKLE_SPEED + star.x) * STARFIELD_CONFIG.TWINKLE_AMPLITUDE + STARFIELD_CONFIG.TWINKLE_BASE;
 
         ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
         ctx.beginPath();
@@ -104,13 +100,26 @@ export default function StarfieldBackground() {
       animationId = requestAnimationFrame(animate);
     };
 
-    animate();
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+      } else if (animationId === null) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    if (!document.hidden) animate();
     setIsLoaded(true);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
       if (resizeTimer) clearTimeout(resizeTimer);
-      cancelAnimationFrame(animationId);
+      if (animationId !== null) cancelAnimationFrame(animationId);
     };
   }, []);
 

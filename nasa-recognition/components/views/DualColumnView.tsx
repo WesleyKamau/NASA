@@ -9,6 +9,7 @@ import PersonModal from '@/components/PersonModal';
 import BackToTop from '@/components/BackToTop';
 import TMinusCounter from '@/components/TMinusCounter';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
 import { BIDIRECTIONAL_HIGHLIGHT_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface DualColumnViewProps {
@@ -20,6 +21,7 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [highlightedPersonId, setHighlightedPersonId] = useState<string | null>(null);
   const isTabletLandscape = useTabletLandscape();
+  useViewportHeight(); // keeps .h-viewport accurate as mobile browser chrome shows/hides
 
   const handlePersonClick = (person: Person) => {
     // Highlight the person's tile
@@ -52,7 +54,7 @@ export default function DualColumnView({ groupPhotos, people }: DualColumnViewPr
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden relative z-40">
+      <div className="flex h-viewport overflow-hidden relative z-40">
         {/* Left side - Photo Carousel (fixed) */}
         <div className="flex-shrink-0 h-full flex flex-col justify-center items-center p-8">
           <div 

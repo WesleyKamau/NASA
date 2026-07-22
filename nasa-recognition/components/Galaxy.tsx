@@ -245,7 +245,17 @@ export default function Galaxy({
         );
       }
     }
-    window.addEventListener('resize', resize, false);
+    // Debounce resize: renderer.setSize reallocates GL buffers, so avoid
+    // doing it on every event during a drag-resize.
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    function handleResize() {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        resize();
+        renderStill();
+      }, 150);
+    }
+    window.addEventListener('resize', handleResize, false);
     resize();
 
     const geometry = new Triangle(gl);
@@ -279,7 +289,8 @@ export default function Galaxy({
     });
 
     const mesh = new Mesh(gl, { geometry, program });
-    let animateId: number;
+    let animateId: number | null = null;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     function update(t: number) {
       animateId = requestAnimationFrame(update);
@@ -300,8 +311,50 @@ export default function Galaxy({
 
       renderer.render({ scene: mesh });
     }
-    animateId = requestAnimationFrame(update);
-    
+
+    // A single frame at a fixed time — used for reduced-motion users (static
+    // galaxy instead of no galaxy) and to repaint after a debounced resize.
+    function renderStill() {
+      if (animateId !== null) return;
+      program.uniforms.uTime.value = 12.0;
+      program.uniforms.uStarSpeed.value = (12.0 * starSpeed) / 10.0;
+      renderer.render({ scene: mesh });
+    }
+
+    function start() {
+      if (animateId === null && !reducedMotion.matches) {
+        animateId = requestAnimationFrame(update);
+      }
+    }
+    function stop() {
+      if (animateId !== null) {
+        cancelAnimationFrame(animateId);
+        animateId = null;
+      }
+    }
+
+    // Fully stop the loop while the tab is hidden — no wasted GPU/battery.
+    function handleVisibility() {
+      if (document.hidden) stop();
+      else if (reducedMotion.matches) renderStill();
+      else start();
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    function handleReducedMotionChange() {
+      if (reducedMotion.matches) {
+        stop();
+        renderStill();
+      } else {
+        start();
+      }
+    }
+    reducedMotion.addEventListener('change', handleReducedMotionChange);
+
+    if (reducedMotion.matches) renderStill();
+    else start();
+
+
     // Set canvas background to black to prevent white flash
     gl.canvas.style.backgroundColor = '#000';
     ctn.appendChild(gl.canvas);
@@ -324,8 +377,11 @@ export default function Galaxy({
     }
 
     return () => {
-      cancelAnimationFrame(animateId);
-      window.removeEventListener('resize', resize);
+      stop();
+      if (resizeTimer) clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      reducedMotion.removeEventListener('change', handleReducedMotionChange);
       if (mouseInteraction) {
         ctn.removeEventListener('mousemove', handleMouseMove);
         ctn.removeEventListener('mouseleave', handleMouseLeave);

@@ -24,6 +24,7 @@
     "test:e2e:clean": "rimraf playwright-report test-results .playwright e2e-results.log",
     "test:ci": "jest --coverage --runInBand",
     "validate-data": "tsx scripts/validate-data.ts",
+    "generate:crops": "node scripts/generate-face-crops.mjs",
     "og": "node scripts/capture-og.js"
   },
   "dependencies": {

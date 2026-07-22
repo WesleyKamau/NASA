@@ -104,25 +104,24 @@ main {
   animation: spin 8s linear infinite;
 }
 
+/* Flight is transform-only (compositor) — animating left/top would trigger
+   layout on every frame. The element is parked at its start position and
+   translated across the viewport; --delta-y is (end-y - start-y). */
 @keyframes flyRight {
   from {
-    left: -150px;
-    top: var(--start-y, 0px);
+    transform: translate(0, 0);
   }
   to {
-    left: calc(100vw + 150px);
-    top: var(--end-y, 0px);
+    transform: translate(calc(100vw + 300px), var(--delta-y, 0px));
   }
 }
 
 @keyframes flyLeft {
   from {
-    right: -150px;
-    top: var(--start-y, 0px);
+    transform: translate(0, 0);
   }
   to {
-    right: calc(100vw + 150px);
-    top: var(--end-y, 0px);
+    transform: translate(calc(-100vw - 300px), var(--delta-y, 0px));
   }
 }
 
@@ -386,7 +385,12 @@ main {
   .animate-bounce-slow,
   .animate-float,
   .animate-rainbow-border,
-  .hover\:shadow-rainbow-glow:hover {
+  .hover\:shadow-rainbow-glow:hover,
+  /* Tailwind built-ins used for decorative motion */
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce,
+  .animate-spin {
     animation: none !important;
   }
 

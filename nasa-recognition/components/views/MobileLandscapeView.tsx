@@ -7,6 +7,7 @@ import OrganizedPersonGrid from '@/components/OrganizedPersonGrid';
 import PersonModal from '@/components/PersonModal';
 import TMinusCounter from '@/components/TMinusCounter';
 import { useTabletLandscape } from '@/hooks/useTabletLandscape';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
 import { BIDIRECTIONAL_HIGHLIGHT_CONFIG, GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 interface MobileLandscapeViewProps {
@@ -18,6 +19,7 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [highlightedPersonId, setHighlightedPersonId] = useState<string | null>(null);
   const isTabletLandscape = useTabletLandscape();
+  useViewportHeight(); // keeps .h-viewport accurate as mobile browser chrome shows/hides
 
   const handlePersonClick = (person: Person) => {
     // Highlight the person's tile
@@ -52,11 +54,11 @@ export default function MobileLandscapeView({ groupPhotos, people }: MobileLands
     <>
       {/* Blur overlay for background */}
       <div 
-        className="fixed inset-0 bg-black/30 backdrop-blur-md pointer-events-none z-20"
+        className="fixed inset-0 bg-black/40 pointer-events-none z-20"
         style={{ opacity: GENERAL_COMPONENT_CONFIG.SCROLLED_BLUR_OPACITY }}
       />
       
-      <div className="flex h-screen overflow-hidden relative z-40">
+      <div className="flex h-viewport overflow-hidden relative z-40">
         {/* Left side - Photo Carousel (fixed) - more compact */}
         <div className="w-1/2 flex-shrink-0 p-1 sm:p-2 flex flex-col items-center justify-center">
           <MobilePhotoCarousel

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/configs/siteConfig";
+import { SignatureCurtain } from "@/components/signature/SignatureCurtain";
+import { WORDMARK_FONT_CSS } from "@/components/signature/wordmark-font";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -78,6 +80,10 @@ export default function RootLayout({
   return (
     <html lang="en" style={{ backgroundColor: '#000' }}>
       <head>
+        {/* Wordmark font subset + signature loading curtain — must stay first
+            and synchronous so the sheet exists before anything paints */}
+        <style dangerouslySetInnerHTML={{ __html: WORDMARK_FONT_CSS }} />
+        <SignatureCurtain />
         {/* Apple/iOS specific meta tags for native-like experience */}
         <meta name="apple-mobile-web-app-title" content="MSFC Faces" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

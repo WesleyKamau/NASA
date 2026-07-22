@@ -162,12 +162,12 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
       );
     }
 
-    if (imageInfo.type === 'individual' && imageInfo.src && !imageError) {
+    if ((imageInfo.type === 'individual' || imageInfo.type === 'cropped-static') && imageInfo.src && !imageError) {
       return (
         <>
           {/* Keep placeholder visible until image loads for smooth transition */}
           {showPlaceholder && (
-            <div 
+            <div
               className={`absolute inset-0 w-full h-full flex items-center justify-center font-bold text-blue-400/30 bg-slate-800/30 ${className}`}
             >
               {imageInfo.placeholder || person.name.charAt(0)}
@@ -177,8 +177,8 @@ export default function PersonImage({ person, groupPhotos, className = '', prior
             src={imageInfo.src}
             alt={person.name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className={`${imageInfo.type === 'cropped-static' ? 'object-fill' : 'object-cover'} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
             onError={() => {
               if (!isMountedRef.current) return;
               crashLogger.log('error', `Image load error: ${person.name} (${imageInfo.src})`);

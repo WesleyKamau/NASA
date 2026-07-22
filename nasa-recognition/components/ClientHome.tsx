@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import type { JSX } from 'react';
 import dynamic from 'next/dynamic';
 import { GroupPhoto, Person } from '@/types';
-import { useLoadingContext } from '@/components/LoadingWrapper';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 
 // Dynamic imports - only the active view and background are loaded
@@ -30,17 +29,7 @@ type LayoutState = {
 
 export default function ClientHome({ groupPhotos, people }: ClientHomeProps) {
   const [layout, setLayout] = useState<LayoutState | null>(null);
-  const loadingContext = useLoadingContext();
-  const hasSignaledLoaded = useRef(false);
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Signal assets loaded immediately - images lazy-load via Next.js Image
-  useEffect(() => {
-    if (!hasSignaledLoaded.current) {
-      hasSignaledLoaded.current = true;
-      loadingContext?.setAssetsLoaded(true);
-    }
-  }, [loadingContext]);
 
   const checkLayout = useCallback(() => {
     const isLandscape = window.matchMedia('(orientation: landscape)').matches;

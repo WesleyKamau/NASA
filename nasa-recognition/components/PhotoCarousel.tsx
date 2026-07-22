@@ -2,7 +2,7 @@
 
 import { GroupPhoto, Person } from '@/types';
 import Image from 'next/image';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { GENERAL_COMPONENT_CONFIG } from '@/lib/configs/componentsConfig';
 import { getPeopleInPhoto, shuffleArray, startAutoCycle } from '@/lib/carouselUtils';
 import CarouselNameTag from './CarouselNameTag';
@@ -50,6 +50,14 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     setHighlightedPersonIndex(0);
   }, [currentPhoto, people]);
 
+  // Track the highlight index in a ref so the auto-cycle effect doesn't tear
+  // down and recreate its timer chain on every internal tick — startAutoCycle
+  // drives itself; the effect only needs the index when it (re)starts.
+  const highlightedPersonIndexRef = useRef(highlightedPersonIndex);
+  useEffect(() => {
+    highlightedPersonIndexRef.current = highlightedPersonIndex;
+  }, [highlightedPersonIndex]);
+
   // Unified auto-cycle: highlights people, then scrolls to next photo when cycle completes
   useEffect(() => {
     if (!currentPhoto) return;
@@ -67,11 +75,11 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
         autoCycleResetTimer,
         transitionDelayTimer,
       },
-      currentHighlightIndex: highlightedPersonIndex,
+      currentHighlightIndex: highlightedPersonIndexRef.current,
     });
 
     return cleanup;
-  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhoto, highlightedPersonIndex]);
+  }, [isAutoScrolling, isAutoHighlighting, shuffledPeople.length, groupPhotos.length, currentPhoto]);
 
   const pauseAutoScroll = useCallback(() => {
     setIsAutoScrolling(false);
@@ -203,7 +211,7 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     // Don't trigger if auto-highlighting is active (unless we want auto-highlight to sync too)
     // But getHoveredPerson returns null if isAutoHighlighting is true anyway.
     const hoveredPerson = getHoveredPerson();
-    
+
     // Only notify if changed
     if (hoveredPerson?.id !== lastHoveredPersonIdRef.current) {
       lastHoveredPersonIdRef.current = hoveredPerson?.id || null;
@@ -211,13 +219,34 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
     }
   }, [mousePos, isAutoHighlighting, currentPhoto, shuffledPeople, isMouseInside, getHoveredPerson, onHighlightedPersonChange]);
 
+  // Computed once per render and shared with the overlay JSX (previously this
+  // hitbox scan ran a second time inside the render body).
+  const hoveredPerson = useMemo(() => getHoveredPerson(), [getHoveredPerson]);
+
+  // Throttle pointer tracking to one state update per frame — mousemove can
+  // fire far more often than 60Hz and each setState re-renders the carousel.
+  const pendingMousePos = useRef<{ x: number; y: number } | null>(null);
+  const mouseRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (mouseRafRef.current !== null) cancelAnimationFrame(mouseRafRef.current);
+    };
+  }, []);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isTouching) return; // Don't update mouse pos during touch
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setMousePos({ x, y });
-    setIsMouseInside(true);
+    pendingMousePos.current = { x, y };
+    if (mouseRafRef.current === null) {
+      mouseRafRef.current = requestAnimationFrame(() => {
+        mouseRafRef.current = null;
+        if (pendingMousePos.current) setMousePos(pendingMousePos.current);
+        setIsMouseInside(true);
+      });
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
@@ -286,13 +315,12 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
             className="w-full h-full object-cover"
             priority
             sizes="(max-width: 768px) 100vw, (max-height: 80vh) 100vh, 100vw"
+            data-wk-wait=""
           />
 
           {/* Interactive regions overlay */}
           <div className="absolute inset-0 z-10">
             {(() => {
-              const hoveredPerson = getHoveredPerson();
-              
               return shuffledPeople.map((person, idx) => {
                 const location = person.photoLocations.find(
                   loc => loc.photoId === currentPhoto.id
@@ -386,13 +414,19 @@ export default function PhotoCarousel({ groupPhotos, people, onPersonClick, high
             <button
               key={photo.id}
               onClick={() => handlePhotoNavigation(index)}
-              className={`transition-all duration-300 rounded-full ${
-                index === currentPhotoIndex
-                  ? 'bg-white/80 w-3 h-3'
-                  : 'bg-white/30 hover:bg-white/60 w-2 h-2'
-              }`}
+              className="w-7 h-7 -my-2 flex items-center justify-center rounded-full"
               aria-label={`View ${photo.name}`}
-            />
+              aria-current={index === currentPhotoIndex ? 'true' : undefined}
+            >
+              <span
+                aria-hidden
+                className={`transition-all duration-300 rounded-full ${
+                  index === currentPhotoIndex
+                    ? 'bg-white/80 w-3 h-3'
+                    : 'bg-white/30 group-hover:bg-white/60 hover:bg-white/60 w-2 h-2'
+                }`}
+              />
+            </button>
           ))}
         </div>
 

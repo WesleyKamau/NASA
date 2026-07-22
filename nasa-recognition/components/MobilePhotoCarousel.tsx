@@ -2,7 +2,7 @@
 
 import { GroupPhoto, Person, PhotoLocation } from '@/types';
 import Image from 'next/image';
-import { useState, useEffect, useRef, useCallback, TouchEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, TouchEvent } from 'react';
 // import { useLayoutEffect } from 'react'; // TODO: Not currently used
 import CenterIndicator from './CenterIndicator';
 import PersonImage from './PersonImage';
@@ -703,6 +703,43 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
   // const currentHighlightedPerson = shuffledPeople[highlightedPersonIndex];
 
+  // One O(n) pass per render for "which face is under the viewport center"
+  // (this used to run per person inside the map below — O(n²) on every
+  // touchmove-driven render).
+  const centerPersonId = useMemo(() => {
+    if (isAutoHighlighting || !containerRef.current) return null;
+    const rect = containerRef.current.getBoundingClientRect();
+    const visibleCenterX = 50 + (-position.x / (rect.width * scale)) * 100;
+    const visibleCenterY = 50 + (-position.y / (rect.height * scale)) * 100;
+
+    let closestId: string | null = null;
+    let closestDist = Infinity;
+    for (const p of shuffledPeople) {
+      const loc = p.photoLocations.find(l => l.photoId === currentPhoto.id);
+      if (!loc) continue;
+      const expandedX = loc.x - FACE_HITBOX_PADDING / 2;
+      const expandedY = loc.y - FACE_HITBOX_PADDING / 2;
+      const expandedWidth = loc.width + FACE_HITBOX_PADDING;
+      const expandedHeight = loc.height + FACE_HITBOX_PADDING;
+      const isInside =
+        visibleCenterX >= expandedX &&
+        visibleCenterX <= expandedX + expandedWidth &&
+        visibleCenterY >= expandedY &&
+        visibleCenterY <= expandedY + expandedHeight;
+      if (!isInside) continue;
+      const dx = loc.x + loc.width / 2 - visibleCenterX;
+      const dy = loc.y + loc.height / 2 - visibleCenterY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestId = p.id;
+      }
+    }
+    return closestId;
+  // centerIndicatorForce re-runs this while a drag rAF loop is active
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutoHighlighting, position.x, position.y, scale, shuffledPeople, currentPhoto.id, FACE_HITBOX_PADDING, centerIndicatorForce]);
+
   return (
     <div className="w-full" data-testid="mobile-photo-carousel">
       {/* Fallback for aspect-ratio using padding-bottom technique */}
@@ -767,6 +804,7 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
               style={{ imageRendering: 'auto' }}
               priority
               sizes="(max-width: 500px) 100vw, (max-width: 1024px) 75vw, 50vw"
+              data-wk-wait=""
               draggable={false}
               onLoad={(e) => {
                 const img = e.currentTarget;
@@ -845,74 +883,9 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
 
                 // Calculate responsive text size based on zoom (inverse scaling with more reduction)
                 // const fontSize = Math.max(7, Math.min(14, 14 / (scale * 0.8))); // TODO: Not currently used
-                const showWhenZoomed = (() => {
-                  if (person.id === hoveredPersonId) return true;
-                  if (isAutoHighlighting) return false;
-                  
-                  // Check if viewport center is inside this person's expanded hitbox
-                  if (!containerRef.current) return false;
-                  
-                  const rect = containerRef.current.getBoundingClientRect();
-                  const imageCenterOffsetX = -position.x / (rect.width * scale) * 100;
-                  const imageCenterOffsetY = -position.y / (rect.height * scale) * 100;
-                  
-                  const visibleCenterX = 50 + imageCenterOffsetX;
-                  const visibleCenterY = 50 + imageCenterOffsetY;
-                  
-                  // Calculate expanded hitbox
-                  const expandedX = location.x - FACE_HITBOX_PADDING / 2;
-                  const expandedY = location.y - FACE_HITBOX_PADDING / 2;
-                  const expandedWidth = location.width + FACE_HITBOX_PADDING;
-                  const expandedHeight = location.height + FACE_HITBOX_PADDING;
-                  
-                  // Check if center point is inside the expanded box
-                  const isInside = visibleCenterX >= expandedX && 
-                                  visibleCenterX <= expandedX + expandedWidth &&
-                                  visibleCenterY >= expandedY && 
-                                  visibleCenterY <= expandedY + expandedHeight;
-                  
-                  if (!isInside) return false;
-                  
-                  // If multiple faces overlap, only show the closest one
-                  // const personCenterX = location.x + location.width / 2;
-                  // const personCenterY = location.y + location.height / 2;
-                  // const myDist = Math.sqrt(
-                  //   Math.pow(personCenterX - visibleCenterX, 2) + 
-                  //   Math.pow(personCenterY - visibleCenterY, 2)
-                  // ); // TODO: Not currently used
-                  
-                  const peopleInsideHitbox = shuffledPeople.filter(p => {
-                    const pLoc = p.photoLocations.find(l => l.photoId === currentPhoto.id);
-                    if (!pLoc) return false;
-                    
-                    const pExpandedX = pLoc.x - FACE_HITBOX_PADDING / 2;
-                    const pExpandedY = pLoc.y - FACE_HITBOX_PADDING / 2;
-                    const pExpandedWidth = pLoc.width + FACE_HITBOX_PADDING;
-                    const pExpandedHeight = pLoc.height + FACE_HITBOX_PADDING;
-                    
-                    return visibleCenterX >= pExpandedX && 
-                           visibleCenterX <= pExpandedX + pExpandedWidth &&
-                           visibleCenterY >= pExpandedY && 
-                           visibleCenterY <= pExpandedY + pExpandedHeight;
-                  });
-                  
-                  // Only show if this is the closest person whose hitbox contains the center
-                  const sortedByDistance = peopleInsideHitbox
-                    .map(p => {
-                      const pLoc = p.photoLocations.find(l => l.photoId === currentPhoto.id)!;
-                      const pCenterX = pLoc.x + pLoc.width / 2;
-                      const pCenterY = pLoc.y + pLoc.height / 2;
-                      const dist = Math.sqrt(
-                        Math.pow(pCenterX - visibleCenterX, 2) + 
-                        Math.pow(pCenterY - visibleCenterY, 2)
-                      );
-                      return { id: p.id, dist };
-                    })
-                    .sort((a, b) => a.dist - b.dist);
-                  
-                  // Only show the single closest person
-                  return sortedByDistance.length > 0 && sortedByDistance[0].id === person.id;
-                })();
+                const showWhenZoomed =
+                  person.id === hoveredPersonId ||
+                  (!isAutoHighlighting && person.id === centerPersonId);
 
                 // Calculate expanded hitbox for debugging
                 const adjustedLocation = convertPhotoToContainerCoords(location);
@@ -1216,13 +1189,19 @@ export default function MobilePhotoCarousel({ groupPhotos, people, onPersonClick
             <button
               key={photo.id}
               onClick={() => handlePhotoNavigation(index)}
-              className={`h-2.5 rounded-full transition-all duration-300 touch-manipulation ${
-                index === currentPhotoIndex
-                  ? 'bg-white w-8'
-                  : 'bg-white/40 w-2.5 active:bg-white/70'
-              }`}
+              className="h-11 -my-4 flex items-center touch-manipulation"
               aria-label={`View ${photo.name}`}
-            />
+              aria-current={index === currentPhotoIndex ? 'true' : undefined}
+            >
+              <span
+                aria-hidden
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  index === currentPhotoIndex
+                    ? 'bg-white w-8'
+                    : 'bg-white/40 w-2.5 active:bg-white/70'
+                }`}
+              />
+            </button>
           ))}
         </div>
 

@@ -1,4 +1,4 @@
-import { GENERAL_COMPONENT_CONFIG, MOBILE_PHOTO_CAROUSEL_CONFIG, SLS_ROCKET_CONFIG, BIDIRECTIONAL_HIGHLIGHT_CONFIG, GALAXY_CONFIG, STARFIELD_CONFIG, LOADING_SCREEN_CONFIG } from '@/lib/configs/componentsConfig';
+import { GENERAL_COMPONENT_CONFIG, MOBILE_PHOTO_CAROUSEL_CONFIG, SLS_ROCKET_CONFIG, BIDIRECTIONAL_HIGHLIGHT_CONFIG, GALAXY_CONFIG, STARFIELD_CONFIG } from '@/lib/configs/componentsConfig';
 import { SITE_CONFIG } from '@/lib/configs/siteConfig';
 import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
 import { OG_IMAGE_CONFIG } from '@/lib/configs/ogConfig';
@@ -30,11 +30,6 @@ describe('configs invariants', () => {
   it('GALAXY and STARFIELD configs numeric and sensible', () => {
     expect(GALAXY_CONFIG.FOCAL.length).toBe(2);
     expect(STARFIELD_CONFIG.NUM_STARS).toBeGreaterThan(0);
-  });
-
-  it('LOADING_SCREEN_CONFIG has positive durations', () => {
-    expect(LOADING_SCREEN_CONFIG.MIN_LOADING_TIME_MS).toBeGreaterThanOrEqual(0);
-    expect(LOADING_SCREEN_CONFIG.FADE_OUT_MS).toBeGreaterThan(0);
   });
 
   it('SITE and OG configs valid', () => {
