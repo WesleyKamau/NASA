@@ -12,7 +12,7 @@ export const SIGNATURE_CONFIG = {
   ink: "#cdd7ff",
   font: "'wks-mark', 'Geist', system-ui, sans-serif",
   fonts: { "Book of Faces": { family: "wks-mark", weight: 700 } },
-  reveal: "up",
+  reveal: "split",
   minHold: 1875,
   domains: ["wesleykamau.com", "wesleygram.com"],
 };
