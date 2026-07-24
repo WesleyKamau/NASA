@@ -1,7 +1,6 @@
 import { GENERAL_COMPONENT_CONFIG, MOBILE_PHOTO_CAROUSEL_CONFIG, SLS_ROCKET_CONFIG, BIDIRECTIONAL_HIGHLIGHT_CONFIG, GALAXY_CONFIG, STARFIELD_CONFIG } from '@/lib/configs/componentsConfig';
 import { SITE_CONFIG } from '@/lib/configs/siteConfig';
 import { ROCKET_CONFIG } from '@/lib/configs/rocketConfig';
-import { OG_IMAGE_CONFIG } from '@/lib/configs/ogConfig';
 
 describe('configs invariants', () => {
   it('GENERAL_COMPONENT_CONFIG has expected shapes', () => {
@@ -32,9 +31,7 @@ describe('configs invariants', () => {
     expect(STARFIELD_CONFIG.NUM_STARS).toBeGreaterThan(0);
   });
 
-  it('SITE and OG configs valid', () => {
+  it('SITE config valid', () => {
     expect(SITE_CONFIG.title).toBeTruthy();
-    expect(typeof OG_IMAGE_CONFIG.rocketRotation).toBe('number');
-    expect(typeof OG_IMAGE_CONFIG.showRocket).toBe('boolean');
   });
 });

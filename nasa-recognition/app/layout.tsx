@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "imessage-ui/css";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/configs/siteConfig";
 import { SignatureCurtain } from "@/components/signature/SignatureCurtain";
 import { WORDMARK_FONT_CSS } from "@/components/signature/wordmark-font";
+import { PersonJsonLd } from "@/components/seo/JsonLd";
+import { ogImageFor, OG_HOME } from "@/lib/og/pages";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,18 +39,20 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: `${siteUrl}/og.png`,
+        url: `${siteUrl}${ogImageFor(OG_HOME.slug)}`,
         width: 1200,
         height: 630,
-        alt: SITE_CONFIG.title,
+        alt: OG_HOME.alt,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@weswesleyley',
+    creator: '@weswesleyley',
     title: SITE_CONFIG.title,
     description: SITE_CONFIG.description,
-    images: [`${siteUrl}/og.png`],
+    images: [`${siteUrl}${ogImageFor(OG_HOME.slug)}`],
   },
   alternates: {
     canonical: siteUrl,
@@ -69,14 +74,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: SITE_CONFIG.title,
-    description: SITE_CONFIG.description,
-    url: getBaseUrl(),
-  };
-
   return (
     <html lang="en" style={{ backgroundColor: '#000' }}>
       <head>
@@ -91,10 +88,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="color-scheme" content="dark" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <PersonJsonLd />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased touch-native scroll-native no-overscroll`}

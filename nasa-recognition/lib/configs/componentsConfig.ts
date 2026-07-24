@@ -76,22 +76,6 @@ export const SLS_ROCKET_CONFIG = {
 } as const;
 
 // ============================================================================
-// OG Generator Configuration
-// ============================================================================
-
-export const OG_GENERATOR_CONFIG = {
-  // Font options available in the generator
-  AVAILABLE_FONTS: [
-    { name: 'Geist Sans', value: 'var(--font-geist-sans)' },
-    { name: 'Inter', value: 'Inter, sans-serif' },
-    { name: 'Roboto', value: 'Roboto, sans-serif' },
-    { name: 'Helvetica Neue', value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-    { name: 'System UI', value: 'system-ui, sans-serif' },
-    { name: 'Monospace', value: 'var(--font-geist-mono)' },
-  ] as const,
-} as const;
-
-// ============================================================================
 // General Component Settings
 // ============================================================================
 
